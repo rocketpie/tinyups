@@ -1,0 +1,15 @@
+# devcontainer 
+## install / update / uninstall 
+    curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh
+    curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh -s -- --update
+    curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh -s -- --uninstall
+
+## start
+devcontainer exec opencode web --port 4096 --hostname 0.0.0.0
+devcontainer exec opencode --version
+
+
+# directly run opencode on the wsl host
+curl -fsSL https://opencode.ai/v2/install | bash
+opencode service set hostname 0.0.0.0
+opencode pair
