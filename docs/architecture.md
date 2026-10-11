@@ -81,6 +81,7 @@ docs/
   requirements.md
   architecture.md
   test-plan.md
+  datasheets/            # vendor datasheets + source register
   decisions/
 ```
 
@@ -94,4 +95,4 @@ docs/
 - All checks headless via CLI (`kicad-cli`, KiBot, ngspice) for CI and
   agent support.
 
-See `docs/decisions/0002`–`0005` for the recorded choices.
+See `docs/decisions/0002`–`0006` for the recorded choices.

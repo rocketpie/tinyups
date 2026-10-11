@@ -1,31 +1,31 @@
-# 0001 – Werkzeuge und Workflow für PCB-Design
+# 0001 – Tooling and workflow for PCB design
 
-- Status: akzeptiert
+- Status: accepted
 
-## Kontext
+## Context
 
-Der TinyUPS soll dokumentiert, entworfen, mit Bauteilauswahl versehen und
-validiert werden. Der Agent arbeitet dabei in einem Dev-Container und soll
-möglichst alle Werkzeuge headless und reproduzierbar nutzen können.
+TinyUPS is to be documented, designed, given a component selection and
+validated. The agent works in a dev container and should use as many tools as
+possible headlessly and reproducibly.
 
-## Entscheidung
+## Decision
 
-1. **EDA-Kern: KiCad 9 + `kicad-cli`/KiBot (Hybrid).**
-   KiCad für Schaltplan/Layout; alle Prüfungen und Exporte headless über
-   `kicad-cli` und KiBot. Formate sind textbasiert und git-freundlich.
-2. **Simulation: ngspice (ggf. via PySpice).**
-   Für Power-Path, Wandler und Schutzbeschaltungen vor dem Layout.
-3. **Recheneinheit: MCU mit Telemetrie.**
-   Verhalten unabhängig vom SBC beobachtbar und autark testbar.
-4. **Ziel: DC-UPS für PC**, Ausgang ~12 V.
-5. **Test: `pytest` + PyVISA/PyMeasure + sigrok-cli** für automatisierte
-   Bring-up- und Abnahmetests.
-6. **Alles im Repo**: Schaltplan, Layout, BOM, Gerber, Tests, Doku. Checks als
-   `make`-Ziele, identisch in CI (GitHub Actions).
+1. **EDA core: KiCad 9 + `kicad-cli`/KiBot (hybrid).**
+   KiCad for schematic/layout; all checks and exports headless via
+   `kicad-cli` and KiBot. Formats are text-based and git-friendly.
+2. **Simulation: ngspice (optionally via PySpice).**
+   For the power path, converters and protection circuits ahead of layout.
+3. **Compute unit: MCU with telemetry.**
+   Behaviour is observable and testable independently of the host.
+4. **Goal: DC UPS for a PC**, output ~12 V.
+5. **Test: `pytest` + PyVISA/PyMeasure + sigrok-cli** for automated bring-up
+   and acceptance tests.
+6. **Everything in the repo**: schematic, layout, BOM, Gerber, tests, docs.
+   Checks as `make` targets, identical in CI (GitHub Actions).
 
-## Konsequenzen
+## Consequences
 
-- GUI-KiCad ist optional (noVNC-Feature) und nicht Voraussetzung für den Workflow.
-- Der Agent kann ERC/DRC/Exporte selbst ausführen und iterieren.
-- Der laufende Container muss die Werkzeuge enthalten; Änderungen am
-  `Dockerfile` greifen erst beim nächsten Rebuild.
+- GUI KiCad is optional (noVNC feature) and not required for the workflow.
+- The agent can run ERC/DRC/exports itself and iterate.
+- The running container must contain the tools; changes to the `Dockerfile`
+  only take effect on the next rebuild.

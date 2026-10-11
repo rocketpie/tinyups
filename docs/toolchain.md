@@ -1,21 +1,21 @@
-# Toolchain – Stand & Verifikation
+# Toolchain – status and verification
 
-Verifiziert im laufenden Dev-Container.
+Verified in the running dev container.
 
-## Umgebung
+## Environment
 
-| Punkt | Wert |
+| Item | Value |
 | --- | --- |
-| Basis | Ubuntu 26.04.1 LTS (Dev-Container) |
-| Agent | OpenCode v2.0.26 (Port 4096) |
-| Architektur | x86_64 |
+| Base | Ubuntu 26.04.1 LTS (dev container) |
+| Agent | OpenCode v2.0.26 (port 4096) |
+| Architecture | x86_64 |
 
-## Versionen
+## Versions
 
-| Werkzeug | Version |
+| Tool | Version |
 | --- | --- |
 | KiCad / `kicad-cli` | 9.0.8 |
-| kicad-libraries (Symbole, Footprints, 3D) | 9.0.8 |
+| kicad-libraries (symbols, footprints, 3D) | 9.0.8 |
 | ngspice | 45.2 |
 | sigrok-cli | 0.7.2 |
 | KiBot | 1.9.1 |
@@ -26,30 +26,29 @@ Verifiziert im laufenden Dev-Container.
 | pytest / pytest-html | 9.0.2 / 4.2.0 |
 | Python | 3.14 (`/opt/eda/venv`, `--system-site-packages`) |
 
-## Erkenntnisse / Fallstricke
+## Findings / pitfalls
 
-- **KiBot braucht wxPython.** Das venv wird deshalb mit
-  `--system-site-packages` erzeugt, damit das System-`python3-wxgtk4.0` gefunden
-  wird. Zusätzlich sind `lxml` und `--no-compile` nötig (KiBot-Empfehlung).
-- **`kicad-cli pcb export drill`** nutzt `--excellon-units mm` (nicht `--units`).
-- **`kicad-cli pcb export svg`** benötigt in KiCad 9 `--mode-multi` für die
-  Ausgabe in ein Verzeichnis.
-- `kicad-cli` schreibt harmlose `Directory ... couldn't be created (error 17)`-
-  Warnungen (HOME/XDG-Init); das Ergebnis ist davon unberührt.
-- `kicad-cli pcb render` funktioniert **headless** (kein Display nötig).
+- **KiBot needs wxPython.** The venv is therefore created with
+  `--system-site-packages` so that the system `python3-wxgtk4.0` is found.
+  `lxml` and `--no-compile` are also required (KiBot recommendation).
+- **`kicad-cli pcb export drill`** uses `--excellon-units mm` (not `--units`).
+- **`kicad-cli pcb export svg`** needs `--mode-multi` in KiCad 9 to write into
+  a directory.
+- `kicad-cli` prints harmless `Directory ... couldn't be created (error 17)`
+  warnings (HOME/XDG init); the result is unaffected.
+- `kicad-cli pcb render` works **headless** (no display needed).
 
-## Nicht installiert (bei Bedarf)
+## Not installed (if needed)
 
-| Werkzeug | Zweck | Wie |
+| Tool | Purpose | How |
 | --- | --- | --- |
-| FreeCAD | Gehäuse / Mechanik | nicht in den Repos, PPA/Flatpak |
-| Node/npm | nur für code-first EDA (tscircuit) | devcontainer-Feature |
-| InvenTree / Part-DB | Inventar & Wareneingang | `docker compose` |
-| desktop-lite (noVNC) | GUI-KiCad im Browser | devcontainer-Feature |
+| FreeCAD | enclosure / mechanics | not in the repos, PPA/flatpak |
+| Node/npm | only for code-first EDA (tscircuit) | devcontainer feature |
+| InvenTree / Part-DB | inventory & goods receipt | `docker compose` |
+| desktop-lite (noVNC) | GUI KiCad in the browser | devcontainer feature |
 
-## GUI-Hinweis
+## GUI note
 
-Der Agent arbeitet vollständig headless. Für eine manuelle Layout-Session in
-KiCad: entweder KiCad auf dem WSL-Host nutzen (das Projekt liegt im
-Bind-Mount) oder das `desktop-lite`-Feature für einen Browser-Desktop im
-Container aktivieren.
+The agent works fully headless. For a manual layout session in KiCad: either
+use KiCad on the WSL host (the project is in the bind mount) or enable the
+`desktop-lite` feature for a browser desktop in the container.

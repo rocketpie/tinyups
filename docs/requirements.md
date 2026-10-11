@@ -59,6 +59,18 @@ The module has four external interfaces:
 | Connectors | **XT60 input**, fixed 12 V output pigtail, spot-welded pack + harness | |
 | Prototype | **JLCPCB, 5 pcs, EMC-ready** | Rules in `.kicad_dru`. |
 
+### 3.1 Key components (see ADR-0006 and `docs/datasheets/`)
+
+| Block | Part |
+| --- | --- |
+| Input front-end (inrush, UVLO/OVLO, current limit) | TI LM5069 |
+| Priority power path | TI LM74700-Q1 ideal diode (pack branch) + input-valid gating |
+| Charger (buck-boost CC/CV) | TI BQ25720 (LiFePO₄, IINDPM input-current regulation) |
+| Output converter (buck-boost, 12 V regulated) | TI LM5176 |
+| Battery AFE / BMS | TI BQ76942 (3–10S) + protection FETs |
+| MCU | RP2040 + QSPI flash |
+| Sources / datasheets | `docs/datasheets/` |
+
 ## 4. Functional requirements
 
 - **FR-1 Priority power path.** While the input is valid, the load is supplied
@@ -74,8 +86,10 @@ The module has four external interfaces:
 - **FR-5 Simultaneous run & charge.** The load runs from the input while the
   pack charges; the adapter's 20 A budget covers both. Charge current is
   limited so that input current stays within the adapter rating — the charger
-  throttles back as load rises (input power-budget management). Default charge
-  current 5 A (0.33C), configurable up to 15 A (1C) when headroom allows.
+  throttles back as load rises (input power-budget management, BQ25720 IINDPM).
+  Default charge current 5 A (0.33C); the achievable maximum is ~8 A because
+  the charger's input-current limit caps at ~10 A at 12 V, below the cell's
+  1C (15 A) rating.
 - **FR-6 SOC estimation.** State of charge is estimated by coulomb counting
   with open-circuit-voltage correction, and is reported with defined accuracy.
 - **FR-7 Telemetry.** Pack voltage, current, per-cell voltages, temperatures,
@@ -128,8 +142,8 @@ The module has four external interfaces:
   over-voltage protection above `TBD` V, transient survival to `TBD` V; reverse
   and short-circuit protected; fused.
 - **IF-2 (B, battery).** Internal 4S1P LFP pack wired to internal terminals;
-  pack-level AFE (BQ769x2-class or equivalent) with per-cell sensing, current
-  sense and NTC(s); passive balancing; charge/discharge FETs on the PCB.
+  pack-level AFE **TI BQ76942** with per-cell sensing, current sense and
+  NTC(s); passive balancing; charge/discharge FETs on the PCB.
 - **IF-3 (C, output).** Fixed pigtail (≈14 AWG) delivering 12 V/GND; continuous
   ≥ 15 A (180 W), peak ≥ 17 A (200 W) for ≤ 10 s; ripple ≤ 100 mVpp; load-step
   deviation ≤ 5 % recovering in < 1 ms.
@@ -153,10 +167,14 @@ The module has four external interfaces:
 1. ~~**Exact cell**~~ **Resolved:** Topband 33138-HE, 3.2 V / 15 Ah LiFePO₄,
    33 × 140 mm, 1C charge / 2C discharge, 0–45 °C charge, −20–60 °C discharge,
    > 2000 cycles. *Still to do:* file the manufacturer datasheet in the repo.
-2. **AFE part** selection (e.g. BQ769x2 family) and balancing current.
-3. **Buck-boost output controller** and **buck-boost charger** selection.
-4. Charge current default confirmed at 5 A with a 15 A ceiling; termination
-   rule still `TBD`.
+2. ~~**AFE part**~~ **Resolved:** TI BQ76942 (3–10S, LiFePO₄). Balancing
+   current still `TBD` (target 20–50 mA). ADR-0006.
+3. ~~**Buck-boost output controller**~~ **Resolved:** TI LM5176. ~~**Charger**~~
+   **Resolved:** TI BQ25720. ADR-0006.
+4. **Charger current ceiling:** default 5 A confirmed, but the BQ25720's ~10 A
+   input-current limit caps charging at **~8 A** (not the 1C/15 A the cell
+   allows). Decide whether ~8 A is acceptable or a different charger is needed.
+   Termination rule still `TBD`.
 5. Exact ATX bay dimensions and tolerance in the particular chassis.
 6. Component temperature limit and efficiency/accuracy measurement points.
 7. Firmware stack (Pico SDK vs PlatformIO) and the on-wire CDC protocol framing.
@@ -164,6 +182,10 @@ The module has four external interfaces:
 9. Whether to add a discrete shutdown/FSD line as a hardware backup to the USB
    signalling.
 10. Prototype cost target and USB connector type on the enclosure.
+11. Derive the passives: protection/ideal-diode FETs, inductors, sense
+    resistors (5 mΩ charger sense), TVS, NTCs. Verify the ADI LTC4421
+    alternative if a purpose-built priority controller is preferred.
+12. **Cell datasheet file/link** still missing (see `docs/datasheets/`).
 
 ## 9. Decision log
 

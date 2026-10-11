@@ -19,6 +19,16 @@
 
 ## 2. Phases
 
+### Phase S – Simulation (pre-layout)
+
+- Behavioural ngspice checks in `sim/` (see `sim/README.md`), run with
+  `make sim`: input-priority transfer, 12 V regulation/load step, CC/CV charge
+  and backup runtime.
+- **Criterion:** each model runs clean and meets its limit (e.g. transfer dip
+  ≤ 5 %, no pack current on mains, backup ≥ 30 min).
+- **Status:** first pass passing (dip ≈ 187 mV, ~0 A pack current on mains,
+  runtime ≈ 3.3 h). Confirm the critical ones on hardware in the phases below.
+
 ### Phase 0 – Visual inspection & bring-up (unpowered)
 
 - Assembly, solder joints, polarity, pack wiring, short-circuit check

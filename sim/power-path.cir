@@ -1,0 +1,41 @@
+* TinyUPS - input-priority power path and seamless transfer
+* Models the source-selection node that feeds the 12 V buck-boost.
+* The pack is modelled FULL (13.8 V) on purpose, to prove that the input
+* still has priority even though a charged pack is higher than the 12 V adapter.
+.param VIN=12
+.param VPACK=13.8
+
+* external 12 V adapter (source resistance), removed abruptly at t = 1 ms
+V_in  in   0  PWL(0 VIN 0.999m VIN 1.0m 0 3m 0)
+R_in  in   in_r 0.05
+
+* 4S LiFePO4 pack (full) with internal resistance + 0 V sense source
+V_pk  pk   0  VPACK
+R_pk  pk   pk_m 0.02
+V_pks pk_m pk_r 0
+
+* hold-up capacitor at the converter input, plus a ~50 W load
+R_esr  out c_h 0.01
+C_hold c_h 0   1000u
+R_bleed c_h 0  1meg
+I_load out 0   4.1667
+
+* priority decision: input wins while valid; comparator threshold ~10.5 V
+B_ci  ci   0 V = 0.5*(1+tanh((V(in_r)-10.5)/0.3))
+B_co  co_r 0 V = 0.5*(1+tanh((10.5-V(in_r))/0.3))
+R_co  co_r co 1k
+C_co  co  0 50n          ; ~50 us handover delay on the pack branch
+
+* muxed ideal switches: input branch (ci), pack branch (co)
+S_in in_r out ci 0 SWIN
+S_pk pk_r out co 0 SWPK
+.model SWIN SW(Ron=0.05 Roff=1e6 Vt=0.5)
+.model SWPK SW(Ron=0.05 Roff=1e6 Vt=0.5)
+
+.tran 0.1u 3m
+.meas tran Vout_nom   AVG  V(out)    FROM=0.5m TO=0.9m
+.meas tran Vout_min   MIN  V(out)    FROM=0.99m TO=1.2m
+.meas tran dip        PARAM='Vout_nom-Vout_min'
+.meas tran Ipk_mains  AVG  I(V_pks)  FROM=0.5m TO=0.9m
+.meas tran Ipk_backup AVG  I(V_pks)  FROM=1.5m TO=2.5m
+.end

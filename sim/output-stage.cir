@@ -1,0 +1,17 @@
+* TinyUPS - 12 V output regulation and load-step transient (behavioural)
+* First-order check of IF-3: stays in 12.0 V +/-3 %, small step deviation.
+V_conv conv 0 12
+R_out  conv out 0.01
+R_esr  out  c_o  0.005
+C_o    c_o  0 470u
+R_bleed c_o 0 1meg
+
+* 50 W (4.17 A) then a step to 160 W (13.33 A) and back
+I_load out 0 PWL(0 4.167 1m 4.167 1.02m 13.33 2m 13.33 2.02m 4.167)
+
+.tran 0.1u 3m
+.meas tran Vout_50W  AVG V(out) FROM=0.5m TO=0.9m
+.meas tran Vout_160W AVG V(out) FROM=1.5m TO=1.9m
+.meas tran Vstep_min MIN V(out) FROM=1m TO=1.15m
+.meas tran Vstep_max MAX V(out) FROM=2m TO=2.15m
+.end

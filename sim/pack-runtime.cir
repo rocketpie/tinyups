@@ -1,0 +1,11 @@
+* TinyUPS - 4S LiFePO4 discharge runtime at 50 W constant power
+* Same lumped model as the charger sim. Checks the >= 30 min requirement.
+C_bat  b 0 27000 IC=13.8
+R_int  b bat 0.02
+
+* 50 W constant-power load (current rises as the pack voltage falls)
+B_load bat 0 I = 50/V(bat)
+
+.tran 10 20000 uic
+.meas tran time_to_cutoff WHEN V(bat)=12.0
+.end

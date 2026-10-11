@@ -1,0 +1,18 @@
+* TinyUPS - 4S LiFePO4 CC/CV charge (behavioural, first-order)
+* Battery lumped as a large capacitor: ~13.5 Ah spread over 12.0-13.8 V.
+.param ICC=5
+.param VCV=13.8
+C_bat  b 0 27000 IC=12.0
+R_int  bat b 0.02
+V_is   y bat 0
+
+* CC/CV source: current limited to ICC, then holds VCV as the pack fills
+B_chg 0 y I = ( ((VCV-V(bat))/0.05) > ICC ) ? ICC : ( ((VCV-V(bat))/0.05) > 0 ? ((VCV-V(bat))/0.05) : 0 )
+
+.tran 10 12000 uic
+.meas tran Ichg_start AVG I(V_is) FROM=10 TO=60
+.meas tran Vbat_first AVG V(bat)  FROM=10 TO=60
+.meas tran Vbat_mid   AVG V(b)    FROM=5900 TO=6000
+.meas tran Vbat_end   AVG V(b)    FROM=11900 TO=12000
+.meas tran time_to_13V WHEN V(bat)=13.0
+.end
