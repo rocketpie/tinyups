@@ -14,3 +14,7 @@ opencode pair
 cd ~/workspaces/tinyups
 devcontainer up --remove-existing-container
 devcontainer exec opencode pair
+
+
+make test    # muss 6/6 grün sein
+make help    # listet alle Ziele

@@ -1,0 +1,33 @@
+# KiCad project outputs and local state
+*-backups/
+*.bak
+*.kicad_prl
+*.kicad_pro.lck
+*.kicad_sch.lck
+*.kicad_pcb.lck
+_autosave-*
+fp-info-cache
+*.net
+*.dsn
+*.ses
+*.rpt
+
+# Build / fabrication outputs
+build/
+gerbers/
+reports/
+bom.csv
+*.kicad_pcb-bak
+*.kicad_sch-bak
+
+# Simulation outputs
+*.cir.out
+*.raw
+*.log
+!dev container/post-install.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/

@@ -11,5 +11,6 @@
         }
     ],
     "forwardPorts": [4096],
+    "postCreateCommand": "kicad-cli version >/dev/null && ngspice --version >/dev/null 2>&1 && python -c 'import kiutils, pyvisa, kibot; print(\"EDA toolchain OK\")'",
     "postStartCommand": "opencode service set hostname 0.0.0.0 && opencode service set port 4096 && opencode service start"
 }
