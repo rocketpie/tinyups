@@ -252,6 +252,32 @@ def main() -> int:
     board.Add(r)
     bw, bh = x1 - x0, y1 - y0
 
+    # planes: GND on In1.Cu, the main 12 V rail (VIN_SYS) on In2.Cu.
+    # Exported to Specctra as planes, so the autorouter doesn't route them
+    # as tracks (they're the hardest nets to route).
+    for netname, layer in (("GND", pcbnew.In1_Cu), ("VIN_SYS", pcbnew.In2_Cu)):
+        net = board.FindNet(netname) or board.FindNet("/" + netname)
+        if net is None:
+            print("warn: plane net not found:", netname)
+            continue
+        z = pcbnew.ZONE(board)
+        z.SetLayer(layer)
+        z.SetNetCode(net.GetNetCode())
+        o = z.Outline()
+        o.NewOutline()
+        ins = 0.5
+        for px, py in ((x0 + ins, y0 + ins), (x1 - ins, y0 + ins),
+                       (x1 - ins, y1 - ins), (x0 + ins, y1 - ins)):
+            o.Append(pcbnew.FromMM(px), pcbnew.FromMM(py))
+        z.SetMinThickness(pcbnew.FromMM(0.25))
+        try:
+            z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
+        except Exception:
+            pass
+        board.Add(z)
+    # NOTE: zone filling is done separately (hardware/fill_zones.py); calling
+    # ZONE_FILLER on the freshly-built board crashes in the pcbnew bindings.
+
     pcbnew.SaveBoard(OUT, board)
     print(f"wrote {OUT}")
     print(f"  {len(loaded)} footprints, {len(netcache)} nets, board {bw:.1f} x {bh:.1f} mm")

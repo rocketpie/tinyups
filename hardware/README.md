@@ -44,18 +44,24 @@ make netlist && make bom                             # netlist + BOM
   ```
 
 - **Routing:** KiCad has no autorouter, so routing uses **freerouting**
-  (Java). The flow is: export Specctra DSN (via `pcbnew.ExportSpecctraDSN`) →
-  route with freerouting → import the session (`pcbnew.ImportSpecctraSES`).
+  (Java), driven by `hardware/route.py`: export Specctra DSN →
+  relax the design rules to the JLCPCB minimum (0.13 mm) → route → import the
+  session → refill zones.
 
   ```sh
-  # export
-  python -c "import pcbnew;b=pcbnew.LoadBoard('hardware/tinyups.kicad_pcb');pcbnew.ExportSpecctraDSN(b,'/tmp/t.dsn')"
-  # route (jar build; GUI disabled via freerouting.json {gui:{enabled:false}})
-  java -jar freerouting.jar -de /tmp/t.dsn -do /tmp/t.ses -mp 30
-  # import
-  python -c "import pcbnew;b=pcbnew.LoadBoard('hardware/tinyups.kicad_pcb');pcbnew.ImportSpecctraSES(b,'/tmp/t.ses');pcbnew.SaveBoard('hardware/tinyups.kicad_pcb',b)"
+  FREEROUTING_JAR=/opt/freerouting/freerouting.jar \
+      /opt/eda/venv/bin/python hardware/route.py
   make drc
   ```
+
+  Two things matter for it to converge:
+  1. **Planes.** GND (In1.Cu) and the main 12 V rail VIN_SYS (In2.Cu) are
+     copper zones, exported to the DSN as `plane`s, so the router doesn't
+     have to route those high-fan-out nets as tracks. Filled by
+     `hardware/fill_zones.py`.
+  2. **Rules.** The default 0.2 mm track/clearance cannot escape the
+     0.4 mm-pitch QFN parts (RP2040, BQ25720, LM5176); relaxing to 0.13 mm
+     (5 mil, JLCPCB minimum) lets the router fan them out.
 
 - **Note:** `make drc` fails until *every* net is routed (unconnected pads are
   DRC errors). The current placement is automatic and not electrically
