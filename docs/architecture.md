@@ -13,11 +13,12 @@ flowchart LR
     CHG <--> PACK["B: 4S1P LFP pack\n15 Ah + AFE/BMS"]
     PACK --> PPM
     PPM --> CONV["12 V buck-boost\nregulated 12.0 V"]
-    CONV --> OUT["C: 12 V out pigtail\n→ picoPSU-160-XT"]
+    CONV --> OUT["C: XT30 → 5.5×2.5 barrel\n→ picoPSU-160-XT"]
     AFE["AFE\ncell V · pack I · T\nbalancing · FETs"] <--> PACK
     AFE <--> MCU["RP2040\nSOC · logic · safety"]
     MCU --> USB["D: USB-C\nCDC + HID-PDC"]
     MCU --> IND["LEDs + reset button"]
+    MCU --> FAN["80 mm fan\n4-pin: 12 V/PWM/tach"]
 ```
 
 ## Why this topology
@@ -51,6 +52,7 @@ flowchart LR
 | MCU | SOC, state machine, telemetry, signalling | RP2040 + QSPI flash |
 | Host link | Telemetry + low-battery shutdown | USB-C composite CDC + HID-PDC |
 | User interface | Status indication, reset | LEDs + button |
+| Cooling | Temperature-controlled airflow | 80 mm fan, on-board 4-pin header |
 
 ## Modes
 
@@ -80,6 +82,7 @@ tests/
 docs/
   requirements.md
   architecture.md
+  bom.md
   test-plan.md
   datasheets/            # vendor datasheets + source register
   decisions/

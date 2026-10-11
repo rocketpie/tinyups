@@ -27,6 +27,7 @@ RUN apt-get update \
 # Python tooling: KiCad file automation, SPICE wrappers, bench instruments, tests.
 # --system-site-packages lets KiBot use the distro wxPython (python3-wxgtk4.0).
 # --no-compile is recommended by KiBot for pip installs.
+# pypdf extracts text from vendor datasheet PDFs (offline datasheet checks).
 RUN python3 -m venv --system-site-packages /opt/eda/venv \
     && /opt/eda/venv/bin/pip install --no-cache-dir --upgrade pip wheel \
     && /opt/eda/venv/bin/pip install --no-cache-dir --no-compile \
@@ -35,6 +36,7 @@ RUN python3 -m venv --system-site-packages /opt/eda/venv \
         pytest pytest-html \
         doorstop \
         lxml \
+        pypdf \
         kibot
 
 # Put the EDA venv and KiCad CLI on the PATH for everyone.

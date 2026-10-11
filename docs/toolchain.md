@@ -24,6 +24,7 @@ Verified in the running dev container.
 | PyMeasure | 0.16.0 |
 | python-can | 4.6.1 |
 | pytest / pytest-html | 9.0.2 / 4.2.0 |
+| pypdf | 6.20.0 |
 | Python | 3.14 (`/opt/eda/venv`, `--system-site-packages`) |
 
 ## Findings / pitfalls
@@ -37,6 +38,10 @@ Verified in the running dev container.
 - `kicad-cli` prints harmless `Directory ... couldn't be created (error 17)`
   warnings (HOME/XDG init); the result is unaffected.
 - `kicad-cli pcb render` works **headless** (no display needed).
+- **Datasheets are PDFs and `webfetch` cannot read them.** Download the vendor
+  PDF and text-extract it with **`pypdf`**, e.g.
+  `python -c "from pypdf import PdfReader; print('\n'.join((p.extract_text() or '') for p in PdfReader('x.pdf').pages))"`.
+  Used to verify the BOM values against the TI datasheets (`docs/bom.md`).
 
 ## Not installed (if needed)
 
