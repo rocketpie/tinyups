@@ -5,8 +5,7 @@
     curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh -s -- --uninstall
 
 ## start
-devcontainer exec opencode web --port 4096 --hostname 0.0.0.0
-devcontainer exec opencode --version
+devcontainer up --remove-existing-container
 
 
 # directly run opencode on the wsl host
