@@ -67,9 +67,10 @@ flowchart LR
 ```
 hardware/
   gen_schematic.py       # schematic generator (edit this)
+  gen_pcb.py             # board generator (netlist -> placed PCB)
   tinyups.kicad_pro      # KiCad project
   tinyups.kicad_sch      # schematic (generated)
-  tinyups.kicad_pcb      # layout
+  tinyups.kicad_pcb      # layout (generated)
   tinyups.kicad_dru      # design rules (JLCPCB)
   libs/                  # generated custom symbols
 mechanical/

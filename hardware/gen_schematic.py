@@ -62,6 +62,40 @@ def _pin_local(sym: Symbol, number: str) -> tuple[float, float]:
     raise KeyError(f"{sym.entryName}: no pin {number}")
 
 
+# footprint per part (verified to exist in the KiCad libraries)
+_FP = {
+    "Fuse": "Fuse:Fuse_1206_3216Metric",
+    "L": "Inductor_SMD:L_12x12mm_H8mm",
+    "D_TVS": "Diode_SMD:D_SMB",
+    "Q_NMOS_GSD": "Package_TO_SOT_SMD:TO-252-2",
+    "LED": "LED_SMD:LED_0805_2012Metric",
+    "Crystal": "Crystal:Crystal_SMD_5032-2Pin_5.0x3.2mm",
+    "Conn_01x03": "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical",
+    "Conn_01x04": "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical",
+    "LM5069": "Package_SO:VSSOP-10_3x3mm_P0.5mm",
+    "LM74700-Q1": "Package_TO_SOT_SMD:SOT-23-6",
+    "BQ25720": "Package_DFN_QFN:QFN-32-1EP_4x4mm_P0.4mm_EP2.65x2.65mm",
+    "LM5176": "Package_DFN_QFN:QFN-28-1EP_4x4mm_P0.4mm_EP2.4x2.4mm",
+    "BQ76942": "Package_QFP:TQFP-48_7x7mm_P0.5mm",
+    "RP2040": "Package_DFN_QFN:QFN-56-1EP_7x7mm_P0.4mm_EP3.2x3.2mm",
+    "W25Q128": "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm",
+    "REG_3V3": "Package_TO_SOT_SMD:SOT-23-5",
+}
+
+
+def default_fp(sym: Symbol, value: str | None) -> str:
+    e = sym.entryName
+    if e == "R":
+        return ("Resistor_SMD:R_2512_6332Metric"
+                if value and value.endswith("m") else
+                "Resistor_SMD:R_0805_2012Metric")
+    if e == "C":
+        return ("Capacitor_SMD:CP_Elec_8x10"
+                if value in ("470u", "220u") else
+                "Capacitor_SMD:C_0805_2012Metric")
+    return _FP.get(e, "")
+
+
 class Builder:
     def __init__(self) -> None:
         self.sch = Schematic.create_new()
@@ -81,11 +115,12 @@ class Builder:
 
     def place(self, sym: Symbol, ref: str, value: str | None = None,
               x: float | None = None, y: float | None = None,
-              angle: float = 0) -> SchematicSymbol:
+              angle: float = 0, fp: str | None = None) -> SchematicSymbol:
         if x is None:
             x, y = self._next_slot()
         x = round(x / GRID) * GRID
         y = round(y / GRID) * GRID
+        fp = fp if fp is not None else default_fp(sym, value)
         self._register(sym)
         ss = SchematicSymbol(
             libraryNickname=sym.libraryNickname, entryName=sym.entryName,
@@ -98,7 +133,7 @@ class Builder:
                 Property(key="Value", value=value or sym.entryName,
                          position=Position(X=x + 2.54, Y=y + 2.54, angle=0),
                          effects=Effects(font=Font(width=1.27, height=1.27))),
-                Property(key="Footprint", value="",
+                Property(key="Footprint", value=fp,
                          position=Position(X=x, Y=y, angle=0),
                          effects=Effects(hide=True)),
                 Property(key="Datasheet", value="~",
@@ -140,6 +175,15 @@ class Builder:
     def nc(self, ref: str, number: str) -> None:
         x, y = self.abs_pin(ref, number)
         self.sch.noConnects.append(NoConnect(position=Position(X=x, Y=y, angle=0)))
+
+    def pwr_flag(self, net: str, x: float, y: float) -> None:
+        """Place a PWR_FLAG and tie it to a named net."""
+        x = round(x / GRID) * GRID
+        y = round(y / GRID) * GRID
+        self.place(std("power", "PWR_FLAG"), "#FLG", "PWR_FLAG", x, y)
+        self.sch.labels.append(
+            LocalLabel(text=net, position=Position(X=x, Y=y, angle=0),
+                       effects=Effects(font=Font(width=1.27, height=1.27))))
 
     def save(self, path: str) -> None:
         self.sch.to_file(path)
@@ -295,7 +339,8 @@ def build() -> Schematic:
     b._syms = {}
 
     # ---- Block A: input protection + LM5069 hot-swap --------------------- #
-    b.place(std("Connector_Generic", "Conn_01x02"), "J1", "XT60", 40.0, 40.0)
+    b.place(std("Connector_Generic", "Conn_01x02"), "J1", "XT60", 40.0, 40.0,
+            fp="Connector_Wire:SolderWire-2.5sqmm_1x02_P8.8mm_D2.4mm_OD4.4mm")
     b.place(std("Device", "Fuse"), "F1", "25A", 63.5, 40.0)
     b.place(std("Device", "D_TVS"), "D1", "SMBJ15A", 88.9, 40.0)
     b.place(std("Device", "R"), "R1", "2.2m", 114.3, 40.0)   # Rsense
@@ -403,8 +448,31 @@ def build() -> Schematic:
     b.place(std("Device", "R"), "R15", "10k", 241.3, 147.32)  # SCL pull-up
     N("R14", "1", "I2C_SDA"); N("R14", "2", "+3V3")
     N("R15", "1", "I2C_SCL"); N("R15", "2", "+3V3")
-    for _p in ("4", "5", "8", "9", "10", "11", "14", "15", "16", "17", "21"):
-        b.nc("U3", _p)
+    # compensation / monitors / status (from PMP22419)
+    b.place(std("Device", "R"), "R40", "10k", 304.8, 381.0)    # COMP1
+    b.place(std("Device", "C"), "C29", "10n", 330.2, 381.0)
+    b.place(std("Device", "C"), "C30", "1n", 355.6, 381.0)     # COMP2
+    b.place(std("Device", "C"), "C31", "100n", 381.0, 381.0)   # PSYS
+    b.place(std("Device", "R"), "R41", "10k", 406.4, 381.0)    # IADPT
+    b.place(std("Device", "C"), "C32", "100n", 431.8, 381.0)
+    b.place(std("Device", "R"), "R42", "10k", 457.2, 381.0)    # IBAT
+    b.place(std("Device", "C"), "C33", "100n", 482.6, 381.0)
+    b.place(std("Device", "R"), "R43", "10k", 508.0, 381.0)    # CHRG_OK pull-up
+    b.place(std("Device", "R"), "R44", "10k", 533.4, 381.0)    # PROCHOT pull-up
+    N("U3", "16", "N_COMP1"); N("R40", "1", "N_COMP1")
+    N("R40", "2", "N_COMP1B"); N("C29", "1", "N_COMP1B"); N("C29", "2", "GND")
+    N("U3", "17", "N_COMP2"); N("C30", "1", "N_COMP2"); N("C30", "2", "GND")
+    N("U3", "10", "N_PSYS"); N("C31", "1", "N_PSYS"); N("C31", "2", "GND")
+    N("U3", "8", "N_IADPT"); N("R41", "1", "N_IADPT")
+    N("R41", "2", "N_IADPTB"); N("C32", "1", "N_IADPTB"); N("C32", "2", "GND")
+    N("U3", "9", "N_IBAT"); N("R42", "1", "N_IBAT")
+    N("R42", "2", "N_IBATB"); N("C33", "1", "N_IBATB"); N("C33", "2", "GND")
+    N("U3", "4", "N_CHGOK"); N("R43", "1", "N_CHGOK"); N("R43", "2", "+3V3")
+    N("U3", "11", "N_PROCHOT"); N("R44", "1", "N_PROCHOT"); N("R44", "2", "+3V3")
+    N("U3", "14", "GND")   # CMPIN tied to ground (unused comparator)
+    N("U3", "5", "GND")    # OTG/VAP/FRS disabled
+    b.nc("U3", "15")       # CMPOUT (float)
+    b.nc("U3", "21")       # BATDRV (no BATFET in this design)
 
     # ---- Block D: 12 V output buck-boost (LM5176) ------------------------ #
     b.place(LM5176, "U4", "LM5176", 330.2, 45.72)
@@ -432,7 +500,8 @@ def build() -> Schematic:
     b.place(std("Device", "C"), "C16", "1u", 330.2, 198.12)    # VCC
     b.place(std("Device", "C"), "C17", "220u", 355.6, 198.12)  # output
     b.place(std("Device", "C"), "C18", "10u", 381.0, 198.12)   # output
-    b.place(std("Connector_Generic", "Conn_01x02"), "J2", "XT30", 406.4, 198.12)
+    b.place(std("Connector_Generic", "Conn_01x02"), "J2", "XT30", 406.4, 198.12,
+            fp="Connector_Wire:SolderWire-2.5sqmm_1x02_P7.2mm_D2.4mm_OD3.6mm")
 
     N("U4", "27", "VIN_SYS"); N("U4", "28", "VIN_SYS"); N("C9", "1", "VIN_SYS")
     N("U4", "25", "SW1"); N("Q7", "2", "SW1"); N("Q8", "3", "SW1")
@@ -520,8 +589,13 @@ def build() -> Schematic:
         N(_c, "2", "GND")
     for _r in ("R26", "R27", "R28", "R30"):
         N(_r, "2", "GND")
-    for _p in ("1", "3", "5", "7", "9", "11", "19", "28", "29", "30",
-               "31", "32", "37", "38", "39", "40", "41", "42", "44"):
+    # CFETOFF/DFETOFF held high (from the BQ76942 EVM)
+    b.place(std("Device", "R"), "R45", "100k", 558.8, 381.0)
+    b.place(std("Device", "R"), "R46", "100k", 584.2, 381.0)
+    N("U5", "29", "N_CFETOFF"); N("R45", "1", "N_CFETOFF"); N("R45", "2", "N_REG1")
+    N("U5", "30", "N_DFETOFF"); N("R46", "1", "N_DFETOFF"); N("R46", "2", "N_REG1")
+    for _p in ("1", "3", "5", "7", "9", "11", "19", "28", "31", "32",
+               "37", "38", "39", "40", "41", "42", "44"):
         b.nc("U5", _p)
 
     # ---- Block F: MCU / USB / fan / UI (RP2040) -------------------------- #
@@ -595,6 +669,13 @@ def build() -> Schematic:
     for _p in ("2", "3", "14", "15", "16", "17", "18", "27", "28", "29",
                "30", "31", "32", "34", "35", "36", "37", "38", "39", "40", "41"):
         b.nc("U6", _p)
+
+    # mark the externally-sourced power nets (ready for pin typing in layout)
+    b.pwr_flag("+12V_IN", 25.4, 25.4)
+    b.pwr_flag("GND", 25.4, 50.8)
+    b.pwr_flag("VBAT", 25.4, 76.2)
+    b.pwr_flag("VOUT12", 25.4, 101.6)
+    b.pwr_flag("+3V3", 25.4, 127.0)
 
     return b.sch
 

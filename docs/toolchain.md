@@ -25,6 +25,8 @@ Verified in the running dev container.
 | python-can | 4.6.1 |
 | pytest / pytest-html | 9.0.2 / 4.2.0 |
 | pypdf | 6.20.0 |
+| Java (OpenJDK JRE) | 25.0.4.1 |
+| freerouting | 2.5.0 (`/opt/freerouting/freerouting.jar`) |
 | Python | 3.14 (`/opt/eda/venv`, `--system-site-packages`) |
 
 ## Findings / pitfalls
@@ -38,6 +40,15 @@ Verified in the running dev container.
 - `kicad-cli` prints harmless `Directory ... couldn't be created (error 17)`
   warnings (HOME/XDG init); the result is unaffected.
 - `kicad-cli pcb render` works **headless** (no display needed).
+- **Routing needs freerouting** (KiCad has no autorouter). `kicad-cli` cannot
+  create/import a PCB from a netlist either — build the board with the
+  `pcbnew` Python module (`hardware/gen_pcb.py`) and route via Specctra
+  (`pcbnew.ExportSpecctraDSN` / `ImportSpecctraSES` + freerouting,
+  `hardware/route.py`).
+- freerouting runs **headless** with the jar if the GUI is disabled: put
+  `{ "gui": { "enabled": false } }` in `freerouting.json` in the working dir.
+  (The native `freerouting-cli` build crashed in the autoroute stage; the jar
+  works.)
 - **Datasheets are PDFs and `webfetch` cannot read them.** Download the vendor
   PDF and text-extract it with **`pypdf`**, e.g.
   `python -c "from pypdf import PdfReader; print('\n'.join((p.extract_text() or '') for p in PdfReader('x.pdf').pages))"`.

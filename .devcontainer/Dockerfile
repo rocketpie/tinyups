@@ -21,6 +21,7 @@ RUN apt-get update \
         ngspice \
         sigrok-cli \
         kicad kicad-libraries \
+        default-jre-headless \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -41,3 +42,10 @@ RUN python3 -m venv --system-site-packages /opt/eda/venv \
 
 # Put the EDA venv and KiCad CLI on the PATH for everyone.
 ENV PATH="/opt/eda/venv/bin:${PATH}"
+
+# freerouting: autorouter for the PCB step (KiCad has no built-in one).
+# Driven by hardware/route.py; needs the JRE installed above.
+RUN mkdir -p /opt/freerouting \
+    && curl -fsSL -o /opt/freerouting/freerouting.jar \
+       https://github.com/freerouting/freerouting/releases/download/v2.5.0/freerouting-2.5.0.jar
+ENV FREEROUTING_JAR=/opt/freerouting/freerouting.jar

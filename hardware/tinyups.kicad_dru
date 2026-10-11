@@ -1,0 +1,11 @@
+(version 1)
+
+# TinyUPS custom design rules — JLCPCB 2-layer/4-layer standard capabilities.
+# These are minimums; the board's own settings are stricter, so adding this
+# file does not create violations.
+
+(rule "JLCPCB min track width" (constraint track_width (min 0.13mm)))
+(rule "JLCPCB min clearance" (constraint clearance (min 0.13mm)))
+(rule "JLCPCB min via diameter" (constraint via_diameter (min 0.45mm)))
+(rule "JLCPCB min via hole" (constraint hole_size (min 0.3mm)))
+(rule "JLCPCB min annular ring" (constraint annular_width (min 0.13mm)))
