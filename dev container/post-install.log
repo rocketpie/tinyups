@@ -1,14 +1,16 @@
+# run opencode directly on the wsl host
+curl -fsSL https://opencode.ai/v2/install | bash
+opencode service set hostname 0.0.0.0
+opencode pair
+
+
 # devcontainer 
 ## install / update / uninstall 
     curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh
     curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh -s -- --update
     curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh -s -- --uninstall
 
-## start
+# run opencode in the dev container
+cd ~/workspaces/tinyups
 devcontainer up --remove-existing-container
-
-
-# directly run opencode on the wsl host
-curl -fsSL https://opencode.ai/v2/install | bash
-opencode service set hostname 0.0.0.0
-opencode pair
+devcontainer exec opencode pair

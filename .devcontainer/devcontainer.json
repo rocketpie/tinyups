@@ -1,17 +1,15 @@
 {
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-    "remoteUser": "vscode",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
     "runArgs": ["-p", "4096:4096"],
     "mounts": [
         {
-            "source": "/home/lars/workspaces/tinyups",
+            "source": "${localWorkspaceFolder}",
             "target": "/tinyups",
             "type": "bind"
         }
     ],
     "forwardPorts": [4096],
-    "features": {
-        "ghcr.io/stu-bell/devcontainer-features/open-code": {}
-    },
-    "postStartCommand": "setsid $HOME/.opencode/bin/opencode web --port 4096 --hostname 0.0.0.0 >/tmp/opencode-web.log 2>&1 </dev/null &"
+    "postStartCommand": "opencode service set hostname 0.0.0.0 && opencode service set port 4096 && opencode service start"
 }
