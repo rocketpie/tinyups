@@ -112,10 +112,19 @@ every net is routed (unconnected pads are DRC errors) — see below.
 
 ## PCB status
 
-`tinyups.kicad_pcb` is generated: **4 layers, 122 footprints, 113 nets, board
-145 × 138 mm** (inside the ATX bay). With block-aware placement the board is
-free of placement DRC violations (clearance/overlap/edge); the only remaining
-`drc` findings are **unrouted nets**. Routing runs through freerouting (above).
+`tinyups.kicad_pcb` is generated and **routed**: **4 layers, 122 footprints,
+113 nets, 145 × 138 mm** (inside the ATX bay), ~1630 tracks / ~294 vias.
+
+- Placement is DRC-clean (no clearance/overlap/edge issues).
+- Routing: **112 of 113 nets** routed by freerouting (planes on In1/In2,
+  JLCPCB 0.09 mm rules).
+- **Remaining `drc` findings (3):** one unrouted status net (`N_PGOOD`), a
+  `VIN_SYS` stub and a dangling via on `N_PGOOD`. These are a few minutes of
+  manual cleanup in the KiCad GUI.
+- Traces use **0.09 mm (3.5 mil)** in places (QFN fanout) → **JLCPCB
+  "advanced"** tier, or widen on a re-route.
+
+So `make erc` passes; `make drc` fails only on those 3 items.
 
 ## Remaining before/with layout
 
