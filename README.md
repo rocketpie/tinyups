@@ -1,6 +1,12 @@
 # TinyUPS
 
-like a laptop battery, but for PCs
+like a laptop battery, but for PCs.
+
+A compact 12 V DC UPS for mini servers fed by an external adapter and a
+[picoPSU](https://en.wikipedia.org/wiki/PicoPSU) DC-ATX converter. A 4S
+LiFePO₄ pack keeps the machine running when mains drops and recharges when it
+returns — the whole module fits the ATX PSU bay. Battery status and a clean
+shutdown signal go to the host over USB.
 
 ## Documentation
 
