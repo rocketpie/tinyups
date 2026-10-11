@@ -25,9 +25,9 @@ NETLIST = os.path.join(ROOT, "build", "tinyups.net")
 OUT = os.path.join(HERE, "tinyups.kicad_pcb")
 FP_ROOT = "/usr/share/kicad/footprints"
 
-MARGIN = 5.0          # mm board margin around placement
+MARGIN = 3.0          # mm board margin around placement
 GAP = 2.5             # mm gap between footprints
-MAX_W, MAX_H = 135.0, 138.0   # ATX-bay cap (150 x 140)
+MAX_W, MAX_H = 150.0, 140.0   # ATX-bay cap (150 x 140)
 
 
 # --------------------------------------------------------------------------- #
@@ -144,26 +144,79 @@ def main() -> int:
         fp.SetValue(info["value"])
         fp.SetFPID(pcbnew.LIB_ID(lib, name))
         bb = fp.GetBoundingBox()
-        loaded.append([ref, fp, bb.GetWidth(), bb.GetHeight()])
+        w, h = bb.GetWidth(), bb.GetHeight()
+        if ref.startswith("J"):        # connectors: reserve extra clearance
+            w += pcbnew.FromMM(8)
+            h += pcbnew.FromMM(8)
+        loaded.append([ref, fp, w, h])
 
-    # shelf-pack: tall first, wrap at MAX_W
-    loaded.sort(key=lambda t: -t[3])
-    x = y = 0.0
-    row_h = 0.0
-    used_w = used_h = 0.0
-    for ref, fp, w, h in loaded:
-        wmm, hmm = pcbnew.ToMM(w), pcbnew.ToMM(h)
-        if x > 0 and x + wmm > MAX_W:
-            y += row_h + GAP
-            x = 0.0
-            row_h = 0.0
-        fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(x + wmm / 2),
-                                       pcbnew.FromMM(y + hmm / 2)))
-        x += wmm + GAP
-        row_h = max(row_h, hmm)
-        used_w = max(used_w, x)
-        used_h = max(used_h, y + row_h)
-        board.Add(fp)
+    # ---- block-aware placement ------------------------------------------- #
+    # group parts by functional block (same split as the schematic), lay each
+    # block out in a sub-rectangle, then pack the block rectangles into rows.
+    BLOCKS = {
+        "A": {"J1", "F1", "D1", "R1", "R2", "R3", "R4", "R5", "C1", "R6", "R7", "Q1", "U1"},
+        "B": {"U2", "Q2", "C2", "C3", "C4", "R8"},
+        "C": {"U3", "Q3", "Q4", "Q5", "Q6", "L2", "R9", "R10", "C5", "C6", "C7",
+              "C8", "R11", "R12", "R13", "R14", "R15", "R40", "C29", "C30",
+              "C31", "R41", "C32", "R42", "C33", "R43", "R44"},
+        "D": {"U4", "Q7", "Q8", "Q9", "Q10", "L3", "R16", "R17", "R18", "R19",
+              "R20", "R21", "R22", "R23", "R24", "C9", "C10", "C11", "C12",
+              "C13", "C14", "C15", "C16", "C17", "C18", "J2"},
+        "E": {"U5", "Q11", "Q12", "R25", "Rf0", "Rf1", "Rf2", "Rf3", "Rf4",
+              "Cf0", "Cf1", "Cf2", "Cf3", "Cf4", "C19", "C20", "C21", "C22",
+              "C23", "R26", "R27", "R28", "R29", "R30", "R45", "R46"},
+        "F": {"U6", "U7", "U8", "J3", "J4", "J5", "Y1", "R31", "R36", "R37",
+              "R38", "R32", "R33", "R34", "R35", "D2", "D3", "D4", "D5",
+              "C24", "C25", "C26", "C27", "C28"},
+    }
+    ref_block = {r: b for b, refs in BLOCKS.items() for r in refs}
+
+    def shelf(items, maxw, gap=GAP):
+        """pack (ref, fp, w, h) into rows; return placed [(ref, fp, cx, cy)] + size."""
+        items = sorted(items, key=lambda t: -t[3])
+        x = y = 0.0
+        row_h = uw = uh = 0.0
+        out = []
+        for ref, fp, w, h in items:
+            wmm, hmm = pcbnew.ToMM(w), pcbnew.ToMM(h)
+            if x > 0 and x + wmm > maxw:
+                y += row_h + gap
+                x = 0.0
+                row_h = 0.0
+            out.append((ref, fp, x + wmm / 2, y + hmm / 2))
+            x += wmm + gap
+            row_h = max(row_h, hmm)
+            uw = max(uw, x)
+            uh = max(uh, y + row_h)
+        return out, uw, uh
+
+    by_block: dict[str, list] = {}
+    for item in loaded:
+        by_block.setdefault(ref_block.get(item[0], "X"), []).append(item)
+
+    # 1) lay out each block in a sub-rectangle, then place blocks on a fixed
+    #    3-column grid in signal-flow order (columns sized to the usable width)
+    cols = 3
+    col_w = (MAX_W - 2 * MARGIN) / cols
+    BW = col_w - 4.0
+    block = {b: shelf(items, BW) for b, items in by_block.items()}
+    order = [b for b in ("A", "B", "C", "D", "E", "F", "X") if b in block]
+    rows = [order[i:i + cols] for i in range(0, len(order), cols)]
+    y_off = MARGIN
+    used_w = 0.0
+    for rowblocks in rows:
+        row_h = 0.0
+        for c_i, b in enumerate(rowblocks):
+            placed, bw, bh = block[b]
+            x_off = MARGIN + c_i * col_w
+            for ref, fp, cx, cy in placed:
+                fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(x_off + cx),
+                                               pcbnew.FromMM(y_off + cy)))
+                board.Add(fp)
+            used_w = max(used_w, x_off + bw)
+            row_h = max(row_h, bh)
+        y_off += row_h + GAP
+    used_h = y_off - GAP
 
     # nets -> pads
     netcache = {}
@@ -179,15 +232,25 @@ def main() -> int:
                 netcache[name] = n
             pad.SetNet(netcache[name])
 
-    # outline
-    bw, bh = used_w + 2 * MARGIN, used_h + 2 * MARGIN
+    # outline = union of footprint bboxes + margin (keeps edge clearance)
+    x0 = y0 = 1e18
+    x1 = y1 = -1e18
+    for fp in board.GetFootprints():
+        bb = fp.GetBoundingBox()
+        x0 = min(x0, bb.GetX()); y0 = min(y0, bb.GetY())
+        x1 = max(x1, bb.GetRight()); y1 = max(y1, bb.GetBottom())
+    x0 = pcbnew.ToMM(x0) - MARGIN
+    y0 = pcbnew.ToMM(y0) - MARGIN
+    x1 = pcbnew.ToMM(x1) + MARGIN
+    y1 = pcbnew.ToMM(y1) + MARGIN
     r = pcbnew.PCB_SHAPE(board)
     r.SetShape(pcbnew.SHAPE_T_RECT)
-    r.SetStart(pcbnew.VECTOR2I(pcbnew.FromMM(0), pcbnew.FromMM(0)))
-    r.SetEnd(pcbnew.VECTOR2I(pcbnew.FromMM(bw), pcbnew.FromMM(bh)))
+    r.SetStart(pcbnew.VECTOR2I(pcbnew.FromMM(x0), pcbnew.FromMM(y0)))
+    r.SetEnd(pcbnew.VECTOR2I(pcbnew.FromMM(x1), pcbnew.FromMM(y1)))
     r.SetLayer(pcbnew.Edge_Cuts)
     r.SetWidth(pcbnew.FromMM(0.1))
     board.Add(r)
+    bw, bh = x1 - x0, y1 - y0
 
     pcbnew.SaveBoard(OUT, board)
     print(f"wrote {OUT}")

@@ -58,9 +58,30 @@ make netlist && make bom                             # netlist + BOM
   ```
 
 - **Note:** `make drc` fails until *every* net is routed (unconnected pads are
-  DRC errors). The current placement is automatic (shelf-packed) and not
-  electrically optimised — a hand-tuned placement (power components grouped,
-  short high-current loops) is the main thing that improves routing quality.
+  DRC errors). The current placement is automatic and not electrically
+  optimised — a hand-tuned placement is the main thing that improves routing.
+
+## Placement quality
+
+Placement is quantified (see `hardware/place_metrics.py`) so it can be
+compared and improved objectively:
+
+| Metric | Meaning | shelf-pack (naive) | block-aware |
+| --- | --- | --- | --- |
+| total HPWL | Σ per-net pad bounding-box (w+h) — total copper length | 9 955 mm | **5 188 mm** |
+| weighted HPWL | same, high-current nets ×6 | 17 504 mm | **13 461 mm** |
+| power-net HPWL | only the high-current nets | 1 510 mm | 1 654 mm |
+| decap distance | mean IC supply pin → nearest cap | 37 mm | **18 mm** |
+
+`gen_pcb.py` places parts **grouped by functional block** (A–F, same split as
+the schematic) and packs the blocks on a 3-column grid, instead of packing all
+parts globally. That roughly halved the wirelength and the decoupling distance.
+
+Run it on any board:
+
+```sh
+/opt/eda/venv/bin/python hardware/place_metrics.py
+```
 
 ## Status
 
@@ -80,8 +101,15 @@ Support networks (compensation, monitors, pull-ups) are taken from the TI
 reference designs PMP21278 / PMP22419. `PWR_FLAG`s mark the externally-sourced
 nets (`+12V_IN`, `GND`, `VBAT`, `VOUT12`, `+3V3`).
 
-`make check` also runs `drc`, which needs a PCB (`hardware/tinyups.kicad_pcb`)
-that does not exist yet — so use `make erc netlist bom` until layout starts.
+`make check` runs `erc`, `drc`, `netlist` and `bom`. `drc` only passes once
+every net is routed (unconnected pads are DRC errors) — see below.
+
+## PCB status
+
+`tinyups.kicad_pcb` is generated: **4 layers, 122 footprints, 113 nets, board
+145 × 138 mm** (inside the ATX bay). With block-aware placement the board is
+free of placement DRC violations (clearance/overlap/edge); the only remaining
+`drc` findings are **unrouted nets**. Routing runs through freerouting (above).
 
 ## Remaining before/with layout
 
