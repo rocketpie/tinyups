@@ -34,7 +34,7 @@ make clean
 KiBot (ERC/DRC-HTML-Reports, CI-Berichte) läuft zusätzlich per
 `kibot -b <pcb> -e <sch> -c <kibot.yaml>`.
 
-Versionsstand und verifizierte Kommandos: [`docs/toolchain.md`](docs/toolchain.md).
+Versionsstand: [`docs/toolchain.md`](docs/toolchain.md).
 
 ## Umgebung (verifiziert)
 
