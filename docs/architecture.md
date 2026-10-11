@@ -66,11 +66,12 @@ flowchart LR
 
 ```
 hardware/
+  gen_schematic.py       # schematic generator (edit this)
   tinyups.kicad_pro      # KiCad project
-  tinyups.kicad_sch      # schematic
+  tinyups.kicad_sch      # schematic (generated)
   tinyups.kicad_pcb      # layout
   tinyups.kicad_dru      # design rules (JLCPCB)
-  libs/                  # custom symbols/footprints
+  libs/                  # generated custom symbols
 mechanical/
   enclosure/             # ATX-bay enclosure (STEP/STL)
 firmware/

@@ -1,0 +1,6 @@
+{
+  "meta": { "filename": "tinyups.kicad_pro", "version": 1 },
+  "board": {},
+  "libraries": { "pinned_footprint_libs": [], "pinned_symbol_libs": [] },
+  "schematic": {}
+}

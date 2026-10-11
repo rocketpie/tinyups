@@ -13,6 +13,7 @@ shutdown signal go to the host over USB.
 - [Design goals / requirements](docs/requirements.md)
 - [Architecture](docs/architecture.md)
 - [Component selection & BOM](docs/bom.md)
+- [Schematic (generated)](hardware/README.md)
 - [Test plan](docs/test-plan.md)
 - [Toolchain status](docs/toolchain.md)
 - [Decision records](docs/decisions/)
