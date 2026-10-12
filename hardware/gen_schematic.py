@@ -681,7 +681,11 @@ def build() -> Schematic:
 
 
 if __name__ == "__main__":
+    from kiutils.items.common import TitleBlock
     sch = build()
+    sch.paper.paperSize = "A1"          # the flat schematic spans ~560 x 360 mm
+    sch.titleBlock = TitleBlock(title="TinyUPS", date="2026-10-12",
+                                revision="0.1", company="TinyUPS")
     out = os.path.join(HERE, "tinyups.kicad_sch")
     sch.to_file(out)
     # also emit the custom symbol library so the project's symbol table resolves
