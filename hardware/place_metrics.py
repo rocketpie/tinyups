@@ -27,7 +27,7 @@ DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
 # nets where copper length/loop area matters most (weight them)
 POWER_NETS = {
     "GND", "PGND", "+12V_IN", "VIN_SYS", "VBAT", "VOUT12", "SW1", "SW2",
-    "+3V3", "N_CS", "N_ACL", "N_ACN", "VSYS",
+    "SW1_OUT", "SW2_OUT", "+3V3", "N_CS", "N_ACL", "N_ACN", "VSYS",
 }
 POWER_WEIGHT = 6.0
 

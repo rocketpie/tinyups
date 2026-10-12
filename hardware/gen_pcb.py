@@ -194,12 +194,39 @@ def main() -> int:
     for item in loaded:
         by_block.setdefault(ref_block.get(item[0], "X"), []).append(item)
 
+    # Stage 2: decoupling-aware ordering. Within a block, emit each IC followed
+    # by the caps that share a power net with it, so the shelf packs the caps
+    # right next to the IC (short decap distance) before other parts.
+    POWER_NETS = {"+3V3", "VIN_SYS", "VBAT", "VOUT12", "N_DVDD", "+12V_IN",
+                  "N_REG1", "N_REG2", "N_REG18", "VCC", "REGN", "VDDA"}
+    ref_nets: dict[str, set] = {}
+    for (r, _p), nm in pin_net.items():
+        ref_nets.setdefault(r, set()).add(nm.lstrip("/"))
+
+    def order_block(items):
+        by_ref = {it[0]: it for it in items}
+        ics = sorted([r for r in by_ref if r.startswith("U")],
+                     key=lambda r: -by_ref[r][3])
+        caps = sorted([r for r in by_ref if r.startswith("C")],
+                      key=lambda r: -by_ref[r][3])
+        used, out = set(), []
+        for ic in ics:
+            out.append(by_ref[ic]); used.add(ic)
+            icp = ref_nets.get(ic, set()) & POWER_NETS
+            for c in caps:
+                if c not in used and (ref_nets.get(c, set()) & icp):
+                    out.append(by_ref[c]); used.add(c)
+        for it in sorted(items, key=lambda t: -t[3]):
+            if it[0] not in used:
+                out.append(it)
+        return out
+
     # 1) lay out each block in a sub-rectangle, then place blocks on a fixed
     #    3-column grid in signal-flow order (columns sized to the usable width)
     cols = 3
     col_w = (MAX_W - 2 * MARGIN) / cols
     BW = col_w - 4.0
-    block = {b: shelf(items, BW) for b, items in by_block.items()}
+    block = {b: shelf(order_block(items), BW) for b, items in by_block.items()}
     order = [b for b in ("A", "B", "C", "D", "E", "F", "X") if b in block]
     rows = [order[i:i + cols] for i in range(0, len(order), cols)]
     y_off = MARGIN
@@ -252,10 +279,10 @@ def main() -> int:
     board.Add(r)
     bw, bh = x1 - x0, y1 - y0
 
-    # planes: GND on In1.Cu, the main 12 V rail (VIN_SYS) on In2.Cu.
-    # Exported to Specctra as planes, so the autorouter doesn't route them
-    # as tracks (they're the hardest nets to route).
-    for netname, layer in (("GND", pcbnew.In1_Cu), ("VIN_SYS", pcbnew.In2_Cu)):
+    # planes: a solid GND plane on In1.Cu. In2.Cu is left as a signal layer
+    # (a dedicated VIN_SYS plane cost a signal layer and the router perforated
+    # it anyway — see docs). Power is carried as wide traces / pours instead.
+    for netname, layer in (("GND", pcbnew.In1_Cu),):
         net = board.FindNet(netname) or board.FindNet("/" + netname)
         if net is None:
             print("warn: plane net not found:", netname)

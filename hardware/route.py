@@ -25,7 +25,7 @@ import pcbnew
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PCB = os.path.join(HERE, "tinyups.kicad_pcb")
-RULE_NM = os.environ.get("ROUTE_RULE_UM", "130")   # DSN units are um
+RULE_NM = os.environ.get("ROUTE_RULE_UM", "127")   # DSN units are um (0.127 = 5 mil)
 
 
 def main() -> int:

@@ -55,13 +55,13 @@ make netlist && make bom                             # netlist + BOM
   ```
 
   Two things matter for it to converge:
-  1. **Planes.** GND (In1.Cu) and the main 12 V rail VIN_SYS (In2.Cu) are
-     copper zones, exported to the DSN as `plane`s, so the router doesn't
-     have to route those high-fan-out nets as tracks. Filled by
-     `hardware/fill_zones.py`.
-  2. **Rules.** The default 0.2 mm track/clearance cannot escape the
-     0.4 mm-pitch QFN parts (RP2040, BQ25720, LM5176); relaxing to 0.13 mm
-     (5 mil, JLCPCB minimum) lets the router fan them out.
+  1. **Stackup — signal layers.** `F.Cu / In1.Cu=GND plane / In2.Cu=signal /
+     B.Cu=signal`. A dedicated power plane (VIN_SYS on In2) was tried and
+     removed: it cost a signal layer and the router perforated it anyway.
+     Three signal layers + a solid ground is what lets it route at 5 mil.
+  2. **Rules.** 5 mil (0.127 mm), JLCPCB standard. The fine-pitch QFN fanout
+     is the only place that can't meet it with plain traces (via-in-pad is the
+     fix).
 
 - **Note:** `make drc` fails until *every* net is routed (unconnected pads are
   DRC errors). The current placement is automatic and not electrically
@@ -89,6 +89,34 @@ Run it on any board:
 /opt/eda/venv/bin/python hardware/place_metrics.py
 ```
 
+## Routing report
+
+`hardware/routing_report.py` measures the *route* (complements the placement
+metrics): track/via counts, per-layer usage, the **minimum trace width used vs
+a fab rule**, routing completion, and **inter-block vs internal** net counts
+and wirelength.
+
+```sh
+/opt/eda/venv/bin/python hardware/routing_report.py
+FAB_MIN_MM=0.127 /opt/eda/venv/bin/python hardware/routing_report.py
+```
+
+On the current board (4-layer, `F.Cu / GND / signal / signal`):
+
+```
+tracks 1384  vias 290   layers: F.Cu 844, In2.Cu 277, In1.Cu 239, B.Cu 24
+trace width: min 0.063  median 0.127  max 0.127 mm
+fab min 0.127 mm -> FAIL (100 below, all QFN fanout)
+unconnected: 2
+nets 113 (inter-block 10, internal 103); inter-block HPWL 1889 mm, internal 3297 mm
+```
+
+Only **10 inter-block nets** — the floorplan is good (few cross-block nets).
+The 100 sub-standard tracks are **all the fine-pitch QFN fanout** (0.4 mm
+pitch); everything else is 5 mil. To remove them entirely, use **via-in-pad**
+for the three QFNs (a fab option) — otherwise the fanout needs the advanced
+tier.
+
 ## Status
 
 All blocks placed, **footprints assigned to every part**, and **ERC-clean**
@@ -113,18 +141,20 @@ every net is routed (unconnected pads are DRC errors) — see below.
 ## PCB status
 
 `tinyups.kicad_pcb` is generated and **routed**: **4 layers, 122 footprints,
-113 nets, 145 × 138 mm** (inside the ATX bay), ~1630 tracks / ~294 vias.
+113 nets, 145 × 138 mm** (inside the ATX bay), ~1384 tracks / ~290 vias.
 
-- Placement is DRC-clean (no clearance/overlap/edge issues).
-- Routing: **112 of 113 nets** routed by freerouting (planes on In1/In2,
-  JLCPCB 0.09 mm rules).
-- **Remaining `drc` findings (3):** one unrouted status net (`N_PGOOD`), a
-  `VIN_SYS` stub and a dangling via on `N_PGOOD`. These are a few minutes of
-  manual cleanup in the KiCad GUI.
-- Traces use **0.09 mm (3.5 mil)** in places (QFN fanout) → **JLCPCB
-  "advanced"** tier, or widen on a re-route.
+- **Stackup:** `F.Cu / In1.Cu = solid GND plane / In2.Cu = signal / B.Cu =
+  signal` (3 signal layers). A dedicated power plane was tried and removed —
+  it cost a signal layer and the router perforated it (see below).
+- **Placement:** block-aware + decap-aware, DRC-clean.
+- **Routing:** **complete** (freerouting reports 0 unrouted) at **5 mil**
+  rules, thanks to the extra signal layer. Before the stackup change the
+  router stranded nets and needed 3.5 mil.
+- **Remaining `drc`:** 100 `track_width` (all QFN fanout at 3.75/2.5 mil) and
+  2 unconnected GND stubs. Fix = via-in-pad for the QFNs + connect the 2
+  stubs (a few minutes in the GUI).
 
-So `make erc` passes; `make drc` fails only on those 3 items.
+`make erc` passes; `make drc` fails only on those items.
 
 ## Remaining before/with layout
 
