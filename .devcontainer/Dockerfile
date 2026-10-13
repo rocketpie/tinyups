@@ -43,6 +43,12 @@ RUN python3 -m venv --system-site-packages /opt/eda/venv \
 # Put the EDA venv and KiCad CLI on the PATH for everyone.
 ENV PATH="/opt/eda/venv/bin:${PATH}"
 
+# KiCad's stock library-table variables. The GUI sets these itself, but
+# headless `kicad-cli` does not, which makes it fail to resolve footprints
+# (spurious lib_footprint_issues DRC warnings). Keep in sync with the Makefile.
+ENV KICAD9_FOOTPRINT_DIR="/usr/share/kicad/footprints" \
+    KICAD9_SYMBOL_DIR="/usr/share/kicad/symbols"
+
 # freerouting: autorouter for the PCB step (KiCad has no built-in one).
 # Driven by hardware/route.py; needs the JRE installed above.
 RUN mkdir -p /opt/freerouting \

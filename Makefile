@@ -14,6 +14,13 @@ SIMS    ?= sim/*.cir
 KICAD_CLI ?= kicad-cli
 PYTHON    ?= /opt/eda/venv/bin/python
 
+# KiCad's global library tables point at ${KICAD9_FOOTPRINT_DIR}. The KiCad GUI
+# sets it itself, but headless `kicad-cli` does not, so without this DRC cannot
+# resolve the stock footprints and reports ~120 spurious lib_footprint_issues
+# warnings. Set it (overridable from the environment) for reproducible checks.
+export KICAD9_FOOTPRINT_DIR ?= /usr/share/kicad/footprints
+export KICAD9_SYMBOL_DIR    ?= /usr/share/kicad/symbols
+
 .PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg sim test check clean
 
 all: help
