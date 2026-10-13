@@ -1,129 +1,63 @@
 # RESUME — TinyUPS
 
-**Start here in a fresh session.** This is a handoff: what the project is,
-what's done, what's left, and exactly how to continue.
+**Start here in a fresh session.** 
+This is a handoff: what's done, what's left, and exactly how to continue.
 
-## Status at a glance
 
-| Area | State |
-| --- | --- |
-| Schematic | ✅ generated, **ERC-clean** (127 symbols, 115 nets) |
-| Placement | ✅ block-aware + decap-aware, DRC-clean, board 145×138 mm (fits ATX bay) |
-| Routing | ✅ routed (freerouting), **JLCPCB advanced tier** (min 0.095 mm) |
-| DRC | ⚠️ **1 dangling via + 4 unconnected** (see "Open work") |
-| Fabrication | not exported yet |
-| Bench / DVT | not started (test plan exists) |
+**Where we are**
+I'm taking a look around - and i'm obviously not an expert - so help me out here: is +12V_IN connected to a 25A fuse via In2.Cu?
+that looks like a hairline trace
 
-## Key files & how things are generated
+Yes. I traced it — and you're right to flag it: it's a 5 mil hairline carrying the full input current. Here's the exact path:
 
-Everything is scripted and reproducible — **edit the scripts, not the outputs**.
+J1 (XT60 solder-wire, PTH)  pad 1  (35.265, 31.298)
+   → In2.Cu  0.127 mm   (40.383,31.298) → (52.815,43.73)
+   → via (52.815,43.73)
+   → F.Cu    0.127 mm   → F1 pad 1 (53.81, 44.725)     [the 25 A fuse]
 
-| Script | Produces |
-| --- | --- |
-| `hardware/gen_schematic.py` | `hardware/tinyups.kicad_sch` (+ `libs/tinyups.kicad_sym`) |
-| `hardware/gen_pcb.py` | `hardware/tinyups.kicad_pcb` (4-layer, placed, GND plane, nets) |
-| `hardware/fill_zones.py` | fills the copper zones (planes) |
-| `hardware/fanout.py` | *experimental* radial QFN fanout (see progress.md) |
-| `hardware/route.py` | full routing flow (export DSN → freerouting → import → refill) |
-| `hardware/set_sheet.py` | moves board onto the A4 sheet + title block |
-| `hardware/place_metrics.py` | placement metrics (HPWL, decap distance) |
-| `hardware/routing_report.py` | routing metrics (widths, vias, fab tier, completion) |
+Every segment is 0.127 mm (5 mil), and it's mostly on an inner layer.
 
-**Rebuild flow:**
-```sh
-make netlist && make bom            # from the schematic
-/opt/eda/venv/bin/python hardware/gen_schematic.py
-/opt/eda/venv/bin/python hardware/gen_pcb.py
-/opt/eda/venv/bin/python hardware/fill_zones.py
-FREEROUTING_JAR=/opt/freerouting/freerouting.jar \
-    /opt/eda/venv/bin/python hardware/route.py
-/opt/eda/venv/bin/python hardware/set_sheet.py
-```
+Why that's a problem
+Ampacity (IPC-2221, 1 oz copper, 10 °C rise):
+width 	outer layer 	inner layer
+0.127 mm (5 mil) 	~0.54 A 	~0.27 A
+0.20 mm 	~0.74 A 	~0.37 A
 
-**Checks:**
-```sh
-make erc        # schematic ERC (0 violations expected)
-make drc        # PCB DRC (currently 1 + 4 items, see below)
-make test       # pytest toolchain smoke (6/6)
-```
+So that trace is good for well under 1 A, while the input is specified as 12 V / up to ~20 A (requirements.md §, BOM "up to ~20 A (load + charge)"). To carry 20 A at 10 °C rise you'd need roughly 19 mm of 1 oz outer copper (or ~9 mm of 2 oz) 
 
-## Open work — do this next
+Every power net is routed as hairline:
 
-### 1. Finish the last 5 DRC items (manual, ~5 min in the KiCad GUI)
+/+12V_IN   all 6 tracks 0.127    /VBAT    0.095–0.127
+/N_AF      all 12 tracks 0.127   /VOUT12  all 0.127
+/VIN_SYS   0.095–0.127           /VSYS    0.095–0.127
+/SW1, /SW2, /SW1_OUT, /SW2_OUT   all 0.095–0.127
 
-`make drc` reports **1 `via_dangling` + 4 `unconnected_items`**:
-- **3 GND stubs** (short `/GND` tracks not tied to the In1 ground plane)
-- **`ILIM_HIZ`** (U3 pin 6 → R13 pin 1) — the one net freerouting left unrouted
-- **1 dangling via** on `/N_COMP2`
+There is no wide copper anywhere — the only zone on the board is the GND plane on In1. So there are no power pours; the autorouter used the 5 mil minimum for everything.
 
-In Pcbnew: `Inspect → Design Rules Checker → Run DRC`, then click each entry to
-zoom to it:
-- **GND stubs:** select the stub, `Place → Via` (or press **V**) at its dangling
-  end → a GND via to the In1 plane.
-- **`ILIM_HIZ`:** press **X**, click U3 pad 6, route to R13 pad 1 (press **V**
-  to hop to B.Cu, which is nearly empty). 
-- **dangling via:** select and **Del** (net is otherwise connected).
-- Re-run DRC → aim for 0/0, save (**Ctrl+S**).
+Why the checks didn't catch it
+    DRC has no ampacity rule — it checks clearances/width-minimums, not current.
+    routing_report.py only compares against the fab minimum width, so it happily said "advanced PASS".
 
-⚠️ **Caveat:** the PCB is *generated*; re-running `gen_pcb.py`/`route.py` wipes
-manual fixes. Record them, or fold them into the scripts (e.g. move `R13`
-beside `U3` so freerouting routes `ILIM_HIZ` itself).
+One more thing 
 
-### 2. (optional) Get to standard 5 mil
-The only sub-5-mil feature is the **QFN fanout** (0.4 mm pitch: RP2040,
-BQ25720, LM5176, BQ76942). Options: hand-fanout in the GUI, or HDI. We
-**accepted the advanced tier** for now (see `docs/progress.md`).
+F1 is a Fuse_1206_3216Metric — a 3.2 × 1.6 mm SMD fuse. A 1206 package physically can't be a 25 A fuse (they're typically ≤5 A). The BOM already flags the value as "(verify)". So the footprint and the rating disagree too.
+Where this came from
 
-### 3. Then
-- Export fabrication (`make fab`, `make pos`), review gerbers.
-- Start the DVT per `docs/test-plan.md`.
+gen_pcb.py/route.py set the router to the 5 mil minimum and there are no net classes for power
 
-## How to open KiCad (GUI)
+Fixing it is a real design change (needs an ADR + requirement refs), roughly: power net classes with wide widths and/or high-current nets routed as pours/planes stitched with vias (2 oz copper on the outer layers), fix the fuse footprint, and add an ampacity check to the tooling so it can't silently regress.
 
-The dev container now has the **desktop-lite** feature (port 6080):
-1. Open **http://localhost:6080** (noVNC). Password: **`vscode`**.
-2. In that desktop's terminal:
-   ```sh
-   export DISPLAY=:1
-   pcbnew /tinyups/hardware/tinyups.kicad_pcb
-   ```
-   (workspace is bind-mounted at `/tinyups`; also `/workspaces/tinyups`)
+Want me to start with the tooling piece — a power_report.py (or extend routing_report.py) that computes per-net current capacity vs the requirement, so we can quantify every power net before touching the layout? That also gives us the numbers for the ADR.
 
-Or just open the project with KiCad on the host (it's a normal bind mount).
+# Last prompt
+before that, make a change to the fab requirements. we didn't want to go advanced unless required. I think we should try default again and add more tooling. 
+before we make a change, run the power report and add it to progress as baseline (failing).
 
-## Metrics (current — regenerate with the scripts)
+my intuition tells me to make F the 'power path layer' and B GND, leaving In1 and In2 for signalling.
+we put the external connectors first. xt60 input center 'top' / back, xt30 and usb 'bottom' / front. usb left, xt30 center.
+then we lay the power path, 'straight across the board from back (input) to front (output)' 
 
-```
-placement: total HPWL 4978 mm · weighted 12274 mm · power 1459 mm · decap 21.2 mm
-routing:   1315 tracks · 288 vias · min trace 0.095 mm
-           standard 0.127 -> FAIL (78, all QFN fanout) | advanced 0.09 -> PASS
-           inter-block 8 nets, internal 107
-gates:     ERC 0 · test 6/6 · DRC 1 + 4
-```
+important components first: connector, fuse, whatever lm5069 does, then a wide pour down the board to the buck-boost output. branching right twice: once in the back half to the charger, once in the front half to the bms output (or do both connect at the same time?).
+then we can put the rp2040 on the left side of the board and run traces to wherever we need through In1 and 2. 
 
-## Toolchain (all in the dev container)
-
-`kicad-cli` 9.0.8 · KiBot 1.9.1 · KiUtils · ngspice 45.2 · `pypdf` ·
-Java + **freerouting** (`/opt/freerouting/freerouting.jar`, env `FREEROUTING_JAR`) ·
-pytest · sigrok-cli. Python venv: `/opt/eda/venv` (on `PATH`).
-Version detail: `docs/toolchain.md`.
-
-## Gotchas learned
-
-- KiCad has **no autorouter** and `kicad-cli` can't build a PCB from a netlist
-  — use `pcbnew` Python + freerouting (Specctra DSN/SES).
-- freerouting runs headless only with `{ "gui": { "enabled": false } }` in
-  `freerouting.json` (the native `freerouting-cli` build crashed).
-- The board must sit **inside the sheet border** (`set_sheet.py`).
-- `SW1`/`SW2` were merged between charger and output (caught by metrics) —
-  fixed to `SW1_OUT`/`SW2_OUT`.
-- A dedicated power plane hurt; `F.Cu / GND / signal / signal` routes at 5 mil.
-- `ZONE_FILLER` on a freshly-built in-memory board segfaults — fill from a
-  loaded board (`fill_zones.py`).
-
-**where we left off**
-> That's a ~5-minute manual pass in the KiCad GUI for someone at the keyboard 
-walk me through.
-any way i can access kicad in the container?
-
-(desktop-lite add, container restart, here) 
+how do we translate this strategy into the tooling?
