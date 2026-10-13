@@ -1,11 +1,12 @@
 (version 1)
 
-# TinyUPS custom design rules — JLCPCB advanced capabilities (3.5 mil).
-# These are minimums; the board's own settings are equal or stricter, so
-# adding this file does not create violations.
+# TinyUPS custom design rules — JLCPCB **standard** capabilities (5 mil).
+# Target the default tier; the advanced 3.5 mil tier is only for a documented
+# geometry that cannot meet 5 mil (see NFR-9). These are minimums; the board's
+# own settings are equal or stricter, so adding this file creates no violations.
 
-(rule "JLCPCB min track width" (constraint track_width (min 0.09mm)))
-(rule "JLCPCB min clearance" (constraint clearance (min 0.09mm)))
-(rule "JLCPCB min via diameter" (constraint via_diameter (min 0.45mm)))
-(rule "JLCPCB min via hole" (constraint hole_size (min 0.2mm)))
-(rule "JLCPCB min annular ring" (constraint annular_width (min 0.09mm)))
+(rule "JLCPCB min track width" (constraint track_width (min 0.127mm)))
+(rule "JLCPCB min clearance" (constraint clearance (min 0.127mm)))
+(rule "JLCPCB min via diameter" (constraint via_diameter (min 0.6mm)))
+(rule "JLCPCB min via hole" (constraint hole_size (min 0.3mm)))
+(rule "JLCPCB min annular ring" (constraint annular_width (min 0.13mm)))

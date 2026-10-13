@@ -59,7 +59,7 @@ The module has four external interfaces:
 | Connectors | **XT60 input** on panel, **XT30 output** → 5.5×2.5 mm barrel adapter to the picoPSU | Spot-welded pack + harness. |
 | Cooling | **80 mm fan**, on-board 4-pin header (12 V, PWM, tach) | Temperature-controlled by the MCU. |
 | Ambient | **30–35 °C** inside the server | Design margin above this. |
-| Prototype | **JLCPCB, 5 pcs, EMC-ready** | Rules in `.kicad_dru`. |
+| Prototype | **JLCPCB, 5 pcs, EMC-ready** | Rules in `.kicad_dru`. Default to the **standard 5 mil** tier. |
 
 ### 3.1 Key components (see ADR-0006 and `docs/datasheets/`)
 
@@ -138,7 +138,10 @@ The module has four external interfaces:
   creepage/clearance, temperature monitoring on the cells.
 - **NFR-8 Cost.** Prototype unit cost `TBD`.
 - **NFR-9 Manufacturing.** JLCPCB, 5 boards, ≥ 4 layers; DRU aligned to the
-  fab's capabilities.
+  fab's capabilities. **Target the standard 5 mil tier** (min trace/clearance
+  0.127 mm) by default; only step up to the advanced 3.5 mil tier where a
+  documented geometry genuinely cannot meet 5 mil. A trace must also carry its
+  net's **design current** (see `hardware/power_report.py`).
 - **NFR-10 Serviceability.** Pack is spot-welded with a lead harness; the board
   is replaceable and re-flashable over USB (RP2040 UF2).
 - **NFR-11 Measurement accuracy.** Voltage/current/SOC accuracy `TBD` (see test

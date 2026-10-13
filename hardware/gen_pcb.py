@@ -117,10 +117,10 @@ def main() -> int:
     board = pcbnew.CreateEmptyBoard()
     board.SetCopperLayerCount(4)
 
-    # design rules (also feeds the Specctra export)
+    # design rules (also feeds the Specctra export): JLCPCB standard 5 mil.
     ds = board.GetDesignSettings()
-    ds.m_TrackMinWidth = pcbnew.FromMM(0.2)
-    ds.m_MinClearance = pcbnew.FromMM(0.2)
+    ds.m_TrackMinWidth = pcbnew.FromMM(0.127)
+    ds.m_MinClearance = pcbnew.FromMM(0.127)
     ds.m_ViasMinSize = pcbnew.FromMM(0.6)
     ds.m_ViasMinDrill = pcbnew.FromMM(0.3)
     try:

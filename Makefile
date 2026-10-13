@@ -21,7 +21,7 @@ PYTHON    ?= /opt/eda/venv/bin/python
 export KICAD9_FOOTPRINT_DIR ?= /usr/share/kicad/footprints
 export KICAD9_SYMBOL_DIR    ?= /usr/share/kicad/symbols
 
-.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg sim test check clean
+.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg sim test power check clean
 
 all: help
 
@@ -93,6 +93,11 @@ svg: | $(OUT) ## Export schematic + PCB SVGs for review
 		--layers F.Cu,B.Cu,F.Silkscreen,B.Silkscreen,F.Mask,B.Mask,Edge.Cuts \
 		--output $(OUT)/pcb-svg/ $(PCB)
 
+# --- power -----------------------------------------------------------------
+power: | $(REPORTS) ## Power / ampacity check (design current per net)
+	$(call require,$(PCB))
+	@set -o pipefail; $(PYTHON) hardware/power_report.py $(PCB) | tee $(REPORTS)/power.rpt
+
 # --- simulation ------------------------------------------------------------
 sim: ## Run all ngspice simulations in sim/
 	@shopt -s nullglob; files=($(SIMS)); \
@@ -107,7 +112,7 @@ test: ## Run pytest bring-up / acceptance tests
 	$(PYTHON) -m pytest tests/ -v
 
 # --- aggregate -------------------------------------------------------------
-check: erc drc netlist bom ## Run all automated design checks (CI entrypoint)
+check: erc drc netlist bom power ## Run all automated design checks (CI entrypoint)
 	@echo "all checks passed"
 
 clean: ## Remove build artifacts

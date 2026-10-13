@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Route the PCB with freerouting (KiCad has no built-in autorouter).
 
-Flow: export Specctra DSN -> relax the design rules to JLCPCB minimums ->
-route with freerouting -> import the session -> refill zones.
+Flow: export Specctra DSN -> relax the design rules to the JLCPCB standard
+5 mil (0.127 mm) minimums -> route with freerouting -> import the session ->
+refill zones.
 
-Why relax the rules: the default 0.2 mm track/clearance cannot escape the
-0.4 mm-pitch QFN parts (RP2040, BQ25720, LM5176), so the autorouter strands
-those nets. 0.13 mm (= 5 mil, the JLCPCB minimum) fits between the pads.
+Why relax the rules: the board default is looser, but 0.127 mm (= 5 mil, the
+JLCPCB **standard** tier minimum) is what we actually target.  The advanced
+3.5 mil tier is only for a documented geometry that cannot meet 5 mil (NFR-9).
 
 Requires Java + the freerouting jar (``FREEROUTING_JAR``). Example:
 
