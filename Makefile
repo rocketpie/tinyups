@@ -20,8 +20,13 @@ PYTHON    ?= /opt/eda/venv/bin/python
 # warnings. Set it (overridable from the environment) for reproducible checks.
 export KICAD9_FOOTPRINT_DIR ?= /usr/share/kicad/footprints
 export KICAD9_SYMBOL_DIR    ?= /usr/share/kicad/symbols
+export KICAD9_3DMODEL_DIR   ?= /usr/share/kicad/3dmodels
 
-.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg sim test power check clean
+# 3D render camera (override on the command line, e.g. RENDER_ROTATE=-30,0,45)
+RENDER_ROTATE ?= -15,0,-5
+RENDER_ZOOM   ?= 0.95
+
+.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power check clean
 
 all: help
 
@@ -80,9 +85,12 @@ step: | $(OUT) ## Export 3D STEP model
 	$(call require,$(PCB))
 	$(KICAD_CLI) pcb export step --force --output $(OUT)/$(NAME).step $(PCB)
 
-render: | $(OUT) ## Export PCB render (PNG)
+render: | $(OUT) ## Export PCB 3D render (isometric PNG, component bodies)
 	$(call require,$(PCB))
-	$(KICAD_CLI) pcb render --output $(OUT)/$(NAME).png $(PCB)
+	$(KICAD_CLI) pcb render --side top --perspective --quality high \
+		--rotate $(RENDER_ROTATE) --zoom $(RENDER_ZOOM) \
+		--width 2000 --height 1400 \
+		--output $(OUT)/$(NAME).png $(PCB)
 
 svg: | $(OUT) ## Export schematic + PCB SVGs for review
 	$(call require,$(SCH))
@@ -92,6 +100,16 @@ svg: | $(OUT) ## Export schematic + PCB SVGs for review
 	$(KICAD_CLI) pcb export svg --mode-multi \
 		--layers F.Cu,B.Cu,F.Silkscreen,B.Silkscreen,F.Mask,B.Mask,Edge.Cuts \
 		--output $(OUT)/pcb-svg/ $(PCB)
+
+# 2D top view with the power-handling components outlined in RED silkscreen
+# (hardware/power_silk.py draws the outlines; this colours them red).
+silk: | $(OUT) ## 2D view with red power-silkscreen markers
+	$(call require,$(PCB))
+	@mkdir -p ~/.config/kicad/9.0/colors
+	@cp hardware/themes/tinyups-red.json ~/.config/kicad/9.0/colors/
+	$(KICAD_CLI) pcb export svg --mode-single \
+		--layers F.Cu,F.Silkscreen,Edge.Cuts --theme tinyups-red \
+		--output $(OUT)/$(NAME)-power.svg $(PCB)
 
 # --- power -----------------------------------------------------------------
 power: | $(REPORTS) ## Power / ampacity check (design current per net)

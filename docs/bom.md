@@ -65,7 +65,9 @@
 | Ref | Value / part | Spec | Notes |
 | --- | --- | --- | --- |
 | R_sns_pack | 1 mΩ | 1 %, ≥ 1 W, low TCR | coulomb counter (0.29 W @ 17 A); e.g. Vishay WSLP2726 |
-| Q_chg, Q_dsg | 2 × N-FET, 40 V | RDS(on) ≤ 2 mΩ, ≥ 30 A | high-side protection FETs **(verify)** |
+| Q_chg, Q_dsg | 2 × N-FET, 40 V | RDS(on) ≤ 2 mΩ, ≥ 30 A | **high-side** protection FETs (common source), gate driven by the AFE charge pump (CP1) **(verify)** |
+| J6 | Pack terminal | 2-pin, ≥ 30 A | PACK+ / PACK−, high-current harness |
+| J7 | Cell-sense header | 5-pin 2.54 mm | CELL0…CELL4 Kelvin taps |
 | R_bal | 100 Ω / cell | | passive balance ≈ 30 mA; keep total die power within limit (design choice) |
 | R_cell, C_cell | 100 Ω + 100 nF / cell | | cell input RC filter |
 | NTC2, NTC3 | 10 kΩ B = 3435 | | cell temperature sensing |

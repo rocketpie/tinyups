@@ -23,6 +23,8 @@ import pcbnew
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
+sys.path.insert(0, HERE)
+from power_map import marked_refs  # noqa: E402  (needs HERE on sys.path)
 
 # nets where copper length/loop area matters most (weight them)
 POWER_NETS = {
@@ -104,6 +106,29 @@ def main() -> int:
     if dists:
         print(f"  decap distance:    mean {sum(dists)/len(dists):5.1f} mm, "
               f"max {max(dists):5.1f} mm  ({len(dists)} supply pins)")
+
+    # power-path score: are the power-handling parts on the centreline, and do
+    # they run straight in the flow direction (back -> front = increasing y)?
+    refs = marked_refs(board)
+    pts = []
+    for fp in board.GetFootprints():
+        if fp.GetReference() in refs:
+            p = fp.GetPosition()
+            pts.append((mm(p.x), mm(p.y), fp.GetReference()))
+    if pts:
+        bb = board.GetBoardEdgesBoundingBox()
+        cx = mm(bb.GetCenter().x)
+        dx = [abs(x - cx) for x, _y, _r in pts]
+        flow_pts = sorted(pts, key=lambda t: t[1])
+        flow = sum(((flow_pts[i][0] - flow_pts[i - 1][0]) ** 2 +
+                    (flow_pts[i][1] - flow_pts[i - 1][1]) ** 2) ** 0.5
+                   for i in range(1, len(flow_pts)))
+        span = flow_pts[-1][1] - flow_pts[0][1]
+        print(f"  power parts:       {len(pts)}  (centreline x={cx:.0f} mm)")
+        print(f"  |dx| to centre:    mean {sum(dx)/len(dx):5.1f} mm, "
+              f"max {max(dx):5.1f} mm   (lower = closer to the power path)")
+        print(f"  flow length:       {flow:6.1f} mm over span {span:.0f} mm "
+              f"-> straightness {flow/span:.2f}  (1.0 = dead straight)")
     return 0
 
 

@@ -397,8 +397,8 @@ def build() -> Schematic:
     N("U2", "3", "IN_VALID")  # EN  (from input-valid detect; low = pack off)
     N("U2", "1", "N_VCAP")    # VCAP
     N("U2", "5", "N_PGATE")   # GATE
-    N("U2", "4", "N_CATH")    # CATHODE (to FET drain)
-    N("Q2", "1", "N_PGATE"); N("Q2", "3", "N_CATH"); N("Q2", "2", "VBAT")
+    N("U2", "4", "VIN_SYS")   # CATHODE -> converter input rail (pack ORs in)
+    N("Q2", "1", "N_PGATE"); N("Q2", "3", "VIN_SYS"); N("Q2", "2", "VBAT")
     N("C2", "1", "N_VCAP"); N("C2", "2", "VBAT")
     N("C3", "1", "VIN_SYS"); N("C3", "2", "GND")
     N("C4", "1", "VIN_SYS"); N("C4", "2", "GND")
@@ -557,6 +557,15 @@ def build() -> Schematic:
     b.place(std("Device", "R"), "R29", "100k", 508.0, 198.12)  # ALERT pull-up
     b.place(std("Device", "R"), "R30", "100k", 533.4, 198.12)  # RST_SHUT pull-up
 
+    # pack interface: high-current PACK+/PACK- terminal + cell-sense header
+    b.place(std("Connector_Generic", "Conn_01x02"), "J6", "PACK", 558.8, 96.52,
+            fp="Connector_Wire:SolderWire-2.5sqmm_1x02_P8.8mm_D2.4mm_OD4.4mm")
+    b.place(std("Connector_Generic", "Conn_01x05"), "J7", "CELLS", 584.2, 96.52,
+            fp="Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical")
+    N("J6", "1", "PACK+"); N("J6", "2", "CELL0")
+    for _i in range(5):
+        N("J7", str(_i + 1), f"CELL{_i}")
+
     # cell taps (external 4S pack) + input RC filters
     for _i in range(5):
         N(f"Rf{_i}", "1", f"CELL{_i}"); N(f"Rf{_i}", "2", f"VC{_i}")
@@ -575,16 +584,17 @@ def build() -> Schematic:
     N("U5", "24", "N_REG18"); N("C19", "1", "N_REG18")
     N("U5", "34", "N_REG2"); N("C20", "1", "N_REG2")
     N("U5", "35", "N_REG1"); N("C21", "1", "N_REG1")
-    N("U5", "36", "VBAT"); N("C22", "1", "VBAT")
+    N("U5", "36", "PACK+"); N("C22", "1", "PACK+")
     N("U5", "46", "N_CP1"); N("C23", "1", "N_CP1")
     N("U5", "25", "N_ALERT"); N("R29", "1", "N_ALERT")
     N("U5", "33", "N_RST"); N("R30", "1", "N_RST")
     N("U5", "26", "I2C_SCL"); N("U5", "27", "I2C_SDA")
-    N("U5", "47", "VBAT"); N("U5", "43", "N_DSG"); N("Q12", "1", "N_DSG")
+    N("U5", "47", "PACK+"); N("U5", "43", "N_DSG"); N("Q12", "1", "N_DSG")
     N("U5", "45", "N_CHG"); N("Q11", "1", "N_CHG")
-    N("Q11", "3", "VBAT"); N("Q12", "2", "VBAT")
-    N("Q11", "2", "N_PACKMID"); N("Q12", "3", "N_PACKMID")
-    N("C23", "2", "VBAT"); N("R29", "2", "+3V3")
+    # high-side, common-source protection FETs: PACK+ -> Q11 -> mid -> Q12 -> VBAT
+    N("Q11", "3", "PACK+"); N("Q12", "3", "VBAT")
+    N("Q11", "2", "N_PACKMID"); N("Q12", "2", "N_PACKMID")
+    N("C23", "2", "PACK+"); N("R29", "2", "+3V3")
     for _c in ("C19", "C20", "C21", "C22"):
         N(_c, "2", "GND")
     for _r in ("R26", "R27", "R28", "R30"):

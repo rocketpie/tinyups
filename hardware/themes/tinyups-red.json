@@ -1,0 +1,11 @@
+{
+  "meta": { "version": 1 },
+  "board": {
+    "f_silks": "rgb(255, 0, 0)",
+    "b_silks": "rgb(255, 0, 0)"
+  },
+  "3d_viewer": {
+    "silkscreen_top": "rgb(255, 0, 0)",
+    "silkscreen_bottom": "rgb(255, 0, 0)"
+  }
+}

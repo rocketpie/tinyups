@@ -14,14 +14,23 @@ RUN ln -sf /home/vscode/.opencode/bin/opencode /usr/local/bin/opencode
 ENV DEBIAN_FRONTEND=noninteractive
 
 # KiCad 9 provides `kicad-cli` for headless ERC/DRC/export.
-# kicad-libraries bundles symbols, footprints and 3D models (~1 GB).
+# kicad-libraries = symbols + footprints.  kicad-packages3d = the component 3D
+# models (~4.7 GB unpacked) needed by `kicad-cli pcb render` / STEP export with
+# bodies — NOT bundled in kicad-libraries.
 RUN apt-get update \
     && apt-get install -y \
         python3 python3-pip python3-venv pipx python3-wxgtk4.0 \
         ngspice \
         sigrok-cli \
-        kicad kicad-libraries \
+        kicad kicad-libraries kicad-packages3d \
         default-jre-headless \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# GUI-debugging helpers: xwd + ImageMagick to screenshot the noVNC desktop
+# (used to inspect KiCad dialogs during agent sessions). Small, optional.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends x11-apps imagemagick \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -47,7 +56,8 @@ ENV PATH="/opt/eda/venv/bin:${PATH}"
 # headless `kicad-cli` does not, which makes it fail to resolve footprints
 # (spurious lib_footprint_issues DRC warnings). Keep in sync with the Makefile.
 ENV KICAD9_FOOTPRINT_DIR="/usr/share/kicad/footprints" \
-    KICAD9_SYMBOL_DIR="/usr/share/kicad/symbols"
+    KICAD9_SYMBOL_DIR="/usr/share/kicad/symbols" \
+    KICAD9_3DMODEL_DIR="/usr/share/kicad/3dmodels"
 
 # freerouting: autorouter for the PCB step (KiCad has no built-in one).
 # Driven by hardware/route.py; needs the JRE installed above.

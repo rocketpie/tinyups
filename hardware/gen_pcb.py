@@ -26,8 +26,31 @@ OUT = os.path.join(HERE, "tinyups.kicad_pcb")
 FP_ROOT = "/usr/share/kicad/footprints"
 
 MARGIN = 3.0          # mm board margin around placement
-GAP = 2.5             # mm gap between footprints
+GAP = 1.5             # mm gap between footprints
 MAX_W, MAX_H = 150.0, 140.0   # ATX-bay cap (150 x 140)
+
+# ---- floorplan (power-path-first) ----------------------------------------- #
+# Back (top, small y) = input; front (bottom) = output.  A vertical power
+# corridor down the centre carries the power path (blocks A+B+D); the charger
+# (C) and the battery AFE (E) branch off to the right; the MCU (F) sits on the
+# left.  Connectors are anchored on the edges first (see ANCHORS).
+BOARD_W, BOARD_H = 150.0, 140.0
+CORRIDOR_HALF = 25.0                  # half-width of the power corridor
+ANCHORS = {                           # ref -> (x, y) centre, mm
+    "J1": (BOARD_W / 2, 11.0),               # XT60 input   — back centre
+    "J2": (BOARD_W / 2, BOARD_H - 11.0),     # XT30 output  — front centre
+    "J3": (18.0, BOARD_H - 11.0),            # USB header   — front left
+    "J4": (38.0, BOARD_H - 11.0),            # SWD header   — front, left of centre
+    "J5": (BOARD_W - 14.0, BOARD_H - 11.0),  # fan header   — front right
+    "J6": (BOARD_W - 40.0, BOARD_H - 12.0),  # PACK terminal — front
+    "J7": (BOARD_W - 62.0, BOARD_H - 15.0),  # cell sense    — front
+}
+ZONES = {                             # group -> (x0, y0, x1, y1) mm
+    "P": (42.0, 20.0, 94.0, 122.0),                   # power path A+B+D
+    "C": (96.0, 20.0, BOARD_W - 4.0, 82.0),
+    "E": (96.0, 82.0, BOARD_W - 4.0, 122.0),
+    "F": (4.0, 20.0, 40.0, 118.0),
+}
 
 
 # --------------------------------------------------------------------------- #
@@ -164,16 +187,18 @@ def main() -> int:
               "C13", "C14", "C15", "C16", "C17", "C18", "J2"},
         "E": {"U5", "Q11", "Q12", "R25", "Rf0", "Rf1", "Rf2", "Rf3", "Rf4",
               "Cf0", "Cf1", "Cf2", "Cf3", "Cf4", "C19", "C20", "C21", "C22",
-              "C23", "R26", "R27", "R28", "R29", "R30", "R45", "R46"},
+              "C23", "R26", "R27", "R28", "R29", "R30", "R45", "R46",
+              "J6", "J7"},
         "F": {"U6", "U7", "U8", "J3", "J4", "J5", "Y1", "R31", "R36", "R37",
               "R38", "R32", "R33", "R34", "R35", "D2", "D3", "D4", "D5",
               "C24", "C25", "C26", "C27", "C28"},
     }
     ref_block = {r: b for b, refs in BLOCKS.items() for r in refs}
 
-    def shelf(items, maxw, gap=GAP):
+    def shelf(items, maxw, gap=GAP, sort=True):
         """pack (ref, fp, w, h) into rows; return placed [(ref, fp, cx, cy)] + size."""
-        items = sorted(items, key=lambda t: -t[3])
+        if sort:
+            items = sorted(items, key=lambda t: -t[3])
         x = y = 0.0
         row_h = uw = uh = 0.0
         out = []
@@ -221,29 +246,42 @@ def main() -> int:
                 out.append(it)
         return out
 
-    # 1) lay out each block in a sub-rectangle, then place blocks on a fixed
-    #    3-column grid in signal-flow order (columns sized to the usable width)
-    cols = 3
-    col_w = (MAX_W - 2 * MARGIN) / cols
-    BW = col_w - 4.0
-    block = {b: shelf(order_block(items), BW) for b, items in by_block.items()}
-    order = [b for b in ("A", "B", "C", "D", "E", "F", "X") if b in block]
-    rows = [order[i:i + cols] for i in range(0, len(order), cols)]
-    y_off = MARGIN
-    used_w = 0.0
-    for rowblocks in rows:
-        row_h = 0.0
-        for c_i, b in enumerate(rowblocks):
-            placed, bw, bh = block[b]
-            x_off = MARGIN + c_i * col_w
-            for ref, fp, cx, cy in placed:
-                fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(x_off + cx),
-                                               pcbnew.FromMM(y_off + cy)))
-                board.Add(fp)
-            used_w = max(used_w, x_off + bw)
-            row_h = max(row_h, bh)
-        y_off += row_h + GAP
-    used_h = y_off - GAP
+    # ---- floorplan placement (power-path-first) --------------------------- #
+    items_by_ref = {it[0]: it for it in loaded}
+
+    def group_items(refs):
+        return order_block([items_by_ref[r] for r in refs
+                            if r in items_by_ref and r not in ANCHORS])
+
+    # spine order for the power group: input protection -> priority -> converter
+    power_items = (group_items(BLOCKS["A"]) + group_items(BLOCKS["B"])
+                   + group_items(BLOCKS["D"]))
+    groups = {
+        "P": power_items,
+        "C": group_items(BLOCKS["C"]),
+        "E": group_items(BLOCKS["E"]),
+        "F": group_items(BLOCKS["F"]),
+    }
+
+    for gname, gitems in groups.items():
+        zx0, zy0, zx1, zy1 = ZONES[gname]
+        placed, bw, bh = shelf(gitems, zx1 - zx0 - GAP, sort=(gname != "P"))
+        for ref, fp, cx, cy in placed:
+            fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(zx0 + cx),
+                                           pcbnew.FromMM(zy0 + cy)))
+            board.Add(fp)
+        if zx0 + bw > zx1 or zy0 + bh > zy1:
+            print(f"  WARNING: group {gname} overflows its zone "
+                  f"(needs {bw:.1f}x{bh:.1f} mm, zone "
+                  f"{zx1 - zx0:.1f}x{zy1 - zy0:.1f} mm)")
+
+    # connectors: anchored on the edges, placed first
+    for ref, (ax, ay) in ANCHORS.items():
+        it = items_by_ref.get(ref)
+        if it is None:
+            continue
+        it[1].SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(ax), pcbnew.FromMM(ay)))
+        board.Add(it[1])
 
     # nets -> pads
     netcache = {}
@@ -259,17 +297,14 @@ def main() -> int:
                 netcache[name] = n
             pad.SetNet(netcache[name])
 
-    # outline = union of footprint bboxes + margin (keeps edge clearance)
-    x0 = y0 = 1e18
-    x1 = y1 = -1e18
+    # outline = the fixed floorplan board (0,0)-(BOARD_W,BOARD_H)
+    x0, y0, x1, y1 = 0.0, 0.0, BOARD_W, BOARD_H
     for fp in board.GetFootprints():
-        bb = fp.GetBoundingBox()
-        x0 = min(x0, bb.GetX()); y0 = min(y0, bb.GetY())
-        x1 = max(x1, bb.GetRight()); y1 = max(y1, bb.GetBottom())
-    x0 = pcbnew.ToMM(x0) - MARGIN
-    y0 = pcbnew.ToMM(y0) - MARGIN
-    x1 = pcbnew.ToMM(x1) + MARGIN
-    y1 = pcbnew.ToMM(y1) + MARGIN
+        bb = fp.GetBoundingBox(False, False)          # body only, ignore text
+        if (pcbnew.ToMM(bb.GetX()) < x0 or pcbnew.ToMM(bb.GetY()) < y0
+                or pcbnew.ToMM(bb.GetRight()) > x1
+                or pcbnew.ToMM(bb.GetBottom()) > y1):
+            print(f"  WARNING: {fp.GetReference()} extends past the board edge")
     r = pcbnew.PCB_SHAPE(board)
     r.SetShape(pcbnew.SHAPE_T_RECT)
     r.SetStart(pcbnew.VECTOR2I(pcbnew.FromMM(x0), pcbnew.FromMM(y0)))

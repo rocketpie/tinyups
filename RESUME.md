@@ -1,19 +1,50 @@
 # RESUME — TinyUPS
 
-**Start here in a fresh session.** This is a handoff: what's done, what's left, and exactly how to continue.
+**Start here in a fresh session.** Handoff: what the project is, what we found
+this session, the plan, and how to continue.
+
+## What it is
+
+TinyUPS — a compact 12 V DC UPS for mini-PCs, fed by an external 12 V adapter
+and a **picoPSU**. A 4S1P LiFePO₄ pack (Topband 33138-HE, 15 Ah) keeps the
+machine running when mains drops and recharges when it returns. Fits an ATX PSU
+bay. Status + shutdown signalling over USB (CDC + HID-PDC). The deliverable of
+this repo is the **PCB**.
+
+Authoritative docs: `docs/requirements.md` (FR/NFR/IF), `docs/architecture.md`,
+`docs/bom.md`, `docs/progress.md` (metrics log), `docs/decisions/0001…0008`,
+`docs/test-plan.md`, `docs/datasheets/`.
 
 ## Status at a glance
 
 | Area | State |
 | --- | --- |
 | Schematic | ✅ generated, **ERC-clean** (127 symbols, 115 nets) |
-| Placement | ✅ block-aware + decap-aware, board 145×138 mm (fits ATX bay) |
-| Routing | ✅ routed (freerouting); **does not yet meet standard 5 mil** |
-| DRC (advanced rules) | ✅ **0 / 0** after the manual pass (see below) |
-| DRC (**standard 5 mil**) | ⚠️ **524** (446 clearance + 78 width) — the new target |
-| Power / ampacity | ❌ **10/10 power nets FAIL** (`make power`) — see "Discovery" |
+| Placement | 🔄 **Stage 1 power-path floorplan** — connectors anchored + centre power corridor, board 150×140 mm |
+| Routing | ⬜ not routed — rebuilding (old advanced-tier route superseded) |
+| Power / ampacity | ❌ **10/10 nets FAIL** (`make power`) — baseline; pours not added yet |
+| DRC (standard 5 mil) | ⬜ pending re-route (old board showed 524 = 446 clearance + 78 width) |
 | Fabrication | not exported yet |
 | Bench / DVT | not started (test plan exists) |
+
+**Progress this session:** Stage 1 (floorplan) done — `gen_pcb.py` now anchors the
+connectors and lays the power spine J1→A→B→D→J2 down the centre; placement is
+geometry-clean and decap improved to 17.3 mm. `make render` produces an
+isometric 3D PNG with component bodies (`build/tinyups.png`).
+
+**Pack path fixed (Option A, high-side).** The AFE protection FETs were shorted
+across `VBAT` (`N_PACKMID` dead-end) and the ideal-diode output `N_CATH` went
+nowhere — the pack could not feed the system. Now:
+`PACK+ → Q11 → N_PACKMID → Q12 → VBAT` (common source), `PACK− → CELL0 → R25 →
+GND`, AFE supply from `PACK+` (pre-FET), and `N_CATH → VIN_SYS`. Added a 2-pin
+high-current **PACK** terminal (J6) and a 5-pin **CELLS** sense header (J7).
+Board is now 124 footprints; ERC 0.
+
+**Power tooling added:** `power_spec.py` (net currents/voltages), `power_map.py`
+(per-component power map → `build/power-map.csv`; classifies series ≥ 1 A,
+cap ripple ≥ 1 A, or ≥ 1 W), `power_silk.py` (marks power parts on
+F.Silkscreen), `make power` / `make silk`, and a **power-path placement score**
+in `place_metrics.py` (mean distance to centreline + flow straightness).
 
 ## Discovery this session (the important part)
 

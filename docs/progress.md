@@ -31,6 +31,14 @@ kicad-cli pcb drc --severity-all --output reports/drc.rpt hardware/tinyups.kicad
 | 4 | + connector padding, margin 3 mm | 5188 | 13461 | 1654 | 18.2 | 65.5 | DRC-clean placement |
 | 5 | + decap-aware ordering + SW1/SW2 fix | 4978 | 12274 | 1459 | 21.2 | 65.5 | nets 115 |
 | 6 | decap tightening (IC+caps group packing) | 6583 | 14199 | 1523 | 16.2 | 48.5 | **rejected** — board 146 mm tall, HPWL much worse |
+| 7 | power-path floorplan (anchors + corridor) | 5942 | 12718 | 1355 | 17.3 | 48.9 | **Stage 1** — connectors anchored, power spine J1→A→B→D→J2, board 150×140 |
+
+Rows 1–5 are from earlier runs in this project's history. Row 7 is the new
+power-path-first floorplan (`gen_pcb.py`): connectors anchored on the edges
+(J1 XT60 back-centre, J2 XT30 front-centre, J3/J4 front-left, J5 front-right),
+a vertical power corridor down the centre carries blocks A+B+D in spine order,
+charger (C) and AFE (E) branch right, MCU (F) on the left. Placement is
+geometry-clean (0 courtyard/clearance); decap improved to 17.3 mm.
 
 Rows 1–5 are from earlier runs in this project's history.
 
@@ -62,6 +70,24 @@ Baseline detail (state 1): `+12V_IN` XT60 → 25 A fuse is a single 0.127 mm
 Every power net is 0.095–0.127 mm; there is **no power pour anywhere** (the
 only zone is the GND plane). Worst case ≈ **46× short**. DRC cannot see this
 (no ampacity rule), which is why it slipped through.
+
+### Power-path placement score (rows = placement)
+
+`power_map.py` classifies each part (series element ≥ 1 A, capacitor ≥ 1 A
+ripple, or ≥ 1 W dissipation) → `build/power-map.csv`. `place_metrics.py` then
+scores where those parts sit relative to the centreline (the intended power
+path, x = board centre) and how straight they run back→front.
+
+| # | Placement | power parts | mean \|dx\| to centre | max \|dx\| | straightness | Notes |
+| - | --------- | ----------: | --------------------: | ---------: | -----------: | ----- |
+| 1 | block-aware shelf-pack | 25 | **22.9 mm** | 61.5 mm | **6.19** | baseline — parts not on the path |
+| 2 | + pack terminals (J6/J7) | 27 | 22.7 mm | 62.0 mm | 6.27 | pack path fixed; score unchanged (floorplan not power-first yet) |
+
+Target: mean |dx| → ~0 mm, straightness → ~1.1 (dead straight, 1.0 = ideal).
+A "power part" is a **series element carrying ≥ 1 A, a capacitor carrying ≥ 1 A
+of ripple, or any part dissipating ≥ 1 W** (25 parts on the current board:
+`C3 C4 C17 F1 J1 J2 L2 L3 Q1–Q12 R1 R9 R10 R18 R25`).
+
 
 ## Gates & fab (rows = state)
 
