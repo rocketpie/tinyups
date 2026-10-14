@@ -82,6 +82,7 @@ path, x = board centre) and how straight they run back→front.
 | - | --------- | ----------: | --------------------: | ---------: | -----------: | ----- |
 | 1 | block-aware shelf-pack | 25 | **22.9 mm** | 61.5 mm | **6.19** | baseline — parts not on the path |
 | 2 | + pack terminals (J6/J7) | 27 | 22.7 mm | 62.0 mm | 6.27 | pack path fixed; score unchanged (floorplan not power-first yet) |
+| 3 | **power-first bands** (stage bands) | 26 | **12.3 mm** | **35.0 mm** | **4.14** | power parts on the centreline, signal beside each stage; decap 14.7 mm; HPWL 5942→8227 (trade-off) |
 
 Target: mean |dx| → ~0 mm, straightness → ~1.1 (dead straight, 1.0 = ideal).
 A "power part" is a **series element carrying ≥ 1 A, a capacitor carrying ≥ 1 A

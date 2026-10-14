@@ -48,6 +48,7 @@ SERIES = {"shunt", "fet", "inductor", "fuse", "connector"}
 # branch consumers that do NOT carry the rail's full current
 OVERRIDES = {
     "J5": 0.2,     # fan header (~0.2 A), not the 17 A on VOUT12
+    "J7": 0.01,    # cell-sense header (~uA), not the 17 A on CELL0
 }
 
 
@@ -118,6 +119,17 @@ def _handles(r) -> bool:
         return True
     if r["category"] in SERIES or r["category"] == "cap":
         return max(r["I_dc_A"], r["I_rms_A"]) >= MARK_A
+    return False
+
+
+def component_is_power(ref: str, value: str, nets: set[str],
+                       mark_w: float = MARK_W, mark_a: float = MARK_A) -> bool:
+    """True if this component is power-handling (usable without a board)."""
+    cat, idc, irms, _v, _p, pdiss, _pt = component_power(ref, value, nets)
+    if pdiss >= mark_w:
+        return True
+    if cat in SERIES or cat == "cap":
+        return max(idc, irms) >= mark_a
     return False
 
 

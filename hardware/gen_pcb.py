@@ -46,10 +46,9 @@ ANCHORS = {                           # ref -> (x, y) centre, mm
     "J7": (BOARD_W - 62.0, BOARD_H - 15.0),  # cell sense    — front
 }
 ZONES = {                             # group -> (x0, y0, x1, y1) mm
-    "P": (42.0, 20.0, 94.0, 122.0),                   # power path A+B+D
-    "C": (96.0, 20.0, BOARD_W - 4.0, 82.0),
-    "E": (96.0, 82.0, BOARD_W - 4.0, 122.0),
-    "F": (4.0, 20.0, 40.0, 118.0),
+    "SPINE": (48.0, 20.0, 102.0, 122.0),  # power path, on the centreline
+    "L": (4.0, 20.0, 46.0, 122.0),        # signal: A/B/D/F
+    "R": (104.0, 20.0, BOARD_W - 4.0, 122.0),  # signal: C/E
 }
 
 
@@ -246,34 +245,68 @@ def main() -> int:
                 out.append(it)
         return out
 
+    def block_units(items):
+        """Group each IC with its decoupling caps, so a group stays together."""
+        by_ref = {it[0]: it for it in items}
+        ics = sorted([r for r in by_ref if r.startswith("U")],
+                     key=lambda r: -by_ref[r][3])
+        caps = sorted([r for r in by_ref if r.startswith("C")],
+                      key=lambda r: -by_ref[r][3])
+        used, units = set(), []
+        for ic in ics:
+            grp = [by_ref[ic]]; used.add(ic)
+            icp = ref_nets.get(ic, set()) & POWER_NETS
+            for c in caps:
+                if c not in used and (ref_nets.get(c, set()) & icp):
+                    grp.append(by_ref[c]); used.add(c)
+            units.append(grp)
+        units.extend([[it] for it in sorted(items, key=lambda t: -t[3])
+                      if it[0] not in used])
+        return units
+
     # ---- floorplan placement (power-path-first) --------------------------- #
+    from power_map import component_is_power
     items_by_ref = {it[0]: it for it in loaded}
 
-    def group_items(refs):
-        return order_block([items_by_ref[r] for r in refs
-                            if r in items_by_ref and r not in ANCHORS])
+    def ref_power(r):
+        return component_is_power(r, comps[r]["value"], ref_nets.get(r, set()))
 
-    # spine order for the power group: input protection -> priority -> converter
-    power_items = (group_items(BLOCKS["A"]) + group_items(BLOCKS["B"])
-                   + group_items(BLOCKS["D"]))
-    groups = {
-        "P": power_items,
-        "C": group_items(BLOCKS["C"]),
-        "E": group_items(BLOCKS["E"]),
-        "F": group_items(BLOCKS["F"]),
-    }
-
-    for gname, gitems in groups.items():
-        zx0, zy0, zx1, zy1 = ZONES[gname]
-        placed, bw, bh = shelf(gitems, zx1 - zx0 - GAP, sort=(gname != "P"))
-        for ref, fp, cx, cy in placed:
-            fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(zx0 + cx),
-                                           pcbnew.FromMM(zy0 + cy)))
+    # ---- power-path bands ------------------------------------------------- #
+    # Each functional stage is a horizontal band: its power-handling parts sit
+    # on the centreline (in flow order) and its signal parts flank them, so the
+    # power parts cluster on the path without separating them from their
+    # decoupling/compensation parts.
+    BANDS = [["A"], ["C"], ["B", "E"], ["D", "F"]]   # back -> front (flow)
+    PW = 54.0                                   # power column width (mm)
+    X0, X1 = 4.0, BOARD_W - 4.0
+    flank = (X1 - X0 - PW) / 2.0
+    y = 20.0
+    for blocks in BANDS:
+        bname = "+".join(blocks)
+        items = [items_by_ref[r] for b in blocks for r in BLOCKS.get(b, [])
+                 if r in items_by_ref and r not in ANCHORS]
+        power = [it for it in items if ref_power(it[0])]
+        signal = order_block([it for it in items if not ref_power(it[0])])
+        pplaced, _pw, ph = shelf(power, PW - GAP, sort=True)
+        half = len(signal) // 2
+        lplaced, _lw, lh = shelf(signal[:half], flank - GAP)
+        rplaced, _rw, rh = shelf(signal[half:], flank - GAP)
+        band_h = max(ph, lh, rh, 1.0)
+        for ref, fp, cx, cy in pplaced:
+            fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(X0 + flank + cx),
+                                           pcbnew.FromMM(y + cy)))
             board.Add(fp)
-        if zx0 + bw > zx1 or zy0 + bh > zy1:
-            print(f"  WARNING: group {gname} overflows its zone "
-                  f"(needs {bw:.1f}x{bh:.1f} mm, zone "
-                  f"{zx1 - zx0:.1f}x{zy1 - zy0:.1f} mm)")
+        for ref, fp, cx, cy in lplaced:            # right-align to the spine
+            fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(X0 + flank - cx),
+                                           pcbnew.FromMM(y + cy)))
+            board.Add(fp)
+        for ref, fp, cx, cy in rplaced:
+            fp.SetPosition(pcbnew.VECTOR2I(
+                pcbnew.FromMM(X0 + flank + PW + cx), pcbnew.FromMM(y + cy)))
+            board.Add(fp)
+        y += band_h + GAP
+    if y - GAP > BOARD_H - 14:
+        print(f"  WARNING: bands reach {y - GAP:.1f} mm (board {BOARD_H})")
 
     # connectors: anchored on the edges, placed first
     for ref, (ax, ay) in ANCHORS.items():

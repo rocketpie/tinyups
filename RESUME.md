@@ -1,192 +1,93 @@
 # RESUME — TinyUPS
 
-**Start here in a fresh session.** Handoff: what the project is, what we found
-this session, the plan, and how to continue.
-
-## What it is
-
-TinyUPS — a compact 12 V DC UPS for mini-PCs, fed by an external 12 V adapter
-and a **picoPSU**. A 4S1P LiFePO₄ pack (Topband 33138-HE, 15 Ah) keeps the
-machine running when mains drops and recharges when it returns. Fits an ATX PSU
-bay. Status + shutdown signalling over USB (CDC + HID-PDC). The deliverable of
-this repo is the **PCB**.
-
-Authoritative docs: `docs/requirements.md` (FR/NFR/IF), `docs/architecture.md`,
-`docs/bom.md`, `docs/progress.md` (metrics log), `docs/decisions/0001…0008`,
-`docs/test-plan.md`, `docs/datasheets/`.
+**Start here in a fresh session.** Handoff: what the project is, what changed
+this session, the plan, current numbers, and exactly how to continue.
 
 ## Status at a glance
 
 | Area | State |
 | --- | --- |
-| Schematic | ✅ generated, **ERC-clean** (127 symbols, 115 nets) |
-| Placement | 🔄 **Stage 1 power-path floorplan** — connectors anchored + centre power corridor, board 150×140 mm |
-| Routing | ⬜ not routed — rebuilding (old advanced-tier route superseded) |
-| Power / ampacity | ❌ **10/10 nets FAIL** (`make power`) — baseline; pours not added yet |
-| DRC (standard 5 mil) | ⬜ pending re-route (old board showed 524 = 446 clearance + 78 width) |
+| Schematic | ✅ generated, **ERC-clean** (129 symbols, 115 nets) |
+| Placement | 🔄 **power-first bands** (power parts on the centreline), board 150×140 mm |
+| Routing | ⬜ **not routed** — the old advanced-tier route is superseded; re-route pending Stage 2 |
+| Power / ampacity | ❌ **10/10 nets FAIL** (`make power`) — no pours yet |
+| DRC (standard 5 mil) | ⬜ pending re-route (unrouted board ⇒ 278 unconnected, no geometry errors) |
 | Fabrication | not exported yet |
 | Bench / DVT | not started (test plan exists) |
 
-**Progress this session:** Stage 1 (floorplan) done — `gen_pcb.py` now anchors the
-connectors and lays the power spine J1→A→B→D→J2 down the centre; placement is
-geometry-clean and decap improved to 17.3 mm. `make render` produces an
-isometric 3D PNG with component bodies (`build/tinyups.png`).
+## key WIPs
 
-**Pack path fixed (Option A, high-side).** The AFE protection FETs were shorted
-across `VBAT` (`N_PACKMID` dead-end) and the ideal-diode output `N_CATH` went
-nowhere — the pack could not feed the system. Now:
-`PACK+ → Q11 → N_PACKMID → Q12 → VBAT` (common source), `PACK− → CELL0 → R25 →
-GND`, AFE supply from `PACK+` (pre-FET), and `N_CATH → VIN_SYS`. Added a 2-pin
-high-current **PACK** terminal (J6) and a 5-pin **CELLS** sense header (J7).
-Board is now 124 footprints; ERC 0.
+1. **Power tooling built:**
+   - `power_spec.py` — design current + rail voltage per net (single source).
+   - `power_map.py` — per-component power map → `build/power-map.csv`
+     (shunt P=I²R, FET I²Rds, inductor I²DCR, cap ripple `I_rms=V/|Z|`,
+     divider V²/R, …). Defines "power-handling" = series element ≥ 1 A,
+     capacitor ripple ≥ 1 A, or dissipation ≥ 1 W.
+   - `power_silk.py` — draws those parts on F.Silkscreen (red via
+     `make silk` + `hardware/themes/tinyups-red.json`).
+   - `place_metrics.py` — **power-path score**: mean distance to the
+     centreline + flow straightness.
+4. **Pack path fixed (Option A, high-side).** The AFE protection FETs were
+   shorted across `VBAT` and `N_CATH` (ideal-diode output) went nowhere — the
+   pack could not feed the system. Now: `PACK+ → Q11 → N_PACKMID → Q12 → VBAT`
+   (common source), `PACK− → CELL0 → R25 → GND`, AFE supply from `PACK+`
+   (pre-FET), `N_CATH → VIN_SYS`. Added **J6** (2-pin high-current PACK
+   terminal) + **J7** (5-pin CELLS sense header).
+5. **Power-first placement** — `gen_pcb.py` splits each stage into
+   power-handling vs signal parts: the power parts sit on the **centreline**
+   (centre column), the signal parts flank them, in stage bands
+   (`A`, `C`, `B+E`, `D+F`). Connectors are anchored first.
+6. **3D renders with component bodies** — installed `kicad-packages3d`,
+   `KICAD9_3DMODEL_DIR` wired in the Makefile + Dockerfile; `make render`
+   → `build/tinyups.png` (isometric). Camera via `RENDER_ROTATE` / `RENDER_ZOOM`.
 
-**Power tooling added:** `power_spec.py` (net currents/voltages), `power_map.py`
-(per-component power map → `build/power-map.csv`; classifies series ≥ 1 A,
-cap ripple ≥ 1 A, or ≥ 1 W), `power_silk.py` (marks power parts on
-F.Silkscreen), `make power` / `make silk`, and a **power-path placement score**
-in `place_metrics.py` (mean distance to centreline + flow straightness).
+## The plan: power-path-first
 
-## Discovery this session (the important part)
+**Stackup (ADR-0008): `F.Cu` = power pour (+ signals around it), `In1.Cu` =
+GND, `In2.Cu` = signal, `B.Cu` = signal (+ GND pour).** GND stays adjacent to
+the power layer so the converters' hot loops close tightly; power on the top
+outer layer connects SMD pads directly (no via bottleneck, 1 oz).
 
-1. **The power path is routed as signal-width hairlines.** `+12V_IN` from the
-   XT60 to the 25 A fuse is a single **0.127 mm trace on In2.Cu**; `VIN_SYS`
-   (20 A) is **0.095 mm**. Every power net is 0.095–0.127 mm and there is **no
-   power pour anywhere**. `power_report.py` sizes each net against its design
-   current (IPC-2221): **10/10 FAIL, worst ≈ 46× short** (e.g. a 0.127 mm inner
-   trace carries ~0.27 A).
-2. **Nothing caught it.** DRC has no ampacity rule, and `routing_report.py`
-   only compares against the *fab minimum width* — so it reported "advanced
-   PASS" while the power path was fatally undersized. DRC-clean ≠ buildable.
-3. **The In1 GND plane is fragmented** into 5 disjoint islands (224 signal
-   tracks were routed on In1). The earlier "GND stubs" were really fragment
-   gaps and were bridged by hand.
-4. **freerouting is not deterministic run-to-run** — a fresh `route.py` from
-   the same placement gives a different board. Do not assume a rebuild
-   reproduces the accepted board.
-5. **F1 is a `Fuse_1206_3216Metric`** (3.2×1.6 mm) labelled "25 A" — a 1206
-   fuse physically cannot be 25 A. BOM already flags the value "(verify)".
-6. **Fab tier:** the board had been accepted at JLCPCB **advanced** 3.5 mil to
-   escape the 0.4 mm-pitch QFNs. We are going back to **standard 5 mil**.
+Floorplan: connectors first (XT60 in back-centre; XT30 + USB front; USB left of
+XT30), power path straight back→front, charger (C) and pack/AFE (E) branching
+right, MCU (F) left.
 
-## Decisions taken this session
+- **Stage 1 ✅** — anchored floorplan + power corridor.
+- **Stage 1.5 ✅** — power/signal split: power parts on the centreline, signal
+  parts flanking (see score below).
+- **Stage 2 ⬜ NEXT** — power **pours** on F.Cu sized to current, GND pour on
+  In1, `Power`/`Signal` net classes, `route.py` marks the power/plane layers in
+  the DSN so freerouting keeps signals off the corridor, then re-route and read
+  DRC (standard) + `make power`.
+- **Stage 3 ⬜** — MCU/signal refinement; confirm In2/B.Cu can carry the signals.
 
-- **Fab tier → standard 5 mil by default** (NFR-9): min trace/clearance
-  **0.127 mm**; advanced 3.5 mil only for a documented geometry that cannot
-  meet 5 mil. Enforced now in `.kicad_dru`, the project rules and `gen_pcb.py`.
-- **Add a power gate:** `hardware/power_report.py`, wired as `make power` and
-  into `make check`.
-- **Power-path-first strategy** (see below) — captured as **ADR-0008**
-  (proposed).
-
-## The plan (power-path-first layout)
-
-**Strategy:**
-
-1. **Stackup / layer roles — GND on In1.** Keep the **GND plane adjacent to
-   the power layer** so the switching converters' hot loops close tightly:
-   **F.Cu = power pour (+ signals routed around it) / In1.Cu = GND /
-   In2.Cu = signal / B.Cu = signal (+ GND pour)**. Power sits on the top outer
-   layer for a direct pad connection (no via bottlenecks) and 1 oz copper.
-   (Earlier instinct was F power / B GND / In1+In2 signal — that works but puts
-   the power return two layers away and leaves In1 signals without a GND
-   reference, so it was dropped.)
-2. **Connectors first, fixed:** XT60 input back/centre; XT30 output front/centre;
-   USB front, left of XT30.
-3. **Power path straight back→front** through A (fuse/TVS/LM5069/sense) →
-   priority path → output converter, as a **wide pour**, branching right twice
-   (back half → charger; front half → pack/BMS output).
-4. **Then the rest** placed around it; RP2040 on the left; signals routed on the
-   remaining copper (top layer + inner layers), hopping under the power path
-   where needed.
-
-**How this maps onto the tooling:**
-
-| Strategy | Tooling change |
-| --- | --- |
-| Layer roles / stackup | `gen_pcb.py`: define stackup once; `route.py`: mark power/plane layers in the exported DSN so freerouting confines signals elsewhere |
-| Connectors first, fixed spots | `gen_pcb.py`: replace shelf-packing with an **anchored floorplan** (connector anchors); `place_metrics.py`: floorplan-conformance checks |
-| Power path straight + branches | `gen_pcb.py`: a **power corridor** + spine order (A → priority → D) and a `pour(net, layer, polygon)` helper; `Power` net class |
-| Signals around the path | `route.py` (signals only; power is pours); `routing_report.py` (unrouted); DRC (standard rules) |
-| Don't regress | `make power` (done), per-net widths in `routing_report.py`, floorplan checks in `place_metrics.py` |
-
-**Staged:**
-
-1. **Floorplan only** — encode anchors + corridor in `gen_pcb.py`, keep the
-   current stackup, re-measure. Isolates the floorplan effect.
-2. **Stackup + pours** — GND adjacent to power, power pours, net classes, DSN
-   layer roles; re-route; read DRC / routing / power.
-3. **MCU + signals** — RP2040 left; confirm the remaining layers carry all
-   signals; iterate.
-
-## Open questions
-
-- **Topology:** does the charger branch and the pack branch tap the same rail
-  node, or different points on the spine? (ADR-0002: input → protection →
-  {priority path, charger}; pack → priority path → converter.)
-- **Fuse:** pick a footprint that can actually carry the rated current.
-- **QFN fanout at 5 mil:** radial escapes (perpendicular, outward) are the way;
-  the earlier *scripted* radial attempt failed at package corners — needs
-  careful per-side geometry or via-in-pad.
-
-## Metrics (current — regenerate with the scripts)
+## Metrics (current)
 
 ```
-placement: total HPWL 4978 mm · weighted 12274 mm · power 1459 mm · decap 21.2 mm
-routing:   1339 tracks · 290 vias · min trace 0.095 mm
-           standard 0.127 -> FAIL (78) | advanced 0.09 -> PASS
-           unconnected 0 · nets 115 (inter-block 8, internal 107)
-power:     10/10 nets FAIL  (worst ~46x short)
-gates:     ERC 0 · test 6/6 · DRC 524 under standard rules (0/0 under advanced)
+placement: total HPWL 8227 mm · weighted 15448 mm · decap 14.7 mm
+           power parts 26 · mean |dx| to centre 12.3 mm · straightness 4.14
+routing:   not routed (rebuild in progress)
+power:     10/10 nets FAIL  (worst ~46x short)  — pours not added yet
+gates:     ERC 0 · test 6/6 · DRC geometry-clean (unrouted)
+board:     150 x 140 mm · 124 footprints · 115 nets
 ```
 
-Reproduce: `make erc`, `make drc`, `make power`,
-`/opt/eda/venv/bin/python hardware/{place_metrics,routing_report,power_report}.py`.
+Reproduce: `make erc`, `make drc`, `make power`, `make render`, `make silk`,
+`/opt/eda/venv/bin/python hardware/{place_metrics,routing_report,power_map}.py`.
 
-## Rebuild flow
+## Next step
 
-```sh
-make netlist && make bom
-/opt/eda/venv/bin/python hardware/gen_schematic.py
-/opt/eda/venv/bin/python hardware/gen_pcb.py
-/opt/eda/venv/bin/python hardware/fill_zones.py
-FREEROUTING_JAR=/opt/freerouting/freerouting.jar \
-    /opt/eda/venv/bin/python hardware/route.py
-/opt/eda/venv/bin/python hardware/set_sheet.py
-```
+**Stage 2 — pours + stackup + re-route.** Concretely:
+1. `gen_pcb.py`: add power **zones** on F.Cu along the corridor (`+12V_IN`,
+   `VIN_SYS`, `VBAT`, `VOUT12`), sized to design current; move the GND zone to
+   In1 (already there) and add a B.Cu GND pour; define net classes.
+2. `route.py`: mark F.Cu/In1.Cu as power/plane in the exported DSN so signals
+   stay on In2/B.Cu (+ the gaps around the corridor); re-route; refill.
+3. Read `make drc` (standard) + `make power` + `place_metrics`; iterate.
 
-⚠️ Re-running `gen_pcb.py`/`route.py` **wipes** the manual DRC fixes currently
-in `hardware/tinyups.kicad_pcb` (3 GND-fragment bridges + the `ILIM_HIZ` route
-+ the deleted dangling via) and the plane fragmentation returns.
-
-## How to open KiCad (GUI)
-
-The container's **desktop-lite is already running** (TigerVNC on `:1`, noVNC on
-**6080**) — no rebuild needed:
-
-1. VS Code → **Ports** → **6080** → *Open in Browser* (or `http://localhost:6080`).
-   **No password** (VNC runs with `-SecurityTypes None`).
-2. From your container terminal (`DISPLAY=:1` is already set):
-   ```sh
-   pcbnew /workspaces/tinyups/hardware/tinyups.kicad_pcb
-   ```
-
-## Toolchain (all in the dev container)
-
-`kicad-cli` 9.0.8 · KiBot 1.9.1 · KiUtils · ngspice 45.2 · `pypdf` · Java +
-**freerouting** (`/opt/freerouting/freerouting.jar`, env `FREEROUTING_JAR`) ·
-pytest · sigrok-cli. Python venv: `/opt/eda/venv` (on `PATH`).
-`kicad-cli` needs `KICAD9_FOOTPRINT_DIR=/usr/share/kicad/footprints` (set in the
-Makefile + Dockerfile) or DRC emits ~120 bogus `lib_footprint_issues`.
-
-## Gotchas learned
-
-- KiCad has **no autorouter**; `kicad-cli` can't build a PCB from a netlist —
-  use `pcbnew` Python + freerouting (Specctra DSN/SES).
-- freerouting runs headless only with `{ "gui": { "enabled": false } }` in
-  `freerouting.json`; it is **non-deterministic run-to-run**.
-- The board must sit **inside the sheet border** (`set_sheet.py`).
-- `ZONE_FILLER` on a freshly-built in-memory board segfaults — fill from a
-  loaded board (`fill_zones.py`).
-- A plane **pour with signals routed through it fragments** it; bridge the
-  islands or keep the pour clear.
-- **DRC cannot see current.** Always run `make power`.
+Also open:
+- **F1 is a `Fuse_1206_3216Metric`** — cannot be a 25 A fuse; pick a real
+  footprint (BOM value already flagged "(verify)").
+- L2/L3 (`L_12x12mm_H8mm`) have no 3D model — add placeholder boxes if wanted.
+- The `set_sheet.py` step is not in the rebuild loop yet (the 2D `make silk`
+  view is off-sheet).
