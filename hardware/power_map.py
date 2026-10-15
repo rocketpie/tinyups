@@ -46,9 +46,10 @@ MARK_A = float(os.environ.get("POWER_MARK_A", "1.0"))   # current (A)
 SERIES = {"shunt", "fet", "inductor", "fuse", "connector"}
 
 # branch consumers that do NOT carry the rail's full current
+from blocks import kind as _kind, label as _label
 OVERRIDES = {
-    "J5": 0.2,     # fan header (~0.2 A), not the 17 A on VOUT12
-    "J7": 0.01,    # cell-sense header (~uA), not the 17 A on CELL0
+    _label("J5"): 0.2,     # fan header (~0.2 A), not the 17 A on VOUT12
+    _label("J7"): 0.01,    # cell-sense header (~uA), not the 17 A on CELL0
 }
 
 
@@ -77,7 +78,7 @@ def component_power(ref: str, value: str, nets: set[str]):
     volt = [RAIL_V.get(n, 0.0) for n in nets]
     I = OVERRIDES.get(ref, max(cur) if cur else 0.0)
     V = max(volt) if volt else 0.0
-    kind = ref[0]
+    kind = _kind(ref)                       # component type (R/C/Q/...)
 
     if kind == "R":
         R = _num(value)

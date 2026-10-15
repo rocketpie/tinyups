@@ -32,6 +32,8 @@ KICAD_SYMBOLS = "/usr/share/kicad/symbols"
 HERE = os.path.dirname(os.path.abspath(__file__))
 GRID = 1.27
 
+from blocks import label as _blk_label  # noqa: E402  (script dir on sys.path)
+
 
 # --------------------------------------------------------------------------- #
 # library + placement helpers
@@ -185,7 +187,22 @@ class Builder:
             LocalLabel(text=net, position=Position(X=x, Y=y, angle=0),
                        effects=Effects(font=Font(width=1.27, height=1.27))))
 
+    def apply_block_labels(self) -> None:
+        """Rename references to block-prefixed ones (IP.F1, CHG.R1, ...)."""
+        for ref, (ss, _sym) in self._syms.items():
+            new = _blk_label(ref)
+            if new == ref:
+                continue
+            for prop in ss.properties:
+                if prop.key == "Reference":
+                    prop.value = new
+            for inst in ss.instances:
+                for p in inst.paths:
+                    p.reference = new
+
     def save(self, path: str) -> None:
+        # block-prefixed reference designators (readability on the board)
+        self.apply_block_labels()
         self.sch.to_file(path)
 
 
@@ -687,6 +704,7 @@ def build() -> Schematic:
     b.pwr_flag("VOUT12", 25.4, 101.6)
     b.pwr_flag("+3V3", 25.4, 127.0)
 
+    b.apply_block_labels()
     return b.sch
 
 

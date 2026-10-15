@@ -41,18 +41,20 @@ flowchart LR
 
 ## Functional blocks
 
-| Block | Task | Candidates |
-| --- | --- | --- |
-| Input protection | Fuse, reverse-polarity, OVP, transient | Fuse + TVS + P-FET / eFuse |
-| Priority power path | Prefer input, disconnect pack on mains | Power mux / back-to-back FETs + controller |
-| Charger | 4S LFP CC/CV to 13.8 V, temp-limited | 4-switch buck-boost charger IC |
-| Output converter | Regulated 12.0 V, ≥ 15 A | Synchronous buck-boost controller |
-| Battery management | Cell V, pack I, T, balancing, protection FETs | BQ769x2-class AFE + dual N-FETs |
-| Measurement | Output V/I, temperatures | AFE / INA226 + NTC |
-| MCU | SOC, state machine, telemetry, signalling | RP2040 + QSPI flash |
-| Host link | Telemetry + low-battery shutdown | USB-C composite CDC + HID-PDC |
-| User interface | Status indication, reset | LEDs + button |
-| Cooling | Temperature-controlled airflow | 80 mm fan, on-board 4-pin header |
+| Power Flow Order | Block | Task | Candidates |
+| --- | --- | --- | --- |
+| 1 | Input protection | Fuse, reverse-polarity, OVP, transient | Fuse + TVS + P-FET / eFuse |
+| 2 | Charger | 4S LFP CC/CV to 13.8 V, temp-limited | 4-switch buck-boost charger IC |
+| 3 | Priority power path | Prefer input, disconnect pack on mains | Power mux / back-to-back FETs + controller |
+| 4 | Battery management | Cell V, pack I, T, balancing, protection FETs | BQ769x2-class AFE + dual N-FETs |
+| 5 | Output converter | Regulated 12.0 V, ≥ 15 A | Synchronous buck-boost controller |
+| 6 | Measurement | Output V/I, temperatures | AFE / INA226 + NTC |
+| 6 | MCU | SOC, state machine, telemetry, signalling | RP2040 + QSPI flash |
+| 6 | Host link | Telemetry + low-battery shutdown | USB-C composite CDC + HID-PDC |
+| 6 | User interface | Status indication, reset | LEDs + button |
+| 6 | Cooling | Temperature-controlled airflow | 80 mm fan, on-board 4-pin header |
+
+ref: blocks.py
 
 ## Modes
 

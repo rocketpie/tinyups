@@ -3070,8 +3070,8 @@
 
   (symbol (lib_id "Connector_Generic:Conn_01x02") (at 39.37 39.37 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 0be57100-9662-4c69-b283-c75772a5c673)
-    (property "Reference" "J1" (at 41.91 36.83 0)
+    (uuid 52b1db48-bd87-45d6-b430-d75dce609c9e)
+    (property "Reference" "1J1" (at 41.91 36.83 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "XT60" (at 41.91 41.91 0)
@@ -3083,12 +3083,12 @@
     (property "Datasheet" "~" (at 39.37 39.37 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 07d8c70e07374434a977debe5e1bfacd))
-    (pin "2" (uuid eccdb905d14246daafabca0418f61cc8))
+    (pin "1" (uuid 58b66f3e447b4e78bb18c34f06fc3787))
+    (pin "2" (uuid 77975af41b2743348b5878ac4530c5e2))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "J1") (unit 1)
+          (reference "1J1") (unit 1)
         )
       )
     )
@@ -3096,8 +3096,8 @@
 
   (symbol (lib_id "Device:Fuse") (at 63.5 39.37 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid a5c18d50-0049-4c05-aa24-756218d1ba75)
-    (property "Reference" "F1" (at 66.04 36.83 0)
+    (uuid d8722ee9-6bd8-4a57-8acd-1a14c13dda95)
+    (property "Reference" "1F1" (at 66.04 36.83 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "25A" (at 66.04 41.91 0)
@@ -3109,12 +3109,12 @@
     (property "Datasheet" "~" (at 63.5 39.37 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 4409ee777ef34e989fedaefbc7845b25))
-    (pin "2" (uuid 2e4d4ce18e21444da38e0d5a21b13382))
+    (pin "1" (uuid eaff4a97fd074217adf572e4b5dc51f7))
+    (pin "2" (uuid e8507e4ad51f4db4bab83b52e81e2077))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "F1") (unit 1)
+          (reference "1F1") (unit 1)
         )
       )
     )
@@ -3122,8 +3122,8 @@
 
   (symbol (lib_id "Device:D_TVS") (at 88.9 39.37 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 7aa243b2-6c0b-44ef-9f05-2111430e3e07)
-    (property "Reference" "D1" (at 91.44000000000001 36.83 0)
+    (uuid b1ac4a0d-d63b-40ea-8090-b81fa5898c86)
+    (property "Reference" "1D1" (at 91.44000000000001 36.83 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "SMBJ15A" (at 91.44000000000001 41.91 0)
@@ -3135,12 +3135,12 @@
     (property "Datasheet" "~" (at 88.9 39.37 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid fce4f670a72841bdbd7036e138a75724))
-    (pin "2" (uuid 7c53d8d6a75a4035b495f336ba37c7fd))
+    (pin "1" (uuid 047aff70c87042b388c268570c2e9f5b))
+    (pin "2" (uuid 633c05b084a14cf2b6dc305c33e04e45))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "D1") (unit 1)
+          (reference "1D1") (unit 1)
         )
       )
     )
@@ -3148,8 +3148,8 @@
 
   (symbol (lib_id "Device:R") (at 114.3 39.37 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 6af58d8c-3dcf-4846-877e-7e92a106de4a)
-    (property "Reference" "R1" (at 116.84 36.83 0)
+    (uuid 4457be59-59a7-4505-8182-c4a2dd122ca3)
+    (property "Reference" "1R1" (at 116.84 36.83 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "2.2m" (at 116.84 41.91 0)
@@ -3161,12 +3161,12 @@
     (property "Datasheet" "~" (at 114.3 39.37 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 2d70835c63b7467eb096af796d2b7dcb))
-    (pin "2" (uuid 533d47e5af6143fe96dcfab003e7228e))
+    (pin "1" (uuid 1db5157c375e4e37ab8415c9b2da2bae))
+    (pin "2" (uuid 3e3f6b23328642fca5b6ab802b5f2b05))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R1") (unit 1)
+          (reference "1R1") (unit 1)
         )
       )
     )
@@ -3174,8 +3174,8 @@
 
   (symbol (lib_id "tinyups:LM5069") (at 152.4 45.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid e2d17469-0bc9-4b53-baef-ed86fa03a7e4)
-    (property "Reference" "U1" (at 154.94 43.18 0)
+    (uuid 6a844511-cd88-467c-b5ae-988d848e3228)
+    (property "Reference" "1U1" (at 154.94 43.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "LM5069" (at 154.94 48.26 0)
@@ -3187,20 +3187,20 @@
     (property "Datasheet" "~" (at 152.4 45.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 9386952c475a43ce897d6dba75edc2f5))
-    (pin "2" (uuid d01bed89227a428b8a7067015fb175f0))
-    (pin "3" (uuid 5de8539b48bf4c31ae24dbabd6453052))
-    (pin "4" (uuid 66ec35ebc66e4b868c2c83c834375f28))
-    (pin "5" (uuid 99070981b69e4483827e77c5121a5e54))
-    (pin "10" (uuid 024ea6424b20444d98df1629eda6ed77))
-    (pin "9" (uuid 459f0f3c74ad44a38eec1ea5bb68b661))
-    (pin "8" (uuid 3cda45c982a3453bb2403db5ad4e48e5))
-    (pin "7" (uuid f5a672bcf41549a4af9bf188cd9250a3))
-    (pin "6" (uuid a6b41fe04e9046bf99826c2bf1ad3c25))
+    (pin "1" (uuid b9f5e8982e6c4ee9a97f290531668cbf))
+    (pin "2" (uuid d56737529db6416584bd57a753b1f220))
+    (pin "3" (uuid 2d7d068ba45a4f658561639ddcbd8bf6))
+    (pin "4" (uuid b93a0592ea4b4457b362baea7b93c156))
+    (pin "5" (uuid 9aed9f56bf36498a94a137fd557281b8))
+    (pin "10" (uuid 9a38fe5f9b26450ab844718c684feb8e))
+    (pin "9" (uuid 7bcc2fcd20ad453f93716cd37dfef29a))
+    (pin "8" (uuid ae0040e263314305a64e2362444e3093))
+    (pin "7" (uuid 3c1f14a335d24ebf916b53ac84d233b8))
+    (pin "6" (uuid 7fcef7e52e6b41998d6462efff31f3d8))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "U1") (unit 1)
+          (reference "1U1") (unit 1)
         )
       )
     )
@@ -3208,8 +3208,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 139.7 71.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid dd2339f2-4804-4387-9714-1851fa7dc9e0)
-    (property "Reference" "Q1" (at 142.23999999999998 68.58 0)
+    (uuid 07994c71-957e-4fd0-abf9-8a38a8695157)
+    (property "Reference" "1Q1" (at 142.23999999999998 68.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 40V" (at 142.23999999999998 73.66000000000001 0)
@@ -3221,13 +3221,13 @@
     (property "Datasheet" "~" (at 139.7 71.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 5a497e0add11457c8acba4231d40b843))
-    (pin "3" (uuid db543291ce374852b2243b630d579af9))
-    (pin "2" (uuid 9e5a3da6ea9848e18bf46fa6c46868c9))
+    (pin "1" (uuid 7ca22ac423de4f769639370e8ac8f855))
+    (pin "3" (uuid c937d7cbf99a4257aa65d50ef7b99dff))
+    (pin "2" (uuid 9f22488fcbc54021a2d436fa2b6ed7a9))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q1") (unit 1)
+          (reference "1Q1") (unit 1)
         )
       )
     )
@@ -3235,8 +3235,8 @@
 
   (symbol (lib_id "Device:R") (at 63.5 71.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 12bcbdbd-8bd6-48b6-b496-58cc3d3911d4)
-    (property "Reference" "R2" (at 66.04 68.58 0)
+    (uuid 3e659d14-75a5-4c75-b13f-22d9edc7397b)
+    (property "Reference" "1R2" (at 66.04 68.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "TBD-UV-hi" (at 66.04 73.66000000000001 0)
@@ -3248,12 +3248,12 @@
     (property "Datasheet" "~" (at 63.5 71.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid aecec15f804345d3ba6f47968d512b5b))
-    (pin "2" (uuid 6d1f4171abb14608ac648219c4f41e62))
+    (pin "1" (uuid 9c74e09b4f7f4c769d9896c85d1c5aef))
+    (pin "2" (uuid ccfc7d0b96e0489eb4af33c004668ff0))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R2") (unit 1)
+          (reference "1R2") (unit 1)
         )
       )
     )
@@ -3261,8 +3261,8 @@
 
   (symbol (lib_id "Device:R") (at 63.5 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 92633347-1bda-48cb-ad22-3bd975849952)
-    (property "Reference" "R3" (at 66.04 93.97999999999999 0)
+    (uuid 4f41c32d-a6ff-4b43-9f44-f05e75e075b6)
+    (property "Reference" "1R3" (at 66.04 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "TBD-UV-lo" (at 66.04 99.06 0)
@@ -3274,12 +3274,12 @@
     (property "Datasheet" "~" (at 63.5 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 1e64dc47d1914c91bf4a8c3468a2564b))
-    (pin "2" (uuid c99db51710374cd4b7db4c96b0342277))
+    (pin "1" (uuid 7fd7ce7a223a4430b8beff0dabcdaad0))
+    (pin "2" (uuid 32c8d94954884dbd997235af5a000383))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R3") (unit 1)
+          (reference "1R3") (unit 1)
         )
       )
     )
@@ -3287,8 +3287,8 @@
 
   (symbol (lib_id "Device:R") (at 88.9 71.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 073889b6-061e-4b97-a42f-38cf1209f538)
-    (property "Reference" "R4" (at 91.44000000000001 68.58 0)
+    (uuid c9f3b586-009a-41c1-b1c3-b0a19860d4f2)
+    (property "Reference" "1R4" (at 91.44000000000001 68.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "TBD-OV-hi" (at 91.44000000000001 73.66000000000001 0)
@@ -3300,12 +3300,12 @@
     (property "Datasheet" "~" (at 88.9 71.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 290b3acdb9784e3c9ecea7f208d0e7f0))
-    (pin "2" (uuid b095b6d790ca49d181d13ee4808e4984))
+    (pin "1" (uuid dd475c51761e4fffa60633711e1bf2d5))
+    (pin "2" (uuid 168f13d374df47a6a1176a4b84c198ba))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R4") (unit 1)
+          (reference "1R4") (unit 1)
         )
       )
     )
@@ -3313,8 +3313,8 @@
 
   (symbol (lib_id "Device:R") (at 88.9 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 40fb832e-d281-4657-a98d-2c40536f58fc)
-    (property "Reference" "R5" (at 91.44000000000001 93.97999999999999 0)
+    (uuid e617c11b-0348-4f49-b01f-55a2c1f94c73)
+    (property "Reference" "1R5" (at 91.44000000000001 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "TBD-OV-lo" (at 91.44000000000001 99.06 0)
@@ -3326,12 +3326,12 @@
     (property "Datasheet" "~" (at 88.9 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid f479b79f96bb4dd592674c81aca34d8c))
-    (pin "2" (uuid be5c9da8ac5a4161b38d1ff75cefabc8))
+    (pin "1" (uuid 5e62ff92c1ca4b1fa49ab99f5242b44a))
+    (pin "2" (uuid ab32425a6dcb47968d6244604eecc770))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R5") (unit 1)
+          (reference "1R5") (unit 1)
         )
       )
     )
@@ -3339,8 +3339,8 @@
 
   (symbol (lib_id "Device:C") (at 114.3 71.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 6521e24e-986b-43a2-82ec-f587fdcdb476)
-    (property "Reference" "C1" (at 116.84 68.58 0)
+    (uuid b30f3b4b-e2ff-4249-94d1-531ca14e5dab)
+    (property "Reference" "1C1" (at 116.84 68.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "TBD" (at 116.84 73.66000000000001 0)
@@ -3352,12 +3352,12 @@
     (property "Datasheet" "~" (at 114.3 71.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 75e657f3e37849c2b16a357a411d84f7))
-    (pin "2" (uuid e6e66b2bb06d48a3b8beffd430d59ac0))
+    (pin "1" (uuid 31284545cfd1467d97f78a3138fdb9ba))
+    (pin "2" (uuid 49474184b3a04ef1a17036d0eb4661fa))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C1") (unit 1)
+          (reference "1C1") (unit 1)
         )
       )
     )
@@ -3365,8 +3365,8 @@
 
   (symbol (lib_id "Device:R") (at 114.3 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid c0528305-fbc2-41cd-9606-b9af7bc2981c)
-    (property "Reference" "R6" (at 116.84 93.97999999999999 0)
+    (uuid d4db3af7-08c9-448b-af48-3c12bb0588e4)
+    (property "Reference" "1R6" (at 116.84 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "TBD-PWR" (at 116.84 99.06 0)
@@ -3378,12 +3378,12 @@
     (property "Datasheet" "~" (at 114.3 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 7998104e0eff4d18abfcda43cffb7cf9))
-    (pin "2" (uuid 9b0ba3c0585f468bab566ca2234ed053))
+    (pin "1" (uuid 73a89bde78ca47d2b70794eb3964fc3a))
+    (pin "2" (uuid 2e41e0000c14486b8b692d1be0e93440))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R6") (unit 1)
+          (reference "1R6") (unit 1)
         )
       )
     )
@@ -3391,8 +3391,8 @@
 
   (symbol (lib_id "Device:R") (at 139.7 39.37 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 2f3c8b0f-002e-421e-90fe-b19a9f1f0420)
-    (property "Reference" "R7" (at 142.23999999999998 36.83 0)
+    (uuid b8efa741-1862-4d89-b22d-ae353f702a56)
+    (property "Reference" "1R7" (at 142.23999999999998 36.83 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k-PGD" (at 142.23999999999998 41.91 0)
@@ -3404,12 +3404,12 @@
     (property "Datasheet" "~" (at 139.7 39.37 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid ccb04fca192443d783564a088735b87f))
-    (pin "2" (uuid af55928621dc42dcbdc0b0b7ff8efede))
+    (pin "1" (uuid cd99da60df92471d983767bcad3e19ae))
+    (pin "2" (uuid 0cfa5a5d1bf84aee998690e796df80e8))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R7") (unit 1)
+          (reference "1R7") (unit 1)
         )
       )
     )
@@ -3417,8 +3417,8 @@
 
   (symbol (lib_id "tinyups:LM74700-Q1") (at 39.37 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid e07b5dc9-258a-4e46-8fe8-512d138719a9)
-    (property "Reference" "U2" (at 41.91 119.38 0)
+    (uuid 44e98932-db10-4c19-b58d-79502d8d2bc4)
+    (property "Reference" "3U1" (at 41.91 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "LM74700-Q1" (at 41.91 124.46000000000001 0)
@@ -3430,16 +3430,16 @@
     (property "Datasheet" "~" (at 39.37 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "6" (uuid b93d3ca4dfdf46069e19bbb48d929103))
-    (pin "3" (uuid f7a5a8a836b842e7a2644cf382f71370))
-    (pin "2" (uuid a399d789790449d49b1fd70ee38d13a6))
-    (pin "1" (uuid 54e84c232ef843fdba53e22d8ca3107f))
-    (pin "5" (uuid a37291d6ce374e87a32485ce5ec2d43a))
-    (pin "4" (uuid 6e715175be9f4a5090307793af856531))
+    (pin "6" (uuid 40b66fd7e3b84f09990b0c27b7e0ff74))
+    (pin "3" (uuid 90b3c11e107d44af9efe4a12c1db0b32))
+    (pin "2" (uuid 1371c18ebc064e8b901682f1d3dc2da3))
+    (pin "1" (uuid 26f7543184d94f60a7cc3571769c6968))
+    (pin "5" (uuid b37717b63bb94c0096dbd122f45a3b93))
+    (pin "4" (uuid ff22c6d5c6e94fe6a35382bc517a5047))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "U2") (unit 1)
+          (reference "3U1") (unit 1)
         )
       )
     )
@@ -3447,8 +3447,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 63.5 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid a6768ae8-e53a-411b-bd88-62588fa88370)
-    (property "Reference" "Q2" (at 66.04 119.38 0)
+    (uuid 6633ae61-a501-41d0-b29a-1d5ae9a618f7)
+    (property "Reference" "3Q1" (at 66.04 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 40V" (at 66.04 124.46000000000001 0)
@@ -3460,13 +3460,13 @@
     (property "Datasheet" "~" (at 63.5 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 971ae1fc8629404b97c6880ae0d642ef))
-    (pin "3" (uuid 8276de58ef2f491f83fb465f6ccb874d))
-    (pin "2" (uuid fa49d9c9e1c948bf9fac8d4bc204b9b5))
+    (pin "1" (uuid a547ab2a931a44478a5fc86072628f06))
+    (pin "3" (uuid 0487909ccf8e40779db195260fced37d))
+    (pin "2" (uuid 3471e94355714cfdbc0ffd707b0c1782))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q2") (unit 1)
+          (reference "3Q1") (unit 1)
         )
       )
     )
@@ -3474,8 +3474,8 @@
 
   (symbol (lib_id "Device:C") (at 88.9 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid d92e9b55-b542-4c09-8b90-428e1e38f78c)
-    (property "Reference" "C2" (at 91.44000000000001 119.38 0)
+    (uuid 24694226-8e17-4176-8eba-a7b205fa1dd6)
+    (property "Reference" "3C1" (at 91.44000000000001 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 91.44000000000001 124.46000000000001 0)
@@ -3487,12 +3487,12 @@
     (property "Datasheet" "~" (at 88.9 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 5b4792eccb10432bae69a99a4ee59f69))
-    (pin "2" (uuid 91504194fd9d46808e179229a0cf9678))
+    (pin "1" (uuid 64b22390cb2444ff984eb6d1be4f6296))
+    (pin "2" (uuid aa835ae6600e4b1bb5fb28c650f97068))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C2") (unit 1)
+          (reference "3C1") (unit 1)
         )
       )
     )
@@ -3500,8 +3500,8 @@
 
   (symbol (lib_id "Device:C") (at 114.3 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid af3ddb9c-c38f-49ab-afbc-80371ffd498c)
-    (property "Reference" "C3" (at 116.84 119.38 0)
+    (uuid 8e35b121-a32a-42d4-9e6b-9ca0e74d42bf)
+    (property "Reference" "3C2" (at 116.84 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "470u" (at 116.84 124.46000000000001 0)
@@ -3513,12 +3513,12 @@
     (property "Datasheet" "~" (at 114.3 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 3f271a95e5ca4a34bc61b7a93ba984e5))
-    (pin "2" (uuid 896ad20093144c71aee96218b0621e70))
+    (pin "1" (uuid 4e1971c679694924a85636c945113bf8))
+    (pin "2" (uuid 79ff3483b4c84b219360ab2b9d015306))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C3") (unit 1)
+          (reference "3C2") (unit 1)
         )
       )
     )
@@ -3526,8 +3526,8 @@
 
   (symbol (lib_id "Device:C") (at 139.7 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 248852e4-b5c7-4467-930e-03d3429d06d9)
-    (property "Reference" "C4" (at 142.23999999999998 119.38 0)
+    (uuid 53250c4c-c628-40df-9ac9-5f269b5c0d4b)
+    (property "Reference" "3C3" (at 142.23999999999998 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "470u" (at 142.23999999999998 124.46000000000001 0)
@@ -3539,12 +3539,12 @@
     (property "Datasheet" "~" (at 139.7 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 1c6ac658a9cc4cea90a7d511395ba244))
-    (pin "2" (uuid 445e3af0a0b447ec97d1789e5ccb15a1))
+    (pin "1" (uuid 92b3e5645de845eb99be81d955aadef5))
+    (pin "2" (uuid ceeca7baffd74ddca54da01bb2570ba3))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C4") (unit 1)
+          (reference "3C3") (unit 1)
         )
       )
     )
@@ -3552,8 +3552,8 @@
 
   (symbol (lib_id "Device:R") (at 63.5 147.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid d12eee10-9586-4538-9c02-6e0e7b5b7e52)
-    (property "Reference" "R8" (at 66.04 144.78 0)
+    (uuid 30f79074-7cc3-4c83-91ab-1bb060290571)
+    (property "Reference" "3R1" (at 66.04 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k" (at 66.04 149.85999999999999 0)
@@ -3565,12 +3565,12 @@
     (property "Datasheet" "~" (at 63.5 147.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid fdef7efc142a491085e101be790951f8))
-    (pin "2" (uuid 8bf5704d39e848ae8b523191cd6ecf32))
+    (pin "1" (uuid b22ffe1088d94f23b78af4fdd9d597fa))
+    (pin "2" (uuid 1407d8c64fff4951a2b46363762149b1))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R8") (unit 1)
+          (reference "3R1") (unit 1)
         )
       )
     )
@@ -3578,8 +3578,8 @@
 
   (symbol (lib_id "tinyups:BQ25720") (at 190.5 45.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 213ea9f4-6452-48fe-9147-24be36ccb0e6)
-    (property "Reference" "U3" (at 193.04 43.18 0)
+    (uuid cc074027-65bb-4cf4-a01f-3985dc029557)
+    (property "Reference" "2U1" (at 193.04 43.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "BQ25720" (at 193.04 48.26 0)
@@ -3591,42 +3591,42 @@
     (property "Datasheet" "~" (at 190.5 45.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 7ece7f5efe66421b96443e44caf3b6c8))
-    (pin "2" (uuid 5871dcb51721455cb2df325f343fa227))
-    (pin "3" (uuid 9475a1ed9425481fb25585b57307908d))
-    (pin "4" (uuid 5be15fd5a7b248d4afec22348f65fcea))
-    (pin "5" (uuid 4e1f8a7529f34fd499ecd40856240ee7))
-    (pin "6" (uuid 2a77d36e00174362aecc9f5fbcd786cb))
-    (pin "7" (uuid 2373b6e123f04e2fae214039af57db89))
-    (pin "8" (uuid 8292ba935c6c4b5ead6de60ce00fc20f))
-    (pin "9" (uuid a91f257539a8433dbf9a0f93d5edb078))
-    (pin "10" (uuid 1f053273d9dc4e9a9acff89dc8d2831d))
-    (pin "11" (uuid ca43c2db26e844ed92dc183518578bf1))
-    (pin "12" (uuid ecc3d79697684569a3dbdd70ddcfca7d))
-    (pin "13" (uuid a48486b8b6c646b7834ca4b7413f993c))
-    (pin "14" (uuid c60e5e2df07f499b8e7a8c24482041da))
-    (pin "15" (uuid 03542581d4574d6f93cac62e9aff986b))
-    (pin "16" (uuid e377a78fc6e9494a9ea4795598ce0d22))
-    (pin "17" (uuid b69611b6d1a841a39f61a02c300d3ef4))
-    (pin "18" (uuid 9f4d89c3756f487687fa50b29df0ff95))
-    (pin "19" (uuid f610098246234adca937f588d4c3b075))
-    (pin "20" (uuid bae8e061c95d433989cea4ce6a36483b))
-    (pin "21" (uuid 5bee50dbfcdc49ed8eb8494e62c61192))
-    (pin "22" (uuid d93c27102284464798f0a0ff2fdce408))
-    (pin "23" (uuid e97a8daa671848c1a151241b2edfbdd5))
-    (pin "24" (uuid c100bc7295d0408eb68b57354accd5eb))
-    (pin "25" (uuid 70bce627685c459d9ff6512b08ee6b75))
-    (pin "26" (uuid b9e84cc03a9d46daaf6c70575070e92c))
-    (pin "27" (uuid 33fee53701d84ed3a3b6719b0bb7be5b))
-    (pin "28" (uuid 43fcc3f691dc4fa084a2b3b15fe9226e))
-    (pin "29" (uuid 25bf7ec4e9c749e7aa602029b52223e9))
-    (pin "30" (uuid 5bc5fd677dcb4966a17ab091de1f66e8))
-    (pin "31" (uuid dafc755e1c4b4aa986c5882b00bb5ecd))
-    (pin "32" (uuid 0522398ce00d495083ca1c3514da0a63))
+    (pin "1" (uuid 23f14ae2ed3146c1b0a5ce005d7abcf4))
+    (pin "2" (uuid bee09c1e7add4fd7bbb421921de71938))
+    (pin "3" (uuid 2c2a884277f7413e84bcd2c0ad5f35d3))
+    (pin "4" (uuid 47af45dc3c194d10aa388e4dd3c6b28b))
+    (pin "5" (uuid 3da675d3c4ba40bca1b9c56eaf1390f0))
+    (pin "6" (uuid cea87ebabdca4a3d84e7f4497f306086))
+    (pin "7" (uuid ed8caf9059604513a22a9f753ce69634))
+    (pin "8" (uuid 6a028dad3b84421ba2a4d6a8adf558c6))
+    (pin "9" (uuid d2a96bcb786640f0b0f601cbfe7aaff3))
+    (pin "10" (uuid 768061fb7b7f4b7f856b2cc151cd9245))
+    (pin "11" (uuid 987aa095ac834c2e8565fa499bd12b96))
+    (pin "12" (uuid add1750aacf54a558deca879c031729a))
+    (pin "13" (uuid 0679d8d21d8c426db3b562554030d2bd))
+    (pin "14" (uuid 2c3e4dcd08c5429f978fbd309af87cce))
+    (pin "15" (uuid c897f8cc99794100996fe439b715f9b9))
+    (pin "16" (uuid ab3538476eba485ca40e7581ec3e1883))
+    (pin "17" (uuid 9bfe0e69bfcb4a74a5267d1c276da166))
+    (pin "18" (uuid a4bcc2815c944a91bcf0bed7c24a9a58))
+    (pin "19" (uuid 51b07cad9a5b4d159c7ec814c4fd06bf))
+    (pin "20" (uuid 2f8c40b3cc14464b80d4153ec95470da))
+    (pin "21" (uuid 3d6ed859e2134d09a8b20113dbd2b28e))
+    (pin "22" (uuid 0fc04daf63f5459598ade1dd89462f47))
+    (pin "23" (uuid 3d94e6cfd7324d778ffff683208aff2e))
+    (pin "24" (uuid ebb6973cc3c34ba6b3f1455551d84e70))
+    (pin "25" (uuid d2ceef205cf84488875e03f0ba1dc18f))
+    (pin "26" (uuid b917750dd6fb4468bfeeb621535ba526))
+    (pin "27" (uuid 41fdb60a74da45e3ad77cfecb457225a))
+    (pin "28" (uuid a1005f6ee66a4d8e9260d9ef6e08d243))
+    (pin "29" (uuid 510d192f97734a29b2e191a860ffda98))
+    (pin "30" (uuid e2dd20e96e80445aadafc041350be3cf))
+    (pin "31" (uuid 7bd62d3b9f614cfd877adad6317898d7))
+    (pin "32" (uuid 6a5c34f6c8a141e081e48cfe6bd42073))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "U3") (unit 1)
+          (reference "2U1") (unit 1)
         )
       )
     )
@@ -3634,8 +3634,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 190.5 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid eaacfdfc-1918-44a0-80fc-c3d08b648445)
-    (property "Reference" "Q3" (at 193.04 93.97999999999999 0)
+    (uuid bd3af40f-9522-4722-a167-b8cffa051bfe)
+    (property "Reference" "2Q1" (at 193.04 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 30V" (at 193.04 99.06 0)
@@ -3647,13 +3647,13 @@
     (property "Datasheet" "~" (at 190.5 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid d8136ab2b7af49f49f0cfd9d5147787f))
-    (pin "3" (uuid 428ebe4e0c514b5583d9074fe6e30f4a))
-    (pin "2" (uuid a84cdbe64aca411d96475f411d581eee))
+    (pin "1" (uuid d9709968c6bd4a62a29c806696eea5a2))
+    (pin "3" (uuid 4f4a08a03403494681437c92d93f6df8))
+    (pin "2" (uuid 612bee90ecab4730b2a8086892a8c2cd))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q3") (unit 1)
+          (reference "2Q1") (unit 1)
         )
       )
     )
@@ -3661,8 +3661,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 215.9 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 88633c21-443c-4cd5-812b-361441552fdf)
-    (property "Reference" "Q4" (at 218.44 93.97999999999999 0)
+    (uuid cec03c4a-97aa-4062-a8f8-3baa2aedc2d4)
+    (property "Reference" "2Q2" (at 218.44 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 30V" (at 218.44 99.06 0)
@@ -3674,13 +3674,13 @@
     (property "Datasheet" "~" (at 215.9 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 585c92f53e5a4a20904915491bf990d1))
-    (pin "3" (uuid 5a9f8a0f6cd24e5cb0190978c89636a0))
-    (pin "2" (uuid 90320ae2604449c78d0879dc4ce9ebc4))
+    (pin "1" (uuid 10c349071d864f819a7903efad557cfb))
+    (pin "3" (uuid 438018146b984559ba5d2d490f157ea1))
+    (pin "2" (uuid 73b705d712a846ada1d305038e0cad60))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q4") (unit 1)
+          (reference "2Q2") (unit 1)
         )
       )
     )
@@ -3688,8 +3688,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 241.3 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid bf859f94-85ef-45ec-88df-202fc685e1f1)
-    (property "Reference" "Q5" (at 243.84 93.97999999999999 0)
+    (uuid d3f84d63-7d34-4b8e-924c-6ffc1bb92bf4)
+    (property "Reference" "2Q3" (at 243.84 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 30V" (at 243.84 99.06 0)
@@ -3701,13 +3701,13 @@
     (property "Datasheet" "~" (at 241.3 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 90d8177117d44fbbbe5c801281a52cd6))
-    (pin "3" (uuid 72bf79ca4ded4147ba6451577091ee33))
-    (pin "2" (uuid d2f0d61939674f079729d35a4f2c6760))
+    (pin "1" (uuid 5f55e1b867c748ed85043a87812afec8))
+    (pin "3" (uuid bd9e489ed1b644c98ac7da6570956593))
+    (pin "2" (uuid 54c53002253c40be8e5e342f2f6c9309))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q5") (unit 1)
+          (reference "2Q3") (unit 1)
         )
       )
     )
@@ -3715,8 +3715,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 266.7 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 832f3d83-7054-4d2e-9292-f8dd8f48313f)
-    (property "Reference" "Q6" (at 269.24 93.97999999999999 0)
+    (uuid babf6c72-1de2-4b16-b3ed-30abb9c32681)
+    (property "Reference" "2Q4" (at 269.24 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 30V" (at 269.24 99.06 0)
@@ -3728,13 +3728,13 @@
     (property "Datasheet" "~" (at 266.7 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid ae191ad893804bd981f84c5213fd5096))
-    (pin "3" (uuid 172ac094051f42aea65785d6c79c97d5))
-    (pin "2" (uuid 64d57b870bdb446691c410d6de6f7820))
+    (pin "1" (uuid d86fcf8713504eb4aab0abbb521ef36a))
+    (pin "3" (uuid e2a863b0177b4aa8af05fd4fd01afdc7))
+    (pin "2" (uuid d5b22e5041834b0ba25903f2dead952b))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q6") (unit 1)
+          (reference "2Q4") (unit 1)
         )
       )
     )
@@ -3742,8 +3742,8 @@
 
   (symbol (lib_id "Device:L") (at 228.6 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 9e9b0eac-46f1-4d0f-bb15-c7e301d68b19)
-    (property "Reference" "L2" (at 231.14 119.38 0)
+    (uuid a7282045-785b-49f4-b25c-374c2c62e006)
+    (property "Reference" "2L1" (at 231.14 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "2.2u" (at 231.14 124.46000000000001 0)
@@ -3755,12 +3755,12 @@
     (property "Datasheet" "~" (at 228.6 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 55cab8aaa4ef47caa23780b162267b54))
-    (pin "2" (uuid d42fda5c06e54bd2b61b7171dd6a93ad))
+    (pin "1" (uuid bb3451e7257344e58e5034cf7c59300a))
+    (pin "2" (uuid 665c7bd37e1d454988e8ffb6d8253489))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "L2") (unit 1)
+          (reference "2L1") (unit 1)
         )
       )
     )
@@ -3768,8 +3768,8 @@
 
   (symbol (lib_id "Device:R") (at 165.1 45.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 629c2652-8e49-437f-bbc9-492c9f334677)
-    (property "Reference" "R9" (at 167.64 43.18 0)
+    (uuid acb3fc72-bf75-4726-9e33-c92947634974)
+    (property "Reference" "2R1" (at 167.64 43.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "5m" (at 167.64 48.26 0)
@@ -3781,12 +3781,12 @@
     (property "Datasheet" "~" (at 165.1 45.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 742ca8b3c89149a7bd1939df69c87d64))
-    (pin "2" (uuid 8e59e201299d440499213d7f3fcfeb87))
+    (pin "1" (uuid 81903478881e44b2bae1a97b84bc2607))
+    (pin "2" (uuid 464219a1556d4266bd752485baef46d0))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R9") (unit 1)
+          (reference "2R1") (unit 1)
         )
       )
     )
@@ -3794,8 +3794,8 @@
 
   (symbol (lib_id "Device:R") (at 165.1 71.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid e8efa580-c278-4aa2-be77-ec074945ee9b)
-    (property "Reference" "R10" (at 167.64 68.58 0)
+    (uuid d9a20fa2-17ee-4b3f-9843-948ae2fdad75)
+    (property "Reference" "2R2" (at 167.64 68.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "5m" (at 167.64 73.66000000000001 0)
@@ -3807,12 +3807,12 @@
     (property "Datasheet" "~" (at 165.1 71.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 7d11b59319fb411dabb8f995f9d29eef))
-    (pin "2" (uuid 6dcf99dd8de7410e8a6233df02876c87))
+    (pin "1" (uuid 106a188259cf4a8fb90e0c1dfe2abc3f))
+    (pin "2" (uuid 8b3d27b2fcf44c9890f2d19c1867debd))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R10") (unit 1)
+          (reference "2R2") (unit 1)
         )
       )
     )
@@ -3820,8 +3820,8 @@
 
   (symbol (lib_id "Device:C") (at 190.5 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 25aa5cd1-39ae-4df2-9f60-f9b62126b176)
-    (property "Reference" "C5" (at 193.04 119.38 0)
+    (uuid a36bf500-b1aa-4f1d-ac7c-8aca14fb5d06)
+    (property "Reference" "2C1" (at 193.04 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "47n" (at 193.04 124.46000000000001 0)
@@ -3833,12 +3833,12 @@
     (property "Datasheet" "~" (at 190.5 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 848282f2e6594cebb0e8c76a880d2ae3))
-    (pin "2" (uuid 312ca57e537f44cf8c61e1d356ee15cd))
+    (pin "1" (uuid 0d75dd1eea1d43a4b66bc495f108b7a2))
+    (pin "2" (uuid cb184b18aef44e98a006e54928062a68))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C5") (unit 1)
+          (reference "2C1") (unit 1)
         )
       )
     )
@@ -3846,8 +3846,8 @@
 
   (symbol (lib_id "Device:C") (at 215.9 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 904ccd68-bb9a-47c4-a117-898cf5ffa486)
-    (property "Reference" "C6" (at 218.44 119.38 0)
+    (uuid 3efe2e00-0544-41d5-9e78-12b62b9344ff)
+    (property "Reference" "2C2" (at 218.44 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "47n" (at 218.44 124.46000000000001 0)
@@ -3859,12 +3859,12 @@
     (property "Datasheet" "~" (at 215.9 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 4e4801653ecc4fbdb668f88ae825c85f))
-    (pin "2" (uuid 50e4150b66d2480db30ebb51bcabcb73))
+    (pin "1" (uuid 0cc3150a7ae24abe858e5ee1864de940))
+    (pin "2" (uuid a80d8ef698a0473cbbf2aabeb1c3104e))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C6") (unit 1)
+          (reference "2C2") (unit 1)
         )
       )
     )
@@ -3872,8 +3872,8 @@
 
   (symbol (lib_id "Device:C") (at 241.3 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 6b4c0953-ef7e-47ef-80e2-7c674727fea4)
-    (property "Reference" "C7" (at 243.84 119.38 0)
+    (uuid a632aae0-566c-4065-84f4-594e7e2ce542)
+    (property "Reference" "2C3" (at 243.84 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1u" (at 243.84 124.46000000000001 0)
@@ -3885,12 +3885,12 @@
     (property "Datasheet" "~" (at 241.3 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid ddaa0d7c64cc48f5b8719518b327bf7a))
-    (pin "2" (uuid 2850751b6b5344d0bb4c52381ad02f88))
+    (pin "1" (uuid 08436420f29b40789217e2b73fa6a4c9))
+    (pin "2" (uuid deeae9ec025a49038a3bfad7297a2ee4))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C7") (unit 1)
+          (reference "2C3") (unit 1)
         )
       )
     )
@@ -3898,8 +3898,8 @@
 
   (symbol (lib_id "Device:C") (at 266.7 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 35337e90-dda4-4395-a41f-1ef1e497e99b)
-    (property "Reference" "C8" (at 269.24 119.38 0)
+    (uuid eb6a0883-6f6e-4bc3-9823-ad3ff750639b)
+    (property "Reference" "2C4" (at 269.24 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1u" (at 269.24 124.46000000000001 0)
@@ -3911,12 +3911,12 @@
     (property "Datasheet" "~" (at 266.7 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 4e08a234d595408bab9a6693f4cefe77))
-    (pin "2" (uuid 2215998a1481419f8eda2d4353d52abf))
+    (pin "1" (uuid e227cf52c4154a7cbc6fb95ec75e50c9))
+    (pin "2" (uuid 2691d3e9fa5f46e784f2d54bf1bdd5f8))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C8") (unit 1)
+          (reference "2C4") (unit 1)
         )
       )
     )
@@ -3924,8 +3924,8 @@
 
   (symbol (lib_id "Device:R") (at 165.1 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid aa306c38-cbe1-4413-b903-f18a2643d4bc)
-    (property "Reference" "R11" (at 167.64 93.97999999999999 0)
+    (uuid 3cc04f09-af8a-4376-9072-39c1d2a4ba86)
+    (property "Reference" "2R3" (at 167.64 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k" (at 167.64 99.06 0)
@@ -3937,12 +3937,12 @@
     (property "Datasheet" "~" (at 165.1 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid bddfb873d0734aa58217622fd4b23c2c))
-    (pin "2" (uuid d4728f05b64246069213ca57aa616bd2))
+    (pin "1" (uuid cda18dd4687147c4a15cb1fdb72deaa9))
+    (pin "2" (uuid d66ee3cbb51c46a199f4759c5c7feeec))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R11") (unit 1)
+          (reference "2R3") (unit 1)
         )
       )
     )
@@ -3950,8 +3950,8 @@
 
   (symbol (lib_id "Device:R") (at 165.1 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid b4bdc477-35f9-46da-aea1-d6fb5f58b9fe)
-    (property "Reference" "R12" (at 167.64 119.38 0)
+    (uuid 2a7e9a3a-4548-4001-b31e-0791fb3fd3e4)
+    (property "Reference" "2R4" (at 167.64 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k" (at 167.64 124.46000000000001 0)
@@ -3963,12 +3963,12 @@
     (property "Datasheet" "~" (at 165.1 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid de7d2386a0254110884dceb5c2fbe747))
-    (pin "2" (uuid e62ac16c45ef45bba4691ab3f264bb7f))
+    (pin "1" (uuid b8d5ac8f932e4409bb1c5fe35a09706e))
+    (pin "2" (uuid 5bca79c87d3249c699793a82d7e705dd))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R12") (unit 1)
+          (reference "2R4") (unit 1)
         )
       )
     )
@@ -3976,8 +3976,8 @@
 
   (symbol (lib_id "Device:R") (at 190.5 147.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 51261da9-3dba-4a93-9a19-49dd053ef183)
-    (property "Reference" "R13" (at 193.04 144.78 0)
+    (uuid e8c01df8-7961-41fb-84e6-d0f90ab209e7)
+    (property "Reference" "2R5" (at 193.04 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 193.04 149.85999999999999 0)
@@ -3989,12 +3989,12 @@
     (property "Datasheet" "~" (at 190.5 147.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 00550d9d94b14af49f170ee082310c18))
-    (pin "2" (uuid 8cea85072d0f40e78f996d746b6c6b22))
+    (pin "1" (uuid e443dd2fd43c4eac965e3d907d0e3158))
+    (pin "2" (uuid 1a5604bf4f754cd78f0004bd7e825bc6))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R13") (unit 1)
+          (reference "2R5") (unit 1)
         )
       )
     )
@@ -4002,8 +4002,8 @@
 
   (symbol (lib_id "Device:R") (at 215.9 147.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 8d54d2f1-0084-4dd8-ad1b-ac62917dba04)
-    (property "Reference" "R14" (at 218.44 144.78 0)
+    (uuid bc264b9e-0236-4b37-a8ce-43916121007a)
+    (property "Reference" "2R6" (at 218.44 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 218.44 149.85999999999999 0)
@@ -4015,12 +4015,12 @@
     (property "Datasheet" "~" (at 215.9 147.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid d574cccdf5394caabd7e077aac9b540b))
-    (pin "2" (uuid bd2ce8538b9046bb80460a5969263c04))
+    (pin "1" (uuid cc00110433e642d089d258e5283d4a6b))
+    (pin "2" (uuid 20e4b5d816354b40a4fb18ecb00bbdfb))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R14") (unit 1)
+          (reference "2R6") (unit 1)
         )
       )
     )
@@ -4028,8 +4028,8 @@
 
   (symbol (lib_id "Device:R") (at 241.3 147.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 519115bb-c60f-4d01-87cc-5900ce922485)
-    (property "Reference" "R15" (at 243.84 144.78 0)
+    (uuid 5492370d-5e8d-4a09-8557-825160eed0b2)
+    (property "Reference" "2R7" (at 243.84 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 243.84 149.85999999999999 0)
@@ -4041,12 +4041,12 @@
     (property "Datasheet" "~" (at 241.3 147.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 97245d2f1ff14e5b87021ccc99dbb0a3))
-    (pin "2" (uuid efc0ffae790d4798b47e3865767482ef))
+    (pin "1" (uuid 7b8609eb73284abfb2f25152cf061e6e))
+    (pin "2" (uuid bffa1c2bca54420fb6052c2bc3c29d7c))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R15") (unit 1)
+          (reference "2R7") (unit 1)
         )
       )
     )
@@ -4054,8 +4054,8 @@
 
   (symbol (lib_id "Device:R") (at 304.8 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 21a67c93-3e48-498c-a196-7942bab6004c)
-    (property "Reference" "R40" (at 307.34000000000003 378.46 0)
+    (uuid bdfe8b55-11b7-4191-85fd-6b82fab57348)
+    (property "Reference" "2R8" (at 307.34000000000003 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 307.34000000000003 383.54 0)
@@ -4067,12 +4067,12 @@
     (property "Datasheet" "~" (at 304.8 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid ecd42d04ce4145f08e0343e946668313))
-    (pin "2" (uuid 834f362946d24776a24b96d96b635615))
+    (pin "1" (uuid 7154dfdd82974a64b2c9bbbfaab1e477))
+    (pin "2" (uuid 1f51e6aae7d249e3bf78e68ac25fc3de))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R40") (unit 1)
+          (reference "2R8") (unit 1)
         )
       )
     )
@@ -4080,8 +4080,8 @@
 
   (symbol (lib_id "Device:C") (at 330.2 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 45ce4379-4737-4da4-8a3d-326472f1f9fa)
-    (property "Reference" "C29" (at 332.74 378.46 0)
+    (uuid 3c8ae42d-9870-4ffb-bcbf-36ff94efbb1b)
+    (property "Reference" "2C5" (at 332.74 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10n" (at 332.74 383.54 0)
@@ -4093,12 +4093,12 @@
     (property "Datasheet" "~" (at 330.2 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid d867908767384497b6dc8f74685c9476))
-    (pin "2" (uuid 105711fb1bcb424b9df14fe481395d2d))
+    (pin "1" (uuid db4d04612337497683af2b7b37ec5336))
+    (pin "2" (uuid e620d88cfac14462aa34511807b343ce))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C29") (unit 1)
+          (reference "2C5") (unit 1)
         )
       )
     )
@@ -4106,8 +4106,8 @@
 
   (symbol (lib_id "Device:C") (at 355.6 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid acb7f034-7c9a-4063-8722-78d16dc2c64f)
-    (property "Reference" "C30" (at 358.14000000000004 378.46 0)
+    (uuid d98a86d8-635d-4f60-80a2-e066430e0815)
+    (property "Reference" "2C6" (at 358.14000000000004 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1n" (at 358.14000000000004 383.54 0)
@@ -4119,12 +4119,12 @@
     (property "Datasheet" "~" (at 355.6 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 9d0c8b5181884350af251a7d2e978625))
-    (pin "2" (uuid 0a6d0775523c43c79fd4a26329fd9bf0))
+    (pin "1" (uuid 300a243be1894fe98e1a219a0f2f3997))
+    (pin "2" (uuid e269d2ef9a914deb8d63224bf54160df))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C30") (unit 1)
+          (reference "2C6") (unit 1)
         )
       )
     )
@@ -4132,8 +4132,8 @@
 
   (symbol (lib_id "Device:C") (at 381.0 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid c63b6e18-5ea4-4c65-bf13-fbd5329eccb8)
-    (property "Reference" "C31" (at 383.54 378.46 0)
+    (uuid b93fcad4-07e3-49d3-8f48-aec299321cd2)
+    (property "Reference" "2C7" (at 383.54 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 383.54 383.54 0)
@@ -4145,12 +4145,12 @@
     (property "Datasheet" "~" (at 381.0 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid bbec92fe6f6d472b824fc11227112520))
-    (pin "2" (uuid b91159085a544976a6cda46d6199bef9))
+    (pin "1" (uuid 4f56de280ee44dfba56e8a24e2c90993))
+    (pin "2" (uuid 8545de37784a4fdfbcbeba4c0fe7bfc3))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C31") (unit 1)
+          (reference "2C7") (unit 1)
         )
       )
     )
@@ -4158,8 +4158,8 @@
 
   (symbol (lib_id "Device:R") (at 406.4 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 867e6585-994d-4e79-a6eb-6ba599161db4)
-    (property "Reference" "R41" (at 408.94 378.46 0)
+    (uuid c0322375-1a7f-4bf6-9b5f-a46ff1079d84)
+    (property "Reference" "2R9" (at 408.94 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 408.94 383.54 0)
@@ -4171,12 +4171,12 @@
     (property "Datasheet" "~" (at 406.4 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid ce07b88cc6354f50b405833202a302b4))
-    (pin "2" (uuid c9d28ce805d24bc0a8efa17bc939fc29))
+    (pin "1" (uuid abdfd6117d5c4b63a58815dd0213e60a))
+    (pin "2" (uuid 9bdac2d8c8f247eeb5bd518486561313))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R41") (unit 1)
+          (reference "2R9") (unit 1)
         )
       )
     )
@@ -4184,8 +4184,8 @@
 
   (symbol (lib_id "Device:C") (at 431.8 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 9d0ac64d-1ea1-4ed8-9847-918c103721ef)
-    (property "Reference" "C32" (at 434.34000000000003 378.46 0)
+    (uuid 8aa0b8dd-2026-42ca-bd7f-d6963f48e4f2)
+    (property "Reference" "2C8" (at 434.34000000000003 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 434.34000000000003 383.54 0)
@@ -4197,12 +4197,12 @@
     (property "Datasheet" "~" (at 431.8 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 61502180d79d42619a4af82e5e40c80d))
-    (pin "2" (uuid 26bc7569cbfe4c51bf070f058590ff19))
+    (pin "1" (uuid 090b4335e1d94bbc851aa1842e81aa1c))
+    (pin "2" (uuid dd634920346e4a9fa0fed1145964c14e))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C32") (unit 1)
+          (reference "2C8") (unit 1)
         )
       )
     )
@@ -4210,8 +4210,8 @@
 
   (symbol (lib_id "Device:R") (at 457.2 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid d2e2b8b9-ab5b-44b8-97bc-2eb08864d792)
-    (property "Reference" "R42" (at 459.74 378.46 0)
+    (uuid d320276b-c5f6-4325-9d7c-70e32ff88e1c)
+    (property "Reference" "2R10" (at 459.74 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 459.74 383.54 0)
@@ -4223,12 +4223,12 @@
     (property "Datasheet" "~" (at 457.2 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 581aa81c6376473a8531af284e9ae5d6))
-    (pin "2" (uuid 713ff79fb62341aa96e86a5c8cf2807d))
+    (pin "1" (uuid d5c9f84c501d420781ff24d96593b4e9))
+    (pin "2" (uuid d37eaa5b1a43475db8fb23886f5c6a18))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R42") (unit 1)
+          (reference "2R10") (unit 1)
         )
       )
     )
@@ -4236,8 +4236,8 @@
 
   (symbol (lib_id "Device:C") (at 482.6 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid f51b806c-8a3e-44cf-a1e8-82d408eb8e45)
-    (property "Reference" "C33" (at 485.14000000000004 378.46 0)
+    (uuid 38892e00-139c-49ac-8e50-3e7c05c79fd3)
+    (property "Reference" "2C9" (at 485.14000000000004 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 485.14000000000004 383.54 0)
@@ -4249,12 +4249,12 @@
     (property "Datasheet" "~" (at 482.6 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 88707f84234e468db2dae0454521b3cb))
-    (pin "2" (uuid 0a19d76c495942d5a7a147eb52b6d74b))
+    (pin "1" (uuid 84fc1356da1346b5803c096a3310e6e4))
+    (pin "2" (uuid 9239eb3d92f049b5a032f486eb9feb23))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C33") (unit 1)
+          (reference "2C9") (unit 1)
         )
       )
     )
@@ -4262,8 +4262,8 @@
 
   (symbol (lib_id "Device:R") (at 508.0 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 8cc3a17c-cded-4135-bfbb-2fbb0aca85ab)
-    (property "Reference" "R43" (at 510.54 378.46 0)
+    (uuid b6244b3c-0a6e-49f4-b715-67f991e2b4f1)
+    (property "Reference" "2R11" (at 510.54 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 510.54 383.54 0)
@@ -4275,12 +4275,12 @@
     (property "Datasheet" "~" (at 508.0 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 5102082d82a548f78742adb078f4fd56))
-    (pin "2" (uuid e8b0dc2dd4024f0f87aabab7e950a119))
+    (pin "1" (uuid 565caa52f3ca4074b9305b1a70e086ee))
+    (pin "2" (uuid d22ecadaad6e4ca483ab05d89a2aed7a))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R43") (unit 1)
+          (reference "2R11") (unit 1)
         )
       )
     )
@@ -4288,8 +4288,8 @@
 
   (symbol (lib_id "Device:R") (at 533.4 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 45c3bb4a-26e9-479a-a68d-9ef7688c8a1b)
-    (property "Reference" "R44" (at 535.9399999999999 378.46 0)
+    (uuid 2a14e471-9609-44d6-9465-2137a7704af8)
+    (property "Reference" "2R12" (at 535.9399999999999 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 535.9399999999999 383.54 0)
@@ -4301,12 +4301,12 @@
     (property "Datasheet" "~" (at 533.4 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid e69865b67a0448a69d648aece4bdc1e1))
-    (pin "2" (uuid 7177d82c1b7948089516256f144b6ac8))
+    (pin "1" (uuid 87a39874d3864dc5b255b4ffbb9da6f7))
+    (pin "2" (uuid f05845c98d82474ba85e1efe063357a4))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R44") (unit 1)
+          (reference "2R12") (unit 1)
         )
       )
     )
@@ -4314,8 +4314,8 @@
 
   (symbol (lib_id "tinyups:LM5176") (at 330.2 45.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 447e7647-04de-49bd-a60b-3f39cea99caf)
-    (property "Reference" "U4" (at 332.74 43.18 0)
+    (uuid b0e8268a-e2e6-4cd4-9dbe-ee25bdfed834)
+    (property "Reference" "5U1" (at 332.74 43.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "LM5176" (at 332.74 48.26 0)
@@ -4327,38 +4327,38 @@
     (property "Datasheet" "~" (at 330.2 45.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 4b09754ff72b456aa88d1efdc28f9389))
-    (pin "2" (uuid f82726ee193946569d295684b2659dc3))
-    (pin "3" (uuid 9b97c53d72c94c0ebd159d8675cebf1f))
-    (pin "4" (uuid b172640323654465b8fcff857f133761))
-    (pin "5" (uuid 36cd2d54d24b404ea82f893cff5e0585))
-    (pin "6" (uuid a88f0e157c394510b507f8c0c28df0e6))
-    (pin "7" (uuid 319a8cf29d3c4e86ab412b39e8a7b0c2))
-    (pin "8" (uuid 490fc9025aea4f42969f4597242a4bc2))
-    (pin "9" (uuid e138c330e45045e19d315e9d3a7e2e04))
-    (pin "10" (uuid bfaeee965b894a05a20deb6274c44a77))
-    (pin "11" (uuid 94544ff3d6124baa8a83eaddcd15a984))
-    (pin "12" (uuid c833c828c8b9449293b732775828a007))
-    (pin "13" (uuid f9508913623741619e98ae5c5d2366b0))
-    (pin "14" (uuid b9381c7cee3d493eb2a198c395d7626d))
-    (pin "15" (uuid fa3e8391290749d38fa55948890192c8))
-    (pin "16" (uuid d3e6b52804ea4f54a309032e82e9c50b))
-    (pin "17" (uuid 17abf9bb7a9448a8ace177cf7dc1ff93))
-    (pin "18" (uuid a3d25ddb8bb4479ab5bc439e9bbd8473))
-    (pin "19" (uuid 339537b296954fa68e164bacc9d2d2e2))
-    (pin "20" (uuid b7a60dc207704724bb843182587d51c4))
-    (pin "21" (uuid 39ecc53f5f2a436ab4ab5a41f092af98))
-    (pin "22" (uuid 9aa11e4687a34ed09ac4e5173a3fc90b))
-    (pin "23" (uuid b8ac638b305b461f8dc11b1d1dd7dde7))
-    (pin "24" (uuid 290db596d0aa4934b24d5145c07cb049))
-    (pin "25" (uuid 5b1ed75cb764487d876dedc224c336b6))
-    (pin "26" (uuid 4b4fa1fbb45f403792c9936caaa5b4d9))
-    (pin "27" (uuid cf9a66f6fae84111b2cfff6e9577d2ff))
-    (pin "28" (uuid bb88ba048ac84e378c63c5627df8e0a5))
+    (pin "1" (uuid 5d5f6249873843adb05cf581a1df6a91))
+    (pin "2" (uuid 3094556f63304c5d9389304df1fabf27))
+    (pin "3" (uuid 29195050e5564ccd8f503475f4cf2e4a))
+    (pin "4" (uuid 4a7cb63380274ac6abe2696a777322f6))
+    (pin "5" (uuid 6cda25c6fbe24a49a109d7a35c74bef0))
+    (pin "6" (uuid 966d2e07bc6b4b12b1a666c58a63a2e8))
+    (pin "7" (uuid f0d3b312c11a4b7cb41e6dd7d22c6e4d))
+    (pin "8" (uuid f3d80ca8589449ec9bdd66194a9ffd99))
+    (pin "9" (uuid d1d62830e49044679d48c89e86c5ebd2))
+    (pin "10" (uuid e6b7ed064b18471d8996a85f8669d3ae))
+    (pin "11" (uuid cc7a1f994e094926aa951680bb725037))
+    (pin "12" (uuid d0b0cd9be6224fd8a1ed0563c805f643))
+    (pin "13" (uuid 5d87b17d9e794c708123a2fce1cfda2f))
+    (pin "14" (uuid ae96803db4ec43e88bb617e53e0654e2))
+    (pin "15" (uuid ab754b9f8d604536ab6241d646a98709))
+    (pin "16" (uuid 5d5fe8df89724c648047c9fc33258245))
+    (pin "17" (uuid 4008ce12c2d041ca820a768373a54c1c))
+    (pin "18" (uuid 87b7eb2deedf41dfbf3fc46db565a8d3))
+    (pin "19" (uuid a99932da373b4487a57d7bca3209f2ab))
+    (pin "20" (uuid 37ec4c48981b47de85cd821e236743bd))
+    (pin "21" (uuid 8e090dfb457d4079bfc5d49d1ce8796d))
+    (pin "22" (uuid e61e42e97a2a46c7a934103c20fca17f))
+    (pin "23" (uuid d05c398ac7354a2f99603170115ffcd4))
+    (pin "24" (uuid f95e0935c03743d393d8472237a3dea1))
+    (pin "25" (uuid bd2a64d9f6734ab388cb01d620b0a418))
+    (pin "26" (uuid 6891e83a79394f52a1ad6b314a2204b0))
+    (pin "27" (uuid 6c2346e2a60448c6b222844f1da94c3b))
+    (pin "28" (uuid 77102cf51acf4549b4404fde0eef579c))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "U4") (unit 1)
+          (reference "5U1") (unit 1)
         )
       )
     )
@@ -4366,8 +4366,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 330.2 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 482e7921-70cc-42b3-9456-33acdf3d33d7)
-    (property "Reference" "Q7" (at 332.74 93.97999999999999 0)
+    (uuid 3079a72d-990d-444c-ac27-68cfd27968f7)
+    (property "Reference" "5Q1" (at 332.74 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 40V" (at 332.74 99.06 0)
@@ -4379,13 +4379,13 @@
     (property "Datasheet" "~" (at 330.2 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid ececcde2edc440f1a1b42ecf0b7ca448))
-    (pin "3" (uuid acd77f0006a94a0096fa339ce0406a7b))
-    (pin "2" (uuid 4d02556a36654db2a0edff79fe88e8ca))
+    (pin "1" (uuid a73a1952a9934bd9a79fab89170fd69a))
+    (pin "3" (uuid 1a9d8bdcb81a4c6c8eeb4a0094c220a1))
+    (pin "2" (uuid 5ca1818e54c64d76be17619ee4310203))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q7") (unit 1)
+          (reference "5Q1") (unit 1)
         )
       )
     )
@@ -4393,8 +4393,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 355.6 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 305174dd-9304-4604-83fd-4d1c08c97aea)
-    (property "Reference" "Q8" (at 358.14000000000004 93.97999999999999 0)
+    (uuid f1b2095f-b9ee-4d96-8f75-3f9c65b66789)
+    (property "Reference" "5Q2" (at 358.14000000000004 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 40V" (at 358.14000000000004 99.06 0)
@@ -4406,13 +4406,13 @@
     (property "Datasheet" "~" (at 355.6 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid f1d4656cee38443083c17642413d6d8f))
-    (pin "3" (uuid 981a50988e2f404495b93fd9c455d2a9))
-    (pin "2" (uuid 5adb083f0d54422d9e2a0047104a68dc))
+    (pin "1" (uuid c12facbbe01a4047a988e6d015b46526))
+    (pin "3" (uuid 44b3f15e6a384b6b9c25f04a88d0a582))
+    (pin "2" (uuid 4a6d2716c8fc4d91b08813a20341f340))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q8") (unit 1)
+          (reference "5Q2") (unit 1)
         )
       )
     )
@@ -4420,8 +4420,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 381.0 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 6c457d9b-6a45-45ab-9b4f-9cceccfc2509)
-    (property "Reference" "Q9" (at 383.54 93.97999999999999 0)
+    (uuid 0a551632-113a-4952-af75-6ee0ca810db5)
+    (property "Reference" "5Q3" (at 383.54 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 40V" (at 383.54 99.06 0)
@@ -4433,13 +4433,13 @@
     (property "Datasheet" "~" (at 381.0 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid de91634103934d9db783bad7a6a59e72))
-    (pin "3" (uuid 6f877262d493432e97df91343ca5a1d7))
-    (pin "2" (uuid a963e3277de2420993e239d6135849e4))
+    (pin "1" (uuid 5ae1238902be4d69bd62a97a9f97701e))
+    (pin "3" (uuid b03c9304a4ad4c8bbbf097a22a559a84))
+    (pin "2" (uuid 11335641fa1e42f5b30a0ccadfec5c0e))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q9") (unit 1)
+          (reference "5Q3") (unit 1)
         )
       )
     )
@@ -4447,8 +4447,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 406.4 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 9be3f3f4-1aec-4d0d-afd6-685c83897aa2)
-    (property "Reference" "Q10" (at 408.94 93.97999999999999 0)
+    (uuid 4e209436-bdea-46d7-818a-5d9fca01f355)
+    (property "Reference" "5Q4" (at 408.94 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 40V" (at 408.94 99.06 0)
@@ -4460,13 +4460,13 @@
     (property "Datasheet" "~" (at 406.4 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 1c5af5f163464eb4b8ca30101e69cae1))
-    (pin "3" (uuid accd065e62ec42998013a101a85a2907))
-    (pin "2" (uuid f7947d109ed04d4f8de2a58d2e88a9b2))
+    (pin "1" (uuid 91510104e07a403789660357837293ff))
+    (pin "3" (uuid 35478eaf2f044f42ac32bf17d02a721d))
+    (pin "2" (uuid f042147c597e4fbc96e640f40632edef))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q10") (unit 1)
+          (reference "5Q4") (unit 1)
         )
       )
     )
@@ -4474,8 +4474,8 @@
 
   (symbol (lib_id "Device:L") (at 368.3 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 40fe922e-0c0f-4fdc-a7c6-1876b2707bc0)
-    (property "Reference" "L3" (at 370.84000000000003 119.38 0)
+    (uuid 9d5900f0-83d2-446b-a7a2-7ed2b425303b)
+    (property "Reference" "5L1" (at 370.84000000000003 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1u0" (at 370.84000000000003 124.46000000000001 0)
@@ -4487,12 +4487,12 @@
     (property "Datasheet" "~" (at 368.3 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid d3575318192340fcae888bf3a5ca9152))
-    (pin "2" (uuid 560b05c3a1894341b849dbddaa15b556))
+    (pin "1" (uuid c3aacd37660a453a96dd106da07ba71d))
+    (pin "2" (uuid ca9be83a026c4fe58e4cca819869836e))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "L3") (unit 1)
+          (reference "5L1") (unit 1)
         )
       )
     )
@@ -4500,8 +4500,8 @@
 
   (symbol (lib_id "Device:R") (at 330.2 147.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 5f6afe5d-31ec-4cd2-adde-91e2e9db2f39)
-    (property "Reference" "R16" (at 332.74 144.78 0)
+    (uuid 79bfe84b-998a-4d92-b0d6-5b4b27669957)
+    (property "Reference" "5R1" (at 332.74 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k" (at 332.74 149.85999999999999 0)
@@ -4513,12 +4513,12 @@
     (property "Datasheet" "~" (at 330.2 147.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid f2719d01834642f09f48d553acf64069))
-    (pin "2" (uuid 19c778b065f74731a94d17f390e11fc6))
+    (pin "1" (uuid 09853047dd394d73bc9f704b05c55221))
+    (pin "2" (uuid e8f3741963eb46c38876dd20de7320be))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R16") (unit 1)
+          (reference "5R1") (unit 1)
         )
       )
     )
@@ -4526,8 +4526,8 @@
 
   (symbol (lib_id "Device:R") (at 355.6 147.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 3a23d85b-b6f0-4804-8393-86277db1a1b0)
-    (property "Reference" "R17" (at 358.14000000000004 144.78 0)
+    (uuid eb7f00f3-ea51-498d-a616-0c84294e01b5)
+    (property "Reference" "5R2" (at 358.14000000000004 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "7k15" (at 358.14000000000004 149.85999999999999 0)
@@ -4539,12 +4539,12 @@
     (property "Datasheet" "~" (at 355.6 147.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 4803f7ac4bfe4cc28f9f7b0007d84821))
-    (pin "2" (uuid b9beecb4674c414a99aa5dd9d3d3b2e0))
+    (pin "1" (uuid 69cd1f12998e456d985b655bc8f95126))
+    (pin "2" (uuid 8d3984f7469b4d2dbf8a7c07cffd704a))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R17") (unit 1)
+          (reference "5R2") (unit 1)
         )
       )
     )
@@ -4552,8 +4552,8 @@
 
   (symbol (lib_id "Device:R") (at 381.0 147.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 7bfd60fa-3a51-47cd-8770-3c3e2b29d9dc)
-    (property "Reference" "R18" (at 383.54 144.78 0)
+    (uuid 6b88b293-820c-40ac-abb9-77d4c5c6dd13)
+    (property "Reference" "5R3" (at 383.54 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1m" (at 383.54 149.85999999999999 0)
@@ -4565,12 +4565,12 @@
     (property "Datasheet" "~" (at 381.0 147.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 6c8c009509b4409a9256241a797b91f5))
-    (pin "2" (uuid 2b4303aaafda431a889bfb735fc8a610))
+    (pin "1" (uuid 245f7ac9deb34c7aa078a039d88cffef))
+    (pin "2" (uuid 2713f0d0a1b943419a45146f0833232f))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R18") (unit 1)
+          (reference "5R3") (unit 1)
         )
       )
     )
@@ -4578,8 +4578,8 @@
 
   (symbol (lib_id "Device:R") (at 406.4 147.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 519399d0-1ff4-4695-9a14-3f2674ac2f10)
-    (property "Reference" "R19" (at 408.94 144.78 0)
+    (uuid d4e709b0-d530-4150-8794-664f97856e30)
+    (property "Reference" "5R4" (at 408.94 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "27k" (at 408.94 149.85999999999999 0)
@@ -4591,12 +4591,12 @@
     (property "Datasheet" "~" (at 406.4 147.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid bca3169703e24b03a3be8233ef256839))
-    (pin "2" (uuid 270894cc4b664438b862a06e7e1f5c42))
+    (pin "1" (uuid ed0c017737914e7fb32913363bdc8f02))
+    (pin "2" (uuid 9724671a696042a18b310bca629d5b76))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R19") (unit 1)
+          (reference "5R4") (unit 1)
         )
       )
     )
@@ -4604,8 +4604,8 @@
 
   (symbol (lib_id "Device:R") (at 304.8 147.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid eecc6073-52e1-4118-a76d-68b1cb325bc8)
-    (property "Reference" "R20" (at 307.34000000000003 144.78 0)
+    (uuid 0be1dd46-aa81-44a4-8513-017ce82522b6)
+    (property "Reference" "5R5" (at 307.34000000000003 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "93k1" (at 307.34000000000003 149.85999999999999 0)
@@ -4617,12 +4617,12 @@
     (property "Datasheet" "~" (at 304.8 147.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 70d3756972f84fbabb491caec5cbc1b1))
-    (pin "2" (uuid d53c1f4d8c59472391997b6866b6c420))
+    (pin "1" (uuid a1f28dbd5587495eb2beb53f06f08817))
+    (pin "2" (uuid 56576a4bba9c409489ac1eb88d751a88))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R20") (unit 1)
+          (reference "5R5") (unit 1)
         )
       )
     )
@@ -4630,8 +4630,8 @@
 
   (symbol (lib_id "Device:R") (at 330.2 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid d8f94317-e6fa-45ca-9800-0c80e537c339)
-    (property "Reference" "R21" (at 332.74 170.18 0)
+    (uuid 086827bc-32fd-4bcf-a028-ba507263a45d)
+    (property "Reference" "5R6" (at 332.74 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 332.74 175.26 0)
@@ -4643,12 +4643,12 @@
     (property "Datasheet" "~" (at 330.2 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 9efbfc2b7fc6418385bad8c10055dc14))
-    (pin "2" (uuid 557b196412fe4c50ac098cc349ad52a7))
+    (pin "1" (uuid de0130cdfa164042b9b729d961e2793b))
+    (pin "2" (uuid 3d3ba2a3fcbf492da3ada924adc15107))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R21") (unit 1)
+          (reference "5R6") (unit 1)
         )
       )
     )
@@ -4656,8 +4656,8 @@
 
   (symbol (lib_id "Device:R") (at 355.6 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 7cf57e7a-f6a7-4678-b642-71612aed7e1e)
-    (property "Reference" "R22" (at 358.14000000000004 170.18 0)
+    (uuid dddf4674-0611-488c-91f1-c417628557e3)
+    (property "Reference" "5R7" (at 358.14000000000004 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k" (at 358.14000000000004 175.26 0)
@@ -4669,12 +4669,12 @@
     (property "Datasheet" "~" (at 355.6 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 0f5181b319ff48548abf85943538c014))
-    (pin "2" (uuid 80c046d293884339bdef9bd18825c3ef))
+    (pin "1" (uuid 032ca448175745f48803b763eb6bc429))
+    (pin "2" (uuid f229dabdacda4f34b6526ec65d9ccc47))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R22") (unit 1)
+          (reference "5R7") (unit 1)
         )
       )
     )
@@ -4682,8 +4682,8 @@
 
   (symbol (lib_id "Device:R") (at 381.0 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 7a0d5bd9-cef0-4d67-b287-ddf362558c64)
-    (property "Reference" "R23" (at 383.54 170.18 0)
+    (uuid ef1aa7e1-0290-49c3-9d18-f6957c3c350c)
+    (property "Reference" "5R8" (at 383.54 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 383.54 175.26 0)
@@ -4695,12 +4695,12 @@
     (property "Datasheet" "~" (at 381.0 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 78dd6621945b4a87b81142755460fc83))
-    (pin "2" (uuid 37de603b0cdb4b0e9e253a40af0c341d))
+    (pin "1" (uuid 20dadafd258f459983e1aee085d3115d))
+    (pin "2" (uuid ccf4d7e124324f2c918a7178ff5fba68))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R23") (unit 1)
+          (reference "5R8") (unit 1)
         )
       )
     )
@@ -4708,8 +4708,8 @@
 
   (symbol (lib_id "Device:R") (at 406.4 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid cbe34c93-5929-4260-929b-239f971064d2)
-    (property "Reference" "R24" (at 408.94 170.18 0)
+    (uuid 3a6b9c82-0024-4052-9ad0-c150173058bf)
+    (property "Reference" "5R9" (at 408.94 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k" (at 408.94 175.26 0)
@@ -4721,12 +4721,12 @@
     (property "Datasheet" "~" (at 406.4 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 6244ea7134944eb6b2759268808c1113))
-    (pin "2" (uuid 2b7b9d9bf6cc4b25b88eeaf171041034))
+    (pin "1" (uuid 784deb587fb64be3b2297a7954c3acf0))
+    (pin "2" (uuid 93b2e76302d945e58ec7f9bc87d578ff))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R24") (unit 1)
+          (reference "5R9") (unit 1)
         )
       )
     )
@@ -4734,8 +4734,8 @@
 
   (symbol (lib_id "Device:C") (at 304.8 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid b770f42e-588a-4f11-be57-5425d5f6ab86)
-    (property "Reference" "C9" (at 307.34000000000003 93.97999999999999 0)
+    (uuid f466cbb2-4210-4469-a0aa-3b4cb76450ca)
+    (property "Reference" "5C1" (at 307.34000000000003 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10u" (at 307.34000000000003 99.06 0)
@@ -4747,12 +4747,12 @@
     (property "Datasheet" "~" (at 304.8 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 905ddde47bfb4a2f997c37a55b0ad998))
-    (pin "2" (uuid 60fd6fb2e91140d2b1bb7bcefd69f94a))
+    (pin "1" (uuid 99e395f1f2ea4ad6ab4c479192bbc481))
+    (pin "2" (uuid 24b28ef419634706b82c1a5478cd331e))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C9") (unit 1)
+          (reference "5C1") (unit 1)
         )
       )
     )
@@ -4760,8 +4760,8 @@
 
   (symbol (lib_id "Device:C") (at 304.8 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 9aa658db-138f-4677-a2a7-04f9707d0849)
-    (property "Reference" "C10" (at 307.34000000000003 119.38 0)
+    (uuid bab8c354-c50a-4d53-bd41-cc75537022f0)
+    (property "Reference" "5C2" (at 307.34000000000003 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 307.34000000000003 124.46000000000001 0)
@@ -4773,12 +4773,12 @@
     (property "Datasheet" "~" (at 304.8 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 10bad97498564d3695902e57354a7299))
-    (pin "2" (uuid f27540bb177c458c92d3acac995ab7cf))
+    (pin "1" (uuid 1f1e0ce21d1d4bceb8c9ec5627689dd1))
+    (pin "2" (uuid afe9c05cd7c44438b1ac74d5ac8ba949))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C10") (unit 1)
+          (reference "5C2") (unit 1)
         )
       )
     )
@@ -4786,8 +4786,8 @@
 
   (symbol (lib_id "Device:C") (at 330.2 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 2faef7b0-745c-4b8f-97f0-a151746701ec)
-    (property "Reference" "C11" (at 332.74 119.38 0)
+    (uuid 547438c9-b375-4796-ab88-04ddf859b332)
+    (property "Reference" "5C3" (at 332.74 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 332.74 124.46000000000001 0)
@@ -4799,12 +4799,12 @@
     (property "Datasheet" "~" (at 330.2 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 0ed48e5a9bad40fb9711771139e10cfc))
-    (pin "2" (uuid 4fdec4558626425b983b05862ea29263))
+    (pin "1" (uuid 623e9205d4cd413c90dc0cb115a842d8))
+    (pin "2" (uuid f0cdb4621f6641b5899cdd37b7e23ece))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C11") (unit 1)
+          (reference "5C3") (unit 1)
         )
       )
     )
@@ -4812,8 +4812,8 @@
 
   (symbol (lib_id "Device:C") (at 355.6 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid d42e98a1-3785-4278-a146-ae2c1d00823e)
-    (property "Reference" "C12" (at 358.14000000000004 119.38 0)
+    (uuid b84c4314-b4a4-4a9b-b4cd-46521ba95155)
+    (property "Reference" "5C4" (at 358.14000000000004 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10n" (at 358.14000000000004 124.46000000000001 0)
@@ -4825,12 +4825,12 @@
     (property "Datasheet" "~" (at 355.6 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 12659960117f4e8d9d2c39a23f1c76a4))
-    (pin "2" (uuid 6e3459f21b7142c1a77af943a3b7cded))
+    (pin "1" (uuid f3920e6fa4db42ffb343e2825feef6ba))
+    (pin "2" (uuid c74814c036b54354847429e524c31972))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C12") (unit 1)
+          (reference "5C4") (unit 1)
         )
       )
     )
@@ -4838,8 +4838,8 @@
 
   (symbol (lib_id "Device:C") (at 381.0 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 303e65f1-179c-4643-ae7e-d8b39e38708c)
-    (property "Reference" "C13" (at 383.54 119.38 0)
+    (uuid ad416ed3-7efe-4fff-8eeb-6a8cd6395473)
+    (property "Reference" "5C5" (at 383.54 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1n" (at 383.54 124.46000000000001 0)
@@ -4851,12 +4851,12 @@
     (property "Datasheet" "~" (at 381.0 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 04f402cbdf604d55ada960b1568d3c31))
-    (pin "2" (uuid b126a6b591f2454aa92b5c64977ae6b2))
+    (pin "1" (uuid ed09771fea2446c78db685847dc00ce7))
+    (pin "2" (uuid 8398f2f2f3f44fa89fb0a19edeb08c78))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C13") (unit 1)
+          (reference "5C5") (unit 1)
         )
       )
     )
@@ -4864,8 +4864,8 @@
 
   (symbol (lib_id "Device:C") (at 406.4 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid d089418f-6d7e-4db6-8c21-9fb6d4396eaa)
-    (property "Reference" "C14" (at 408.94 119.38 0)
+    (uuid 2c4edc3c-a510-44f5-95aa-7c1a648598e2)
+    (property "Reference" "5C6" (at 408.94 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1n" (at 408.94 124.46000000000001 0)
@@ -4877,12 +4877,12 @@
     (property "Datasheet" "~" (at 406.4 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 75fcdb1387d448e2a24324d40ea79dae))
-    (pin "2" (uuid f3105fb005ec45fe8f79e11c7f793d6a))
+    (pin "1" (uuid 837c8ee3d0604893b2b1d63b261301a8))
+    (pin "2" (uuid 96973d8f12fb447d9bb90e23b6ff74e5))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C14") (unit 1)
+          (reference "5C6") (unit 1)
         )
       )
     )
@@ -4890,8 +4890,8 @@
 
   (symbol (lib_id "Device:C") (at 304.8 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 48e89495-f932-43b8-a603-b108b445d8c5)
-    (property "Reference" "C15" (at 307.34000000000003 170.18 0)
+    (uuid faafc84a-9861-4788-9d2c-3503bda64b0f)
+    (property "Reference" "5C7" (at 307.34000000000003 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1n" (at 307.34000000000003 175.26 0)
@@ -4903,12 +4903,12 @@
     (property "Datasheet" "~" (at 304.8 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 7e2c6ed59a0c4cf78e5a9da286dc8595))
-    (pin "2" (uuid 4485e77c14b2427e8e7ca23f04364648))
+    (pin "1" (uuid 568c6412f9ab4ea9bb964ca392b6edd7))
+    (pin "2" (uuid 54942354ce434c7d86acd0960907aea0))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C15") (unit 1)
+          (reference "5C7") (unit 1)
         )
       )
     )
@@ -4916,8 +4916,8 @@
 
   (symbol (lib_id "Device:C") (at 330.2 198.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 6e8cf78d-a432-4df3-b838-5db68271207b)
-    (property "Reference" "C16" (at 332.74 195.58 0)
+    (uuid 55fdfbda-68e8-46b0-a939-c5e9bc469faa)
+    (property "Reference" "5C8" (at 332.74 195.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1u" (at 332.74 200.66 0)
@@ -4929,12 +4929,12 @@
     (property "Datasheet" "~" (at 330.2 198.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 82a2c7db15234788a695451e1ddd9670))
-    (pin "2" (uuid cface5f6b329447581193555acd42c84))
+    (pin "1" (uuid 1d0e86423a51483cb320404b4665335e))
+    (pin "2" (uuid d03802962ed74ce7aed8c2f621e3c1e0))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C16") (unit 1)
+          (reference "5C8") (unit 1)
         )
       )
     )
@@ -4942,8 +4942,8 @@
 
   (symbol (lib_id "Device:C") (at 355.6 198.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid bab392a8-c335-4385-98cf-77ff3a8a992b)
-    (property "Reference" "C17" (at 358.14000000000004 195.58 0)
+    (uuid 42d5742f-9ecf-4769-92c5-04744c34a487)
+    (property "Reference" "5C9" (at 358.14000000000004 195.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "220u" (at 358.14000000000004 200.66 0)
@@ -4955,12 +4955,12 @@
     (property "Datasheet" "~" (at 355.6 198.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 7ea3bb31bb234ab4bb7829ff08d473cc))
-    (pin "2" (uuid cf1df10cdec441388e1e5e2fe4fffc6d))
+    (pin "1" (uuid 5034417355624ce1ac4c7a449d8fcb05))
+    (pin "2" (uuid 03e2a17de893443a8fc706939d168de2))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C17") (unit 1)
+          (reference "5C9") (unit 1)
         )
       )
     )
@@ -4968,8 +4968,8 @@
 
   (symbol (lib_id "Device:C") (at 381.0 198.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid b04171ea-2dba-4670-ae3d-d210355e595e)
-    (property "Reference" "C18" (at 383.54 195.58 0)
+    (uuid d78abd76-8dc7-49ec-863b-054180f071e4)
+    (property "Reference" "5C10" (at 383.54 195.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10u" (at 383.54 200.66 0)
@@ -4981,12 +4981,12 @@
     (property "Datasheet" "~" (at 381.0 198.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 7f65eff89359452089b80fbf1b454422))
-    (pin "2" (uuid cdb83627319248998fba41143edf13d5))
+    (pin "1" (uuid 6a984b8af44d46599d71ae18e1daa3f1))
+    (pin "2" (uuid 0479ddffae9a467ab21a38fe1a35f75e))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C18") (unit 1)
+          (reference "5C10") (unit 1)
         )
       )
     )
@@ -4994,8 +4994,8 @@
 
   (symbol (lib_id "Connector_Generic:Conn_01x02") (at 406.4 198.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 5a0d7d3e-0b34-4736-8168-7e95b02b2a64)
-    (property "Reference" "J2" (at 408.94 195.58 0)
+    (uuid 3a2839c0-1668-42df-8b55-63f068b1be43)
+    (property "Reference" "5J2" (at 408.94 195.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "XT30" (at 408.94 200.66 0)
@@ -5007,12 +5007,12 @@
     (property "Datasheet" "~" (at 406.4 198.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 8f6cfb7541e54bb59964cc599ad485b3))
-    (pin "2" (uuid d63852a24e494eb6b1fc6d44618fe737))
+    (pin "1" (uuid 8a626dc7650b44339de6a8ca04f9a76e))
+    (pin "2" (uuid 8201d233019c4321a8390ce17b644b99))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "J2") (unit 1)
+          (reference "5J2") (unit 1)
         )
       )
     )
@@ -5020,8 +5020,8 @@
 
   (symbol (lib_id "tinyups:BQ76942") (at 482.6 45.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 4b8c8e29-a89e-471b-a77d-2712e6f2728c)
-    (property "Reference" "U5" (at 485.14000000000004 43.18 0)
+    (uuid 1e7215f3-b368-4098-a02f-28d635a350e3)
+    (property "Reference" "4U1" (at 485.14000000000004 43.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "BQ76942" (at 485.14000000000004 48.26 0)
@@ -5033,58 +5033,58 @@
     (property "Datasheet" "~" (at 482.6 45.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid ecb88fdfcccd48f1b49a02621334e09a))
-    (pin "2" (uuid feafa62e2b94404285a6b819dcaef736))
-    (pin "3" (uuid 4fe549ccba90411f90931abe9bf41583))
-    (pin "4" (uuid 86d79dd5dfe347b8ab16e39fd015f7e0))
-    (pin "5" (uuid 6672a8c6229d4f4a9804cecddf645cdc))
-    (pin "6" (uuid cba5dc588dc44ce6b1cd2b33fdfc591c))
-    (pin "7" (uuid 9468f1da046541bab9ee73cb056a55f0))
-    (pin "8" (uuid 25a09dc9b99540b9a9b528963a237c0b))
-    (pin "9" (uuid 343efde5a13d40749ab13fc7fa63b5d3))
-    (pin "10" (uuid b8bca57af32e4bcca3f3eb6f5c6caabc))
-    (pin "11" (uuid 0ddf991c82924235a32ce7c55779887f))
-    (pin "12" (uuid dc017bb1d7734563a2d0bae90b845c68))
-    (pin "13" (uuid 9253222b6b6e4c639744203c8ec00646))
-    (pin "14" (uuid efc6980d9c294a1a9cf8d179f8a8347b))
-    (pin "15" (uuid bb41e731d4e14691aeb68930ca7baf6f))
-    (pin "16" (uuid 6aded066d1774f15aee0d1fcb633fd49))
-    (pin "17" (uuid dbf83c036ffd4720a40a9d3b9fb8f6b2))
-    (pin "18" (uuid 24321e6639a44709927d31f3330da079))
-    (pin "19" (uuid 0578c25b348b40a3b51d05d7c51fc951))
-    (pin "20" (uuid d7f531c9b06b4938a7ba355141101783))
-    (pin "21" (uuid 9c2af50dd0d34284933dcff801de12f6))
-    (pin "22" (uuid 81fb3222a54c4e6c982b080356abb614))
-    (pin "23" (uuid bc66312b7361494288249acc500804a8))
-    (pin "24" (uuid 4cabde57a7c24bc0a8a72e61b3a8e1c0))
-    (pin "25" (uuid d6f979f48bee4b208b2c0269d44827d6))
-    (pin "26" (uuid 60ebb4aadad646fbb72b46075affe371))
-    (pin "27" (uuid 9989737e30504388ad00810e50d4fb63))
-    (pin "28" (uuid b1afc06c9ebb4bb6a4fdd21566934ede))
-    (pin "29" (uuid 27973dc80eb7444ea8c9ee4bc0534730))
-    (pin "30" (uuid 698c2cc7bf3840c9b49f8fde41a976bc))
-    (pin "31" (uuid 03463953059d49468a8d9d47d268b3ca))
-    (pin "32" (uuid c79d4ba3962e42af9cc765650f875645))
-    (pin "33" (uuid bbdc398d2021473b80e4e49cf9ff152e))
-    (pin "34" (uuid 591c540de1a74a29ab5c7227c40ae501))
-    (pin "35" (uuid efa6f8befc0549299a9a68bb6be53791))
-    (pin "36" (uuid bfa3c7bd1c7d4d69b53f949f7c6b0aa9))
-    (pin "37" (uuid d3bca5334a6d4f5abce92fd8748e38d4))
-    (pin "38" (uuid 380370e220f2445bbe16edd84befdb1f))
-    (pin "39" (uuid 1ed059ad6bf946b09169ba006c2b5dfe))
-    (pin "40" (uuid 6bf58064214f45a5a83dddac86a7f8f7))
-    (pin "41" (uuid 6fe6ac48b8514f249a11685c417a991e))
-    (pin "42" (uuid c025dbcf02334f87b37d005408369a92))
-    (pin "43" (uuid 2985143c9a094af5a6523105e621fca2))
-    (pin "44" (uuid cf7def6e04bc4173b42afc694af754ac))
-    (pin "45" (uuid e87a7eb141294388955eb68088a82624))
-    (pin "46" (uuid 7c5dd1e6215c4104ab4b927deb1120be))
-    (pin "47" (uuid 6de7555c7f4d480c8008fa06a8cd4bd3))
-    (pin "48" (uuid 65c00f950c6f4b45a30bcc7c10ee873a))
+    (pin "1" (uuid b762b1d8858e47009847c7382a529584))
+    (pin "2" (uuid e25c35e9baed45dd87fe0e9e4d3ada5e))
+    (pin "3" (uuid 27ea71a435464148b5073cb2447ded8a))
+    (pin "4" (uuid cfc171c3dc1e46b682b31cfb228da56a))
+    (pin "5" (uuid a13b46679e3c4e96b0979458411bdb1d))
+    (pin "6" (uuid 885cf47205d04fefb409b50e862d600e))
+    (pin "7" (uuid f757860f573b432ea5c3fbeb708048b2))
+    (pin "8" (uuid 313bf0a4205d4537a4012ed29c7ca480))
+    (pin "9" (uuid d9d724f567d54b579e2dca19550ed253))
+    (pin "10" (uuid e3b3f2d9b35546a78894e8881559eecb))
+    (pin "11" (uuid 5b6de977064940a4935938ffd9624807))
+    (pin "12" (uuid 666b23c505754e49803e130945c224a5))
+    (pin "13" (uuid 24e64cc9600d4f3eadb336d753ccadbc))
+    (pin "14" (uuid 22e3eafc4abc4b4ca376d6251536e8c1))
+    (pin "15" (uuid 0bb33e4339e04a8d824dfe65b6f0d293))
+    (pin "16" (uuid e60668b8da534c858957cc7b00b83848))
+    (pin "17" (uuid c635a12e9b5346c48bbdaea7d23f3245))
+    (pin "18" (uuid 320d05ea5baf4af2ad5316d5e028f689))
+    (pin "19" (uuid b0f2dd6ec5004192a8dee835e0a8ff28))
+    (pin "20" (uuid f3a7753ad323481c813bc6666e236475))
+    (pin "21" (uuid 8af277e08a55467688c6d11e32f45cd4))
+    (pin "22" (uuid eaa7e7475ac8457cb29c9ab293e879ac))
+    (pin "23" (uuid 34aabb142f3141d9b0a6e9163f1797ab))
+    (pin "24" (uuid 73531c50034144d1925289aa4590bbbe))
+    (pin "25" (uuid 22e9fd353715410891a14e4c94776837))
+    (pin "26" (uuid a1a899b1e73e4c9481f21e9052c7dc00))
+    (pin "27" (uuid 16eb1dcf783143978f0bd7e88b295a36))
+    (pin "28" (uuid ae883bdf18a7468d80d5547ed7653f13))
+    (pin "29" (uuid b3ed3c413ad6466c943f12b6b9859432))
+    (pin "30" (uuid cd0d695bbd784181b265fa7bf77897f3))
+    (pin "31" (uuid 40865e7f89e04cf9b967c632149d110f))
+    (pin "32" (uuid cd3b2acd9b3d44bfb696246597b9b166))
+    (pin "33" (uuid e424fa911e4249da9cbbac32597a4db8))
+    (pin "34" (uuid 8788aef692fb49c981c13b7591573f6d))
+    (pin "35" (uuid 087d254030ea4bc5b0bd1f18ae668d48))
+    (pin "36" (uuid e5e2b7e9272748b68ebd5b0379801cd9))
+    (pin "37" (uuid 0716db3382634b40ac3d80fa54451057))
+    (pin "38" (uuid 7c54de44f75842d187dabfa4c5c386c0))
+    (pin "39" (uuid da181b943bdb43559894bed190d70073))
+    (pin "40" (uuid 8324cd9f690e4c28af5906aad2762bfa))
+    (pin "41" (uuid ee0e97a42a354f3ca7c8a7f7e6900bc7))
+    (pin "42" (uuid 86438ce7a30c49d8a03f38b5205352aa))
+    (pin "43" (uuid 7f5e7b8fb1ef4eb89284d779a9d2003f))
+    (pin "44" (uuid a293614ebd4845b3ad7dd5fd8b0ebfdb))
+    (pin "45" (uuid 059827c0234f44bc98f70aeefeb6b3e5))
+    (pin "46" (uuid 0d6a9738cdb64d76a9adea082cd2f87b))
+    (pin "47" (uuid ebc40eee062c4d44b574ed47c91cc11f))
+    (pin "48" (uuid 4464993bf31c4143a69ad42e423075d9))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "U5") (unit 1)
+          (reference "4U1") (unit 1)
         )
       )
     )
@@ -5092,8 +5092,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 431.8 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 7cf01326-81ab-47cb-8111-8ac371baee4e)
-    (property "Reference" "Q11" (at 434.34000000000003 119.38 0)
+    (uuid 5a58666c-190d-4617-8929-ea20bf286d97)
+    (property "Reference" "4Q1" (at 434.34000000000003 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 40V" (at 434.34000000000003 124.46000000000001 0)
@@ -5105,13 +5105,13 @@
     (property "Datasheet" "~" (at 431.8 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 978dd83750ef40edb0275c958726340c))
-    (pin "3" (uuid b7f6dc46606f407b9600ea30a0ac1618))
-    (pin "2" (uuid 7aaedf056d22417c9566898ba937f74a))
+    (pin "1" (uuid 6e138b0eaa7f4726b8e76863f75b78fd))
+    (pin "3" (uuid 2f500e41b911434e83354d976ca54c16))
+    (pin "2" (uuid 360cf453563e47a087a392fb2fce03c1))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q11") (unit 1)
+          (reference "4Q1") (unit 1)
         )
       )
     )
@@ -5119,8 +5119,8 @@
 
   (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 457.2 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 04940868-5532-4f7d-83c5-7c6afcafe67d)
-    (property "Reference" "Q12" (at 459.74 119.38 0)
+    (uuid 8b97b733-33d2-42fb-90d2-0fe1e7293b59)
+    (property "Reference" "4Q2" (at 459.74 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "N-FET 40V" (at 459.74 124.46000000000001 0)
@@ -5132,13 +5132,13 @@
     (property "Datasheet" "~" (at 457.2 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 2157c537f36b44c2bc358cac11709aea))
-    (pin "3" (uuid 737563af3a734a76a5f9212ddc6ffe2c))
-    (pin "2" (uuid d49bc86ed50a44ce976e36c38adcc6ea))
+    (pin "1" (uuid 9df466bc3c3341c89905254f20689c82))
+    (pin "3" (uuid 5095860dae71465c8812a631c03b2063))
+    (pin "2" (uuid ca69838210994f3da86d4d3aeea7b08c))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Q12") (unit 1)
+          (reference "4Q2") (unit 1)
         )
       )
     )
@@ -5146,8 +5146,8 @@
 
   (symbol (lib_id "Device:R") (at 431.8 147.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 26872711-2b3c-4ac9-b70d-2d939d8eb023)
-    (property "Reference" "R25" (at 434.34000000000003 144.78 0)
+    (uuid d6ead2a6-c75f-4f80-bba9-a9d1bec5a20d)
+    (property "Reference" "4R1" (at 434.34000000000003 144.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1m" (at 434.34000000000003 149.85999999999999 0)
@@ -5159,12 +5159,12 @@
     (property "Datasheet" "~" (at 431.8 147.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 0c775c36a6254b85be98c7d631dc0d81))
-    (pin "2" (uuid 43264f6133154d4eb239192d06ed72f0))
+    (pin "1" (uuid 1e1369b32b8d4303a667eb54b42bb853))
+    (pin "2" (uuid 37f40e1c816146cba3b31e9637e126ff))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R25") (unit 1)
+          (reference "4R1") (unit 1)
         )
       )
     )
@@ -5172,8 +5172,8 @@
 
   (symbol (lib_id "Device:R") (at 304.8 223.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid b9521229-e0ae-437f-8665-303d8e5d5e99)
-    (property "Reference" "Rf0" (at 307.34000000000003 220.98000000000002 0)
+    (uuid adf10021-a92f-4a29-bc01-ddb02984979e)
+    (property "Reference" "4R9" (at 307.34000000000003 220.98000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100" (at 307.34000000000003 226.06 0)
@@ -5185,12 +5185,12 @@
     (property "Datasheet" "~" (at 304.8 223.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 38461b6750a94fd3ab17388d096a41d5))
-    (pin "2" (uuid bd640f9623df49bebc2ce3cfa59aea90))
+    (pin "1" (uuid 66ec8a1fe8964f14855822da5e44b43a))
+    (pin "2" (uuid f8ffa07725b340c288c864d0e64f472a))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Rf0") (unit 1)
+          (reference "4R9") (unit 1)
         )
       )
     )
@@ -5198,8 +5198,8 @@
 
   (symbol (lib_id "Device:C") (at 304.8 248.92000000000002 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 17bb1365-3b1e-43ca-922d-7f7be83c86fe)
-    (property "Reference" "Cf0" (at 307.34000000000003 246.38000000000002 0)
+    (uuid 4cbe025c-c07f-4c50-a9a8-a6ec9728b7ac)
+    (property "Reference" "4C6" (at 307.34000000000003 246.38000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 307.34000000000003 251.46 0)
@@ -5211,12 +5211,12 @@
     (property "Datasheet" "~" (at 304.8 248.92000000000002 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 3824db6478014d4d91dee10a7835976b))
-    (pin "2" (uuid 0ff04fa81ba84d68a0ff11fa21769dad))
+    (pin "1" (uuid 9351dd5ed9f5481ba18168b750444d4a))
+    (pin "2" (uuid 0271964e2180497caaaa7a47051760bd))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Cf0") (unit 1)
+          (reference "4C6") (unit 1)
         )
       )
     )
@@ -5224,8 +5224,8 @@
 
   (symbol (lib_id "Device:R") (at 330.2 223.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid cd2e5c5b-c661-49c7-a171-e680123be094)
-    (property "Reference" "Rf1" (at 332.74 220.98000000000002 0)
+    (uuid c07857e2-2b9b-4fc7-940c-9eb30ede22dc)
+    (property "Reference" "4R10" (at 332.74 220.98000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100" (at 332.74 226.06 0)
@@ -5237,12 +5237,12 @@
     (property "Datasheet" "~" (at 330.2 223.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 6ec58e7dcb764e2c97b316567ed91ce9))
-    (pin "2" (uuid e0b971238bee4359947e35075dad76d0))
+    (pin "1" (uuid 29a7c514570e4126a402cf4350e80bad))
+    (pin "2" (uuid 92025484539845ffa1e17c89c3946639))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Rf1") (unit 1)
+          (reference "4R10") (unit 1)
         )
       )
     )
@@ -5250,8 +5250,8 @@
 
   (symbol (lib_id "Device:C") (at 330.2 248.92000000000002 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 31582b4e-b687-4fd2-bce0-f6463b53dd94)
-    (property "Reference" "Cf1" (at 332.74 246.38000000000002 0)
+    (uuid 8ebe6109-3c90-44cb-884a-c1e2c4feffac)
+    (property "Reference" "4C7" (at 332.74 246.38000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 332.74 251.46 0)
@@ -5263,12 +5263,12 @@
     (property "Datasheet" "~" (at 330.2 248.92000000000002 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid d0bcbccf76694b678009968ed7529683))
-    (pin "2" (uuid d0262ffd0ec947a889f8f23d2c852109))
+    (pin "1" (uuid 24770934a0a6437ca46965d8418276dd))
+    (pin "2" (uuid f9309bc4621c4838abe5f26a4564bff6))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Cf1") (unit 1)
+          (reference "4C7") (unit 1)
         )
       )
     )
@@ -5276,8 +5276,8 @@
 
   (symbol (lib_id "Device:R") (at 355.6 223.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 39cd71c0-c0cc-4f4f-87d4-4d085ac1594e)
-    (property "Reference" "Rf2" (at 358.14000000000004 220.98000000000002 0)
+    (uuid d96381b6-30f4-44a1-903d-ab6efee36fb1)
+    (property "Reference" "4R11" (at 358.14000000000004 220.98000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100" (at 358.14000000000004 226.06 0)
@@ -5289,12 +5289,12 @@
     (property "Datasheet" "~" (at 355.6 223.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 277f35041cc948fcabbe523a96cf3eaa))
-    (pin "2" (uuid e65bff8ab1ee47ed95a41fbefe383416))
+    (pin "1" (uuid cfe149fb95e0463aa8dd7109c3dea988))
+    (pin "2" (uuid 46097ee4f9d04cb8bcef550e778ff854))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Rf2") (unit 1)
+          (reference "4R11") (unit 1)
         )
       )
     )
@@ -5302,8 +5302,8 @@
 
   (symbol (lib_id "Device:C") (at 355.6 248.92000000000002 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid d28a2a60-fdf9-41c5-904c-a6de1c92a13d)
-    (property "Reference" "Cf2" (at 358.14000000000004 246.38000000000002 0)
+    (uuid 2373eda1-478a-4d60-9473-3ae999a03057)
+    (property "Reference" "4C8" (at 358.14000000000004 246.38000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 358.14000000000004 251.46 0)
@@ -5315,12 +5315,12 @@
     (property "Datasheet" "~" (at 355.6 248.92000000000002 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 9ba9a41951604a6ab6592615dc2793e3))
-    (pin "2" (uuid 8289e8399c454121bd6a438eaaef25ca))
+    (pin "1" (uuid 9beac5b5e60549bdb2c4233feec3f60e))
+    (pin "2" (uuid ff4186bd35694a619bc73acb5b99ba71))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Cf2") (unit 1)
+          (reference "4C8") (unit 1)
         )
       )
     )
@@ -5328,8 +5328,8 @@
 
   (symbol (lib_id "Device:R") (at 381.0 223.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 79dce641-ffed-4a58-a5d0-bc32160b793b)
-    (property "Reference" "Rf3" (at 383.54 220.98000000000002 0)
+    (uuid e4ee0880-7279-43b0-8f0c-2fc85e372daa)
+    (property "Reference" "4R12" (at 383.54 220.98000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100" (at 383.54 226.06 0)
@@ -5341,12 +5341,12 @@
     (property "Datasheet" "~" (at 381.0 223.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid b7925e3f6d1f43bfb2794abc475a0822))
-    (pin "2" (uuid 00f822c1918a47feae02ef4126860aa1))
+    (pin "1" (uuid a363f792b0be40fea064ddd3bdc20614))
+    (pin "2" (uuid 2ad41e7a8ae24a7b911ed616489269be))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Rf3") (unit 1)
+          (reference "4R12") (unit 1)
         )
       )
     )
@@ -5354,8 +5354,8 @@
 
   (symbol (lib_id "Device:C") (at 381.0 248.92000000000002 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 5359343b-7570-48f2-9b99-a15cacedc615)
-    (property "Reference" "Cf3" (at 383.54 246.38000000000002 0)
+    (uuid d5024fec-c562-4419-99fb-185d49960835)
+    (property "Reference" "4C9" (at 383.54 246.38000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 383.54 251.46 0)
@@ -5367,12 +5367,12 @@
     (property "Datasheet" "~" (at 381.0 248.92000000000002 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid a2402d9dc7754ab38be6711d49165aad))
-    (pin "2" (uuid 19bf6991dce242de8bb34dde804ba458))
+    (pin "1" (uuid ac64234f41234aa0b148ae0e9a94e996))
+    (pin "2" (uuid 00569ebd94c642a4887f40bd9736a616))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Cf3") (unit 1)
+          (reference "4C9") (unit 1)
         )
       )
     )
@@ -5380,8 +5380,8 @@
 
   (symbol (lib_id "Device:R") (at 406.4 223.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid abb660be-b3a5-48ae-b3c7-847a0b33cc99)
-    (property "Reference" "Rf4" (at 408.94 220.98000000000002 0)
+    (uuid f494e67e-6bd6-4eac-a163-8b58c5eca0b1)
+    (property "Reference" "4R13" (at 408.94 220.98000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100" (at 408.94 226.06 0)
@@ -5393,12 +5393,12 @@
     (property "Datasheet" "~" (at 406.4 223.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 20136e4fca594043877e109659195298))
-    (pin "2" (uuid 51aeb5d71bdb4eeeb044a8cc6ee2c404))
+    (pin "1" (uuid ffbb5f6f1cf0462aa2ef01a8a1b71b5e))
+    (pin "2" (uuid 803a94606cb04734aba010e2af8aac45))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Rf4") (unit 1)
+          (reference "4R13") (unit 1)
         )
       )
     )
@@ -5406,8 +5406,8 @@
 
   (symbol (lib_id "Device:C") (at 406.4 248.92000000000002 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 9d5af300-7b27-495d-8866-3bc9d7fe1d8b)
-    (property "Reference" "Cf4" (at 408.94 246.38000000000002 0)
+    (uuid 507fa3ed-51ef-4d69-8b60-d2946f13f7ad)
+    (property "Reference" "4C10" (at 408.94 246.38000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 408.94 251.46 0)
@@ -5419,12 +5419,12 @@
     (property "Datasheet" "~" (at 406.4 248.92000000000002 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid b8dc01c0320847498d7cb4c747b5f272))
-    (pin "2" (uuid c958b8d98d044857819821834f6e27b8))
+    (pin "1" (uuid e98e1fcffce948f68fe27177d826ecf3))
+    (pin "2" (uuid 4c2d4ce3d42a4095bb437c1296694a7c))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Cf4") (unit 1)
+          (reference "4C10") (unit 1)
         )
       )
     )
@@ -5432,8 +5432,8 @@
 
   (symbol (lib_id "Device:C") (at 431.8 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 9935ad22-2410-42a0-be07-3ce18fb64dac)
-    (property "Reference" "C19" (at 434.34000000000003 170.18 0)
+    (uuid e9076e0c-9f93-4649-ba1e-0ace60f83f52)
+    (property "Reference" "4C1" (at 434.34000000000003 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1u" (at 434.34000000000003 175.26 0)
@@ -5445,12 +5445,12 @@
     (property "Datasheet" "~" (at 431.8 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 7ccb84ef92e544a99eaac05f110644bf))
-    (pin "2" (uuid 7a2e60ca17b34192868b7a0a8fd4e7fa))
+    (pin "1" (uuid c462711158fc46168420fd8c9f165ee2))
+    (pin "2" (uuid 27b939d140334c629e1aa866cb5ebe48))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C19") (unit 1)
+          (reference "4C1") (unit 1)
         )
       )
     )
@@ -5458,8 +5458,8 @@
 
   (symbol (lib_id "Device:C") (at 457.2 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid e62f8460-9abd-4682-b620-0f05522e0111)
-    (property "Reference" "C20" (at 459.74 170.18 0)
+    (uuid 6c82d0dd-691d-48c5-98ec-a141d72767b2)
+    (property "Reference" "4C2" (at 459.74 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1u" (at 459.74 175.26 0)
@@ -5471,12 +5471,12 @@
     (property "Datasheet" "~" (at 457.2 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid a394e2bc30ad494d9a5cf5fa12a3561e))
-    (pin "2" (uuid f68990743df448e08af754566ff37ec7))
+    (pin "1" (uuid 8ef173d5ccf5491299a91c8e8f739c44))
+    (pin "2" (uuid b3b18964d4044b4eb622dbb1ad2e4d01))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C20") (unit 1)
+          (reference "4C2") (unit 1)
         )
       )
     )
@@ -5484,8 +5484,8 @@
 
   (symbol (lib_id "Device:C") (at 482.6 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid caa61db1-b83d-4b9a-9f94-8edb600ed4e6)
-    (property "Reference" "C21" (at 485.14000000000004 170.18 0)
+    (uuid 54859877-1406-4bb6-a881-e70fc8f9c82f)
+    (property "Reference" "4C3" (at 485.14000000000004 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1u" (at 485.14000000000004 175.26 0)
@@ -5497,12 +5497,12 @@
     (property "Datasheet" "~" (at 482.6 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 6e53c9ca1f544346b1b2e5c21c6b8550))
-    (pin "2" (uuid 9f80efab94804b0c80dbf129feea0226))
+    (pin "1" (uuid f86fd8f354cf41ee991c0ebf170947da))
+    (pin "2" (uuid 5d94cfa4640345f4924333ed13d38843))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C21") (unit 1)
+          (reference "4C3") (unit 1)
         )
       )
     )
@@ -5510,8 +5510,8 @@
 
   (symbol (lib_id "Device:C") (at 508.0 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid faebb934-aa46-4d9e-8248-08fb52d8c234)
-    (property "Reference" "C22" (at 510.54 170.18 0)
+    (uuid f4750eb3-57a3-492f-8fe9-46f45baa4661)
+    (property "Reference" "4C4" (at 510.54 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1u" (at 510.54 175.26 0)
@@ -5523,12 +5523,12 @@
     (property "Datasheet" "~" (at 508.0 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 5df3dcd156794f009021459898a9622c))
-    (pin "2" (uuid 12a20448b038468aa765b4cb98690e62))
+    (pin "1" (uuid d3521e8fa448442bbb7e3bd5d1ca40e6))
+    (pin "2" (uuid 9ec6ef5be8bc4a84b0a840bb9dd3603b))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C22") (unit 1)
+          (reference "4C4") (unit 1)
         )
       )
     )
@@ -5536,8 +5536,8 @@
 
   (symbol (lib_id "Device:C") (at 533.4 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid a0fcc15e-d12f-4a6b-8056-fa2376c01619)
-    (property "Reference" "C23" (at 535.9399999999999 170.18 0)
+    (uuid 1798dfc5-c285-4635-9af0-2a61ef833558)
+    (property "Reference" "4C5" (at 535.9399999999999 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100n" (at 535.9399999999999 175.26 0)
@@ -5549,12 +5549,12 @@
     (property "Datasheet" "~" (at 533.4 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 82e32e1b3ff24cc3bc52b89e4e204f24))
-    (pin "2" (uuid a7ce78ca22524620869f1c0c69848f07))
+    (pin "1" (uuid ba1d0ede236f4fce82670c29a3aca63d))
+    (pin "2" (uuid b915c9086b2845ccb995a499876d6ce7))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C23") (unit 1)
+          (reference "4C5") (unit 1)
         )
       )
     )
@@ -5562,8 +5562,8 @@
 
   (symbol (lib_id "Device:R") (at 431.8 198.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid b0353aeb-e8fd-4c06-9646-bb62513da29f)
-    (property "Reference" "R26" (at 434.34000000000003 195.58 0)
+    (uuid 02b25ff6-a5be-4274-85b1-645bf21cb8d1)
+    (property "Reference" "4R2" (at 434.34000000000003 195.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k-NTC" (at 434.34000000000003 200.66 0)
@@ -5575,12 +5575,12 @@
     (property "Datasheet" "~" (at 431.8 198.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid a47dd4b602a44e3bba45cb91c4612f43))
-    (pin "2" (uuid a31e6c4c06f74f5abbace881dd0c38ae))
+    (pin "1" (uuid 87b4d106c3164545932b82bebfa98792))
+    (pin "2" (uuid f3a389cc7e1a404798a39ed9d4afae12))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R26") (unit 1)
+          (reference "4R2") (unit 1)
         )
       )
     )
@@ -5588,8 +5588,8 @@
 
   (symbol (lib_id "Device:R") (at 457.2 198.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 2b5d6e62-0fb2-4a00-8082-a50909ffc06c)
-    (property "Reference" "R27" (at 459.74 195.58 0)
+    (uuid 5f3bee97-02ab-49a7-bbfe-bcec3ff750d4)
+    (property "Reference" "4R3" (at 459.74 195.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k-NTC" (at 459.74 200.66 0)
@@ -5601,12 +5601,12 @@
     (property "Datasheet" "~" (at 457.2 198.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid acce5fd32392460d91d6cf36dff3a02d))
-    (pin "2" (uuid 6fffb6dc41d242a7b2d5ad1784adb383))
+    (pin "1" (uuid b9a342d3ce364061b1d14bc5fd130c98))
+    (pin "2" (uuid c9d2294f9f0b427fbcc4e3296ab3bfbb))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R27") (unit 1)
+          (reference "4R3") (unit 1)
         )
       )
     )
@@ -5614,8 +5614,8 @@
 
   (symbol (lib_id "Device:R") (at 482.6 198.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 970d5a83-afbe-44af-812d-07c200c9097c)
-    (property "Reference" "R28" (at 485.14000000000004 195.58 0)
+    (uuid 21fa4a55-0b0e-43d5-9739-81ff057f824d)
+    (property "Reference" "4R4" (at 485.14000000000004 195.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k-NTC" (at 485.14000000000004 200.66 0)
@@ -5627,12 +5627,12 @@
     (property "Datasheet" "~" (at 482.6 198.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid fafa01b0fadd4bd1ab5b4d7901b21bba))
-    (pin "2" (uuid 5044a55a5abd4abfa5cf65f8cbefac62))
+    (pin "1" (uuid 94cf084b5d4e4b4783a404ee7c4f5e81))
+    (pin "2" (uuid fa6dadd2b8fc492dac8b9837fbb01f0f))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R28") (unit 1)
+          (reference "4R4") (unit 1)
         )
       )
     )
@@ -5640,8 +5640,8 @@
 
   (symbol (lib_id "Device:R") (at 508.0 198.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 005d57ef-6daa-4f41-94eb-981ab9569680)
-    (property "Reference" "R29" (at 510.54 195.58 0)
+    (uuid aa3339e0-19a2-48a6-833a-ac2798c6153a)
+    (property "Reference" "4R5" (at 510.54 195.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k" (at 510.54 200.66 0)
@@ -5653,12 +5653,12 @@
     (property "Datasheet" "~" (at 508.0 198.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid d9c8ca8c29df4a22aa621c41b410e76b))
-    (pin "2" (uuid f568f45522264ecbb3b0f0e1f98285e0))
+    (pin "1" (uuid bd1902254d3f4b7ab507f90a21159c36))
+    (pin "2" (uuid 2185f6cafc9b4f279c865067cec042ce))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R29") (unit 1)
+          (reference "4R5") (unit 1)
         )
       )
     )
@@ -5666,8 +5666,8 @@
 
   (symbol (lib_id "Device:R") (at 533.4 198.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid a195f8dd-79d1-4b35-a9b6-15f90cc1b324)
-    (property "Reference" "R30" (at 535.9399999999999 195.58 0)
+    (uuid d8fdd6ad-31b3-4090-8129-89945c866af7)
+    (property "Reference" "4R6" (at 535.9399999999999 195.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k" (at 535.9399999999999 200.66 0)
@@ -5679,12 +5679,12 @@
     (property "Datasheet" "~" (at 533.4 198.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 93e800b0506344458120367fe396cf20))
-    (pin "2" (uuid 5992a8d838d1482ebc69dc8e70cd62a6))
+    (pin "1" (uuid 5c03064f8e034b2b82854134fa8f7cf7))
+    (pin "2" (uuid 0ce556bf41b644d286808f076032073b))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R30") (unit 1)
+          (reference "4R6") (unit 1)
         )
       )
     )
@@ -5692,8 +5692,8 @@
 
   (symbol (lib_id "Connector_Generic:Conn_01x02") (at 558.8 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 4cf52b85-bbd9-4f42-bb18-e0ca84563e76)
-    (property "Reference" "J6" (at 561.3399999999999 93.97999999999999 0)
+    (uuid f06d918b-550c-4810-8a21-9821872f05e1)
+    (property "Reference" "4J6" (at 561.3399999999999 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "PACK" (at 561.3399999999999 99.06 0)
@@ -5705,12 +5705,12 @@
     (property "Datasheet" "~" (at 558.8 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid fe4cb577ee1c4230a17072d7dae13d3d))
-    (pin "2" (uuid 5c409dab25984248a16ff17d20bde172))
+    (pin "1" (uuid 29d9e7d8d8454220ad1ff59ab3ef5a59))
+    (pin "2" (uuid 8988e126616a41e8afa7a4664df2e9e2))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "J6") (unit 1)
+          (reference "4J6") (unit 1)
         )
       )
     )
@@ -5718,8 +5718,8 @@
 
   (symbol (lib_id "Connector_Generic:Conn_01x05") (at 584.2 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 75c95619-5f2e-43e7-99ae-88c8807f2f7f)
-    (property "Reference" "J7" (at 586.74 93.97999999999999 0)
+    (uuid 46ceec4a-79ab-496c-a857-a59020f88e62)
+    (property "Reference" "4J7" (at 586.74 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "CELLS" (at 586.74 99.06 0)
@@ -5731,15 +5731,15 @@
     (property "Datasheet" "~" (at 584.2 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 1b80c6058d464f8e830c0207cab9fb6d))
-    (pin "2" (uuid aa4a9b34a0d04e9fa6a3dae6b4b9d2a4))
-    (pin "3" (uuid a98f73d1a6424d9c846638eb9624d61f))
-    (pin "4" (uuid f5a360e949b04f14929cee0e395c836f))
-    (pin "5" (uuid 84c669c232c740eeb779b02644e00098))
+    (pin "1" (uuid 90a45bb0e23e40cca3c80b5e7f6d418a))
+    (pin "2" (uuid a11c4972b8e144a3ac65edc482aea126))
+    (pin "3" (uuid 3ad100d8dd924cc884882cdc65577f4d))
+    (pin "4" (uuid 59981c3eb8494be982fdcadc56d08f76))
+    (pin "5" (uuid 9c5cab6077a24bb1ba2ed5d586f5f0aa))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "J7") (unit 1)
+          (reference "4J7") (unit 1)
         )
       )
     )
@@ -5747,8 +5747,8 @@
 
   (symbol (lib_id "Device:R") (at 558.8 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid f118c377-20b3-4441-b37c-e337fb23e093)
-    (property "Reference" "R45" (at 561.3399999999999 378.46 0)
+    (uuid 2560400c-e3d1-4dbb-a9a0-a283599728b3)
+    (property "Reference" "4R7" (at 561.3399999999999 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k" (at 561.3399999999999 383.54 0)
@@ -5760,12 +5760,12 @@
     (property "Datasheet" "~" (at 558.8 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 96251e27bae64f0b9c2e2fef6ffcb867))
-    (pin "2" (uuid 38e8aa1dbc554e5e808ae7ff89cd14be))
+    (pin "1" (uuid f708112459c24c7c9bcc1e86a18e2492))
+    (pin "2" (uuid 3d0192d113224894be1b836d4b689a54))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R45") (unit 1)
+          (reference "4R7") (unit 1)
         )
       )
     )
@@ -5773,8 +5773,8 @@
 
   (symbol (lib_id "Device:R") (at 584.2 381.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid f02148cc-becb-4474-a1b5-b510c9f40e6a)
-    (property "Reference" "R46" (at 586.74 378.46 0)
+    (uuid 6a2a6e5c-6f97-4a25-a744-d4bc971acb38)
+    (property "Reference" "4R8" (at 586.74 378.46 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "100k" (at 586.74 383.54 0)
@@ -5786,12 +5786,12 @@
     (property "Datasheet" "~" (at 584.2 381.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 2e0f06e973d7429485da9cfd2361b677))
-    (pin "2" (uuid 2cc39f8fda4842a78e5c5e92a5dbe577))
+    (pin "1" (uuid ae8952a23a3945e3b5ec107945011dc9))
+    (pin "2" (uuid 90ef61816ce04d6f8123acae28a72209))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R46") (unit 1)
+          (reference "4R8") (unit 1)
         )
       )
     )
@@ -5799,8 +5799,8 @@
 
   (symbol (lib_id "tinyups:RP2040") (at 558.8 45.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 0f27c927-aabb-4fc3-a532-375037efc9a5)
-    (property "Reference" "U6" (at 561.3399999999999 43.18 0)
+    (uuid 3647412c-7cea-417d-bc0a-e1091c55721d)
+    (property "Reference" "6U1" (at 561.3399999999999 43.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "RP2040" (at 561.3399999999999 48.26 0)
@@ -5812,67 +5812,67 @@
     (property "Datasheet" "~" (at 558.8 45.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 6a7dbcca7ff24133bec8658287521cb4))
-    (pin "2" (uuid 40096ae479434544baaf4a271d69c0ea))
-    (pin "3" (uuid 2d3b81f862b6492e985ec9d6bcb6ce15))
-    (pin "4" (uuid 6f3b7ac4b5044cba84e4befcc6cd8a9d))
-    (pin "5" (uuid 5270b18a29a04f728f4666dd32922bbb))
-    (pin "6" (uuid c0c70d712b89446ab2ac2b9d4670b2c3))
-    (pin "7" (uuid 333d0e0ffcbb41bdb8d50d6067ca6cad))
-    (pin "8" (uuid 23e90755041c44ad93204751d9b30064))
-    (pin "9" (uuid 58fb425ecb0f4767a60207e1f4ccd7d1))
-    (pin "10" (uuid b6f0101450d14e9d830bc28ccf4db8d0))
-    (pin "11" (uuid 5d0afec405dc4acd83a90d7459b08965))
-    (pin "12" (uuid a8605e6036e04cdebe8bc27b1a8b84c0))
-    (pin "13" (uuid 2d83ad57b50f403a9df75b778fd1d8f1))
-    (pin "14" (uuid 3205defc83b94929b851b19c0447ae6a))
-    (pin "15" (uuid 3151dea6616a447aaa46e8e57fd75ffb))
-    (pin "16" (uuid 27d88356ce704ca2bd62262da86ba545))
-    (pin "17" (uuid 8d09ebbe005b44c2afdbd847b710a702))
-    (pin "18" (uuid a2723e509ac94ff9bd5593898d54b465))
-    (pin "19" (uuid 010312d93297411db41b72bb37c671f6))
-    (pin "20" (uuid 81b29c55952646d7b8e351e6e9e04839))
-    (pin "21" (uuid be34e9bd37234fc5ab5e9d9299ec056a))
-    (pin "22" (uuid ebdbce97ac9b47dfb5cb9744b292113c))
-    (pin "23" (uuid 4983fd1f145c401dbe0e1f2dff6717bc))
-    (pin "24" (uuid e20a17e048c04dd69f0825cbd35638bd))
-    (pin "25" (uuid 57c8dff1bdd14d7c984000f83ad714ef))
-    (pin "26" (uuid fa5f9bd1c0a5466887be5e24b79372d7))
-    (pin "27" (uuid fd2bdbb7cf8246e797bda0a8e97b4b31))
-    (pin "28" (uuid 8e3e2bbae5fb47e98240ba4875bb876d))
-    (pin "29" (uuid 91884c8a25794bee9b8d61809ce9a2a2))
-    (pin "30" (uuid 68600f1d6f7c4e5782d5b33e2d1c41b6))
-    (pin "31" (uuid e8be0eb0a13544f49660dc90eaed6e81))
-    (pin "32" (uuid a7e7e34a80234ab5a6748f95dbbb4a8d))
-    (pin "33" (uuid f31cbbd5075f4759b48d7ebcb09c7596))
-    (pin "34" (uuid 2eb6c9c861524cdda680252099e851c2))
-    (pin "35" (uuid 2cd8afc6696c40baa927ff3fc77414b7))
-    (pin "36" (uuid 7e16e8cac6264a38a6008f25de1b8619))
-    (pin "37" (uuid 74380ca0b5514e17a394304e23030a77))
-    (pin "38" (uuid c6c5658da0f84948aff4c5aedae7642b))
-    (pin "39" (uuid f46b952a7dae467e99bcd1e8de091c76))
-    (pin "40" (uuid 77b54c52835240949b9b075d5cb8544e))
-    (pin "41" (uuid 3dc08a0d4446463fb2d9d1c71e3acbee))
-    (pin "42" (uuid 4b08462dc26644409865c5f94386462d))
-    (pin "43" (uuid 0ffd3283d04d42c6be593d680a2181e6))
-    (pin "44" (uuid a35611dddbae48ca990f13b87a172bc4))
-    (pin "45" (uuid 199404e8efa44211aecf2af9a53ea9cc))
-    (pin "46" (uuid 9c25ae8402bf4afcb721e1bb59384b90))
-    (pin "47" (uuid 01966db91bf2476d8b7c569a6ff9132d))
-    (pin "48" (uuid c610d365adfd4509bc9a1151dea909fc))
-    (pin "49" (uuid 75b9ae68606d463687700a71aecddb2d))
-    (pin "50" (uuid fa83938f6e9d4393b33f00a48e1ad9e0))
-    (pin "51" (uuid 15826fa6bc16422da2b931ed4ed6cb44))
-    (pin "52" (uuid 947759b359074023a917912df15f14c6))
-    (pin "53" (uuid 49cdc9f93f1242718b44e3cb91fc64ed))
-    (pin "54" (uuid 2d33ffedf7604c83a4699bb485ee4568))
-    (pin "55" (uuid 71e21a6d84fb4cacae2d37562f3ed5f8))
-    (pin "56" (uuid 8a19b32b6fe142daad5e49712e89dd63))
-    (pin "57" (uuid 2a2ca48b5949443ca64facdada420bda))
+    (pin "1" (uuid 1d522c3316144b48942e8a1004779990))
+    (pin "2" (uuid 03886b0f5de54b93b91c93b1ebca1e82))
+    (pin "3" (uuid 81c7af67f2dd4893879bf7eb47db050a))
+    (pin "4" (uuid fff3b30ec0b84dd595b6470cab6dabff))
+    (pin "5" (uuid cecce53884084877a0d1a0e71f5bfed7))
+    (pin "6" (uuid cb2e46cb724240e8ac2d8742a55ec596))
+    (pin "7" (uuid 2df5589695944a5a8a13e955b5287834))
+    (pin "8" (uuid bcc352b6599f4b4abf9962cab2bdad85))
+    (pin "9" (uuid c1a1bbb7e75d4605b65b16e678f24704))
+    (pin "10" (uuid 6e1bde98e34a4aaf923460df2442b1a1))
+    (pin "11" (uuid 23362adb059845919e3e27b90ac23c70))
+    (pin "12" (uuid e21588d74bb84654a953232d699baa2f))
+    (pin "13" (uuid 5474211d36754fe2978badcf13992c39))
+    (pin "14" (uuid 9f4ae5efccd84a8b9f88f05397869a12))
+    (pin "15" (uuid 597c69d3190a4157be91946d7a34478b))
+    (pin "16" (uuid 226728af2a194cbcb2da0d1b163eb384))
+    (pin "17" (uuid 370f6aafbc4c45e4af0794d60f078d40))
+    (pin "18" (uuid 15e9603b6a2b42d0ad7659f41f82f5ab))
+    (pin "19" (uuid 320620af8184461ca3c1fb44fa889883))
+    (pin "20" (uuid bad1f0c892674ed091fec658981498cf))
+    (pin "21" (uuid 19b658e0f329428aabc9117f310f1737))
+    (pin "22" (uuid 987e6ead6cdd4c59a8d5d18f25e3643b))
+    (pin "23" (uuid ff79f838f58149bf97fde5873e040a0d))
+    (pin "24" (uuid dce452b6d5f94ecdba652ce47a028058))
+    (pin "25" (uuid 0d4872fed0a240709da19853ce3d2691))
+    (pin "26" (uuid 99d9365598fb417cb805d93cff54d196))
+    (pin "27" (uuid 5e225b13cdfb425dbc077db3d394a09f))
+    (pin "28" (uuid 071a849d7b3b4a83b176af879970ac94))
+    (pin "29" (uuid 27c3d1b1e15e4e1da918da92f64ce32b))
+    (pin "30" (uuid ba2354c4517e4a68bfa83efa579ef949))
+    (pin "31" (uuid b16e593897fc4d2e8f5a8778237ffffd))
+    (pin "32" (uuid 998d9f5151ad49b699c0603c519b4a3c))
+    (pin "33" (uuid 526268a8dfc54e698574e785757850c8))
+    (pin "34" (uuid 75cbb4c94c444cae88f9dfa8d75413fd))
+    (pin "35" (uuid 6852f6feb4e04be59f9d334833b14860))
+    (pin "36" (uuid 69fec6249bbf4910af15c35b1d0fec0a))
+    (pin "37" (uuid 008978c1fc1741a3928df595f0f9376f))
+    (pin "38" (uuid fa8d89b495a046408923a2afa8aee688))
+    (pin "39" (uuid 4da09c37215a47569688e957145b0f18))
+    (pin "40" (uuid 43132a31dedc489cb72c75b67a94dbb2))
+    (pin "41" (uuid f9b6038facc7429eaade9968b4fa33bf))
+    (pin "42" (uuid d21c52e8ea274581bb53a49724ad16f7))
+    (pin "43" (uuid eb781340c4a24149b45af70c29eebe9c))
+    (pin "44" (uuid cbd2b0f7d67543798ac1883da4649b2f))
+    (pin "45" (uuid 0afad8af6b984a52b3277161f32a9045))
+    (pin "46" (uuid 31e072312d19437b9708882a9f230396))
+    (pin "47" (uuid 6564cec0255e45d095692859c9b94656))
+    (pin "48" (uuid cf3c3899fe314031b4039987bc678525))
+    (pin "49" (uuid e9cb22b681cb40c5bcbe52db16624492))
+    (pin "50" (uuid 05e3dc751acc4845b34450e4adc9eb90))
+    (pin "51" (uuid ae32a12ee3a048dc86558d51491728f6))
+    (pin "52" (uuid 35194001b9474974970d7bb14be4ff79))
+    (pin "53" (uuid e2ef955b6b0348649c809585aab42c46))
+    (pin "54" (uuid f1218d7058d0488c908b390020951f7c))
+    (pin "55" (uuid 749a70699e7b4a778a87f42f367883cc))
+    (pin "56" (uuid 526c09f61f3a4ebb86ae8a0fec7632d6))
+    (pin "57" (uuid 50f3893965cf4874a9c41744f254c1f5))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "U6") (unit 1)
+          (reference "6U1") (unit 1)
         )
       )
     )
@@ -5880,8 +5880,8 @@
 
   (symbol (lib_id "tinyups:W25Q128") (at 558.8 172.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid ccd325c8-6802-4ab9-a476-56edd7b465b5)
-    (property "Reference" "U7" (at 561.3399999999999 170.18 0)
+    (uuid aed28fbd-0dff-45fa-9484-83cba1ee99ff)
+    (property "Reference" "6U2" (at 561.3399999999999 170.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "W25Q128" (at 561.3399999999999 175.26 0)
@@ -5893,18 +5893,18 @@
     (property "Datasheet" "~" (at 558.8 172.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 48ed3f9e547548b18b5b56e2f8d3900e))
-    (pin "2" (uuid e35d40f8ca124ccc8090791d99852beb))
-    (pin "3" (uuid 2e01542d5afb472fab5fa7b9916f65f5))
-    (pin "4" (uuid ba07e583cb124561a212a6755af5e10d))
-    (pin "5" (uuid 214cb643914349ac9d514dce12ac2d3d))
-    (pin "6" (uuid fd80cb1a13f14f1b8acc41263e1fb55c))
-    (pin "7" (uuid c0a81b790df8415f988f35132ea2e8d6))
-    (pin "8" (uuid 5927094b60e545b7b3fd32059b507f1c))
+    (pin "1" (uuid 09e99d65b2a343ddb43c74b8db751eb4))
+    (pin "2" (uuid d541b0dc083d4e139960b6f828bd3ee4))
+    (pin "3" (uuid 53647ee8c2d14c579a3ecf09df36f00e))
+    (pin "4" (uuid b1956a668b834dacb5ee68fa0677fc71))
+    (pin "5" (uuid 83db3c87ea3c4c0f9e065c7f6fb74a5b))
+    (pin "6" (uuid c310f1440a1e48258e97b33d959b5c6e))
+    (pin "7" (uuid 4fe73a5622224135a6dd479a17dd13e2))
+    (pin "8" (uuid b3a7b83f38534734b57b141f13d18676))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "U7") (unit 1)
+          (reference "6U2") (unit 1)
         )
       )
     )
@@ -5912,8 +5912,8 @@
 
   (symbol (lib_id "tinyups:REG_3V3") (at 482.6 248.92000000000002 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid f1bc5c12-9416-4efd-8f0b-0c3b22f4bd55)
-    (property "Reference" "U8" (at 485.14000000000004 246.38000000000002 0)
+    (uuid de92242c-701e-44ef-868b-8a5993379fe4)
+    (property "Reference" "6U3" (at 485.14000000000004 246.38000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "3V3" (at 485.14000000000004 251.46 0)
@@ -5925,14 +5925,14 @@
     (property "Datasheet" "~" (at 482.6 248.92000000000002 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 77ee098b806c410c9e58cce944067508))
-    (pin "2" (uuid 6d5bd24317b44b4ba652ec453c9828d5))
-    (pin "3" (uuid 100545aa70784becac34b9937f6331a2))
-    (pin "4" (uuid b9b37f9f71f84d10ae0ed7f509a15f49))
+    (pin "1" (uuid 183818d5dcc64e888ab806ea04751ded))
+    (pin "2" (uuid 3ab79bc53d92466aad6e72fe55f282f1))
+    (pin "3" (uuid ef86e1e047bd48c2a710ad15dd49daa5))
+    (pin "4" (uuid 4404de718bd9402b8756d2d6f0f64f2d))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "U8") (unit 1)
+          (reference "6U3") (unit 1)
         )
       )
     )
@@ -5940,8 +5940,8 @@
 
   (symbol (lib_id "Connector_Generic:Conn_01x03") (at 584.2 223.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid cfd072fe-178c-498e-a7d1-7f956ae8c8ca)
-    (property "Reference" "J3" (at 586.74 220.98000000000002 0)
+    (uuid 012fbb4c-a2b1-43dd-bb02-3a0035a6ad4f)
+    (property "Reference" "6J3" (at 586.74 220.98000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "USB" (at 586.74 226.06 0)
@@ -5953,13 +5953,13 @@
     (property "Datasheet" "~" (at 584.2 223.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 7af7040aa02b496682cde70c1cae7dac))
-    (pin "2" (uuid 33524095ce3144409415332125c73e22))
-    (pin "3" (uuid 621a1e040d0946efa06fb53b9ac1aa28))
+    (pin "1" (uuid bcccb00351d34c738020bdc5233a88cb))
+    (pin "2" (uuid d7d0f9903a3242d68428027082a0452b))
+    (pin "3" (uuid 6965caec769340178ec7d966f3c6c160))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "J3") (unit 1)
+          (reference "6J3") (unit 1)
         )
       )
     )
@@ -5967,8 +5967,8 @@
 
   (symbol (lib_id "Connector_Generic:Conn_01x03") (at 584.2 248.92000000000002 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid d03c14bb-6c47-468d-a72c-b29b66fa0ed9)
-    (property "Reference" "J4" (at 586.74 246.38000000000002 0)
+    (uuid 2df48e11-61b8-48d5-a48f-7b66bb40d9de)
+    (property "Reference" "6J4" (at 586.74 246.38000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "SWD" (at 586.74 251.46 0)
@@ -5980,13 +5980,13 @@
     (property "Datasheet" "~" (at 584.2 248.92000000000002 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 3a4df91e0d53447eb1d9c08dfe09101a))
-    (pin "2" (uuid fbbdbec3daee49e6973d10225f62c185))
-    (pin "3" (uuid a1fa0b380be5440d81b7dab3ef0750e5))
+    (pin "1" (uuid ce3465e5f16244ea909d626150695ae1))
+    (pin "2" (uuid 94e8fcf3395945a3840e012225e42eef))
+    (pin "3" (uuid 7167bafd0e284efab280994be95b56e5))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "J4") (unit 1)
+          (reference "6J4") (unit 1)
         )
       )
     )
@@ -5994,8 +5994,8 @@
 
   (symbol (lib_id "Connector_Generic:Conn_01x04") (at 584.2 274.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid bb71d461-58ef-473c-b518-653bda0aebcd)
-    (property "Reference" "J5" (at 586.74 271.78 0)
+    (uuid 174bde4d-2ae4-4b39-8d33-c1434ec8102b)
+    (property "Reference" "6J5" (at 586.74 271.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "FAN" (at 586.74 276.86 0)
@@ -6007,14 +6007,14 @@
     (property "Datasheet" "~" (at 584.2 274.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 9c00cca92cce462e8904f30b0af476c4))
-    (pin "2" (uuid 6a1cd58d95d74a62b81303ac25206276))
-    (pin "3" (uuid 54933fa8c57f4d48a2a75858f077a0b3))
-    (pin "4" (uuid c0bc0dd6327541fc89c3989957d1ef3a))
+    (pin "1" (uuid 544972fea98e44bc91bdde35beb6688e))
+    (pin "2" (uuid 9a2c4f60c08a46b0a3f332d70ad072c3))
+    (pin "3" (uuid 7421460dedcd4f659885caa582879933))
+    (pin "4" (uuid a6408139180744ad8b8747e299b5f9a0))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "J5") (unit 1)
+          (reference "6J5") (unit 1)
         )
       )
     )
@@ -6022,8 +6022,8 @@
 
   (symbol (lib_id "Device:Crystal") (at 508.0 248.92000000000002 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 0af98a95-576e-4db6-ad52-5897a8c0821e)
-    (property "Reference" "Y1" (at 510.54 246.38000000000002 0)
+    (uuid b790c9f7-6ac2-4274-95ac-451777adcbb0)
+    (property "Reference" "6Y1" (at 510.54 246.38000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "12MHz" (at 510.54 251.46 0)
@@ -6035,12 +6035,12 @@
     (property "Datasheet" "~" (at 508.0 248.92000000000002 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 033d4f69602643929febad6810b4e35f))
-    (pin "2" (uuid 29be6454b1d246ddba67c9a0b50c7a89))
+    (pin "1" (uuid bffec3a2d0b243828e3f0c3434e104be))
+    (pin "2" (uuid e5c0c654ed2145dd9696ab5154f52172))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "Y1") (unit 1)
+          (reference "6Y1") (unit 1)
         )
       )
     )
@@ -6048,8 +6048,8 @@
 
   (symbol (lib_id "Device:R") (at 508.0 274.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid e2d9f203-8aeb-4f17-890c-ad8eeb1494e6)
-    (property "Reference" "R31" (at 510.54 271.78 0)
+    (uuid e6e74bea-6910-4db4-a7d7-31c5e1ab1446)
+    (property "Reference" "6R1" (at 510.54 271.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1k" (at 510.54 276.86 0)
@@ -6061,12 +6061,12 @@
     (property "Datasheet" "~" (at 508.0 274.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid a7f1c8e60acc4f61a82efde5f486df9f))
-    (pin "2" (uuid 31fac27701b6428c95385d49ed0d2883))
+    (pin "1" (uuid 5e83541d5da040c7b8832e0c83c02a76))
+    (pin "2" (uuid b73a806d821141a1acde1ce54e1815aa))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R31") (unit 1)
+          (reference "6R1") (unit 1)
         )
       )
     )
@@ -6074,8 +6074,8 @@
 
   (symbol (lib_id "Device:R") (at 508.0 299.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid b3bb45eb-a7f0-4acb-8cf6-ebeb563cb59a)
-    (property "Reference" "R36" (at 510.54 297.18 0)
+    (uuid 2bc0e84f-3d02-419e-9eab-60311dd8b3c6)
+    (property "Reference" "6R6" (at 510.54 297.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "27" (at 510.54 302.26000000000005 0)
@@ -6087,12 +6087,12 @@
     (property "Datasheet" "~" (at 508.0 299.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 1576533dd4fc4a21b705bf69f6a9884a))
-    (pin "2" (uuid 6e046c9c62ef4bf2bd92eab4d9deca18))
+    (pin "1" (uuid 90495b5f3d734aaea447b6654453feed))
+    (pin "2" (uuid bb78b2af4bd648298d439fceadae37a8))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R36") (unit 1)
+          (reference "6R6") (unit 1)
         )
       )
     )
@@ -6100,8 +6100,8 @@
 
   (symbol (lib_id "Device:R") (at 533.4 299.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid e60210dd-8c46-41c4-8cef-3c07eeb2a85b)
-    (property "Reference" "R37" (at 535.9399999999999 297.18 0)
+    (uuid c86cdf51-a319-4e24-b482-9cc5cea471cd)
+    (property "Reference" "6R7" (at 535.9399999999999 297.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "27" (at 535.9399999999999 302.26000000000005 0)
@@ -6113,12 +6113,12 @@
     (property "Datasheet" "~" (at 533.4 299.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 6efb9a9c6561481695ef03a26abbf07a))
-    (pin "2" (uuid 5fc3e3c2b3114312ab398785f622e014))
+    (pin "1" (uuid 69e45901b7414363be485578df061b40))
+    (pin "2" (uuid 48978d30383f4b2ba484c2b337a2f76a))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R37") (unit 1)
+          (reference "6R7") (unit 1)
         )
       )
     )
@@ -6126,8 +6126,8 @@
 
   (symbol (lib_id "Device:R") (at 558.8 299.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid ed4f73a3-a59f-4284-97c4-518adab83673)
-    (property "Reference" "R38" (at 561.3399999999999 297.18 0)
+    (uuid 5199d5a1-f297-4ec7-bc5a-d37505a3a626)
+    (property "Reference" "6R8" (at 561.3399999999999 297.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10k" (at 561.3399999999999 302.26000000000005 0)
@@ -6139,12 +6139,12 @@
     (property "Datasheet" "~" (at 558.8 299.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 662349ee5d2545f1adbb18c5e6569ec5))
-    (pin "2" (uuid c435763c886b4291b6dbcd8206810c44))
+    (pin "1" (uuid f5f2367975794a63a8b08cabea8fc90e))
+    (pin "2" (uuid f2c96afc9b654adbad7271eb870e3e04))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R38") (unit 1)
+          (reference "6R8") (unit 1)
         )
       )
     )
@@ -6152,8 +6152,8 @@
 
   (symbol (lib_id "Device:R") (at 482.6 325.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 02b4b35b-b894-46d2-afae-3001cedab4e7)
-    (property "Reference" "R32" (at 485.14000000000004 322.58 0)
+    (uuid 5717731a-b249-4210-8bf6-2c07a354d9b4)
+    (property "Reference" "6R2" (at 485.14000000000004 322.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1k" (at 485.14000000000004 327.66 0)
@@ -6165,12 +6165,12 @@
     (property "Datasheet" "~" (at 482.6 325.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 5845ef79e29d469fa9bfab5a94dfa207))
-    (pin "2" (uuid 58f5f817a6ec458cb717cc22a5af9982))
+    (pin "1" (uuid 592c8b1cbee84989ba1dc218caac7f04))
+    (pin "2" (uuid 84cac80795e64c55806954b6eee2086b))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R32") (unit 1)
+          (reference "6R2") (unit 1)
         )
       )
     )
@@ -6178,8 +6178,8 @@
 
   (symbol (lib_id "Device:LED") (at 482.6 350.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid b532de15-1031-47be-b645-6e266ad77433)
-    (property "Reference" "D2" (at 485.14000000000004 347.97999999999996 0)
+    (uuid 7c579111-4458-4e02-b464-27dc6c92ba8b)
+    (property "Reference" "6D1" (at 485.14000000000004 347.97999999999996 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "LED" (at 485.14000000000004 353.06 0)
@@ -6191,12 +6191,12 @@
     (property "Datasheet" "~" (at 482.6 350.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 0407e1b53feb458ab63d287b437ed533))
-    (pin "2" (uuid 35b33c17868f4631a34d79358819d13e))
+    (pin "1" (uuid be2a608dd874431bacfe6b1eba066632))
+    (pin "2" (uuid 5cd7131f9a26403e8b21ec89db8707dd))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "D2") (unit 1)
+          (reference "6D1") (unit 1)
         )
       )
     )
@@ -6204,8 +6204,8 @@
 
   (symbol (lib_id "Device:R") (at 508.0 325.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 25adc7e5-0746-4ab4-911e-cffbe389aaac)
-    (property "Reference" "R33" (at 510.54 322.58 0)
+    (uuid 77e32b7b-3cd1-4fbe-af99-d7a50ccf5a06)
+    (property "Reference" "6R3" (at 510.54 322.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1k" (at 510.54 327.66 0)
@@ -6217,12 +6217,12 @@
     (property "Datasheet" "~" (at 508.0 325.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 074b794d43dc4473a04b76058c95d813))
-    (pin "2" (uuid 590ec542590340f79742561b7fdc8a48))
+    (pin "1" (uuid bd2ae9d55b5d4f39a9b928834b2b9b5b))
+    (pin "2" (uuid ce313d7876c0482fafb55d3b641e7a3d))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R33") (unit 1)
+          (reference "6R3") (unit 1)
         )
       )
     )
@@ -6230,8 +6230,8 @@
 
   (symbol (lib_id "Device:LED") (at 508.0 350.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 581cdb63-8290-4d57-9496-408dcdef18ca)
-    (property "Reference" "D3" (at 510.54 347.97999999999996 0)
+    (uuid 7588ce8d-630f-48c6-9b1a-34c68fa40e16)
+    (property "Reference" "6D2" (at 510.54 347.97999999999996 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "LED" (at 510.54 353.06 0)
@@ -6243,12 +6243,12 @@
     (property "Datasheet" "~" (at 508.0 350.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 6c6c4e459921463a8826070aa63608b5))
-    (pin "2" (uuid 09c07857708a4cabb2044e59d0a4b7cd))
+    (pin "1" (uuid 56e294ae413e46f3add74a7e236010db))
+    (pin "2" (uuid b8944366f4704c4c8e2e9902f274cca0))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "D3") (unit 1)
+          (reference "6D2") (unit 1)
         )
       )
     )
@@ -6256,8 +6256,8 @@
 
   (symbol (lib_id "Device:R") (at 533.4 325.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 6a1c22a7-8bb0-4ab8-9f41-d508b59b7840)
-    (property "Reference" "R34" (at 535.9399999999999 322.58 0)
+    (uuid ab6ff69d-9067-482e-9262-79420b583fe2)
+    (property "Reference" "6R4" (at 535.9399999999999 322.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1k" (at 535.9399999999999 327.66 0)
@@ -6269,12 +6269,12 @@
     (property "Datasheet" "~" (at 533.4 325.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid c2967d38c64c48ffa4cb1b582515dd09))
-    (pin "2" (uuid 429371c7b279400bad0493c95dcdf7bc))
+    (pin "1" (uuid e084e696acce455d9c22d9df4b81cad9))
+    (pin "2" (uuid d5896ca4a28843cf81e46b57f470d9f6))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R34") (unit 1)
+          (reference "6R4") (unit 1)
         )
       )
     )
@@ -6282,8 +6282,8 @@
 
   (symbol (lib_id "Device:LED") (at 533.4 350.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 301027a6-300f-4980-89d7-ff7dd77b1d87)
-    (property "Reference" "D4" (at 535.9399999999999 347.97999999999996 0)
+    (uuid 1812cf06-4c6b-4fc2-848a-4d833ec228b5)
+    (property "Reference" "6D3" (at 535.9399999999999 347.97999999999996 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "LED" (at 535.9399999999999 353.06 0)
@@ -6295,12 +6295,12 @@
     (property "Datasheet" "~" (at 533.4 350.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 3474f017188a4d64b8ce000ebc84186f))
-    (pin "2" (uuid aae3bb87707140ff8e11988ec2982278))
+    (pin "1" (uuid c6d397ec3acc46428032b344fbca6da9))
+    (pin "2" (uuid 9b8e372ef9a143feb47d1d003c65a340))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "D4") (unit 1)
+          (reference "6D3") (unit 1)
         )
       )
     )
@@ -6308,8 +6308,8 @@
 
   (symbol (lib_id "Device:R") (at 558.8 325.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 2af2f4af-819d-424d-b672-ac98c6f75c1d)
-    (property "Reference" "R35" (at 561.3399999999999 322.58 0)
+    (uuid 92f3a01b-779e-4294-9030-cc801a4f1e49)
+    (property "Reference" "6R5" (at 561.3399999999999 322.58 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1k" (at 561.3399999999999 327.66 0)
@@ -6321,12 +6321,12 @@
     (property "Datasheet" "~" (at 558.8 325.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid d9ef96c9794749a7ab44561d1f2a1f03))
-    (pin "2" (uuid 5e9d3320b56a41d78b4e55de9c08ecea))
+    (pin "1" (uuid 6c180e08a1d340baaee69cdb102a3de8))
+    (pin "2" (uuid 5f2abcc22550459caa1bd70dbbe4ab12))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "R35") (unit 1)
+          (reference "6R5") (unit 1)
         )
       )
     )
@@ -6334,8 +6334,8 @@
 
   (symbol (lib_id "Device:LED") (at 558.8 350.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid f7f3aa8b-8796-4ef4-9e29-e741800425d6)
-    (property "Reference" "D5" (at 561.3399999999999 347.97999999999996 0)
+    (uuid 33924843-09f9-4e81-b636-a790288ac7c8)
+    (property "Reference" "6D4" (at 561.3399999999999 347.97999999999996 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "LED" (at 561.3399999999999 353.06 0)
@@ -6347,12 +6347,12 @@
     (property "Datasheet" "~" (at 558.8 350.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid ff6e50ebc8254f32b6e925e5b467696f))
-    (pin "2" (uuid b0799ae06dac44b09628e998e7450e67))
+    (pin "1" (uuid cd9f42169c8a42859cdef1186e1f1676))
+    (pin "2" (uuid 3507e22586734725b5d6fcffd7a2c1cf))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "D5") (unit 1)
+          (reference "6D4") (unit 1)
         )
       )
     )
@@ -6360,8 +6360,8 @@
 
   (symbol (lib_id "Device:C") (at 431.8 248.92000000000002 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid ac1374ee-8e61-4457-b96c-fe231f47cf99)
-    (property "Reference" "C24" (at 434.34000000000003 246.38000000000002 0)
+    (uuid 89e1f3ef-753d-4628-8f4d-ae927f3fdd13)
+    (property "Reference" "6C1" (at 434.34000000000003 246.38000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "20p" (at 434.34000000000003 251.46 0)
@@ -6373,12 +6373,12 @@
     (property "Datasheet" "~" (at 431.8 248.92000000000002 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid d9464c8ab4cd4f08ad60684e3b860576))
-    (pin "2" (uuid 1524daf50ccf453cbf34fd62e1a63592))
+    (pin "1" (uuid 65da4a378c564b0ba88264e6b7c9c3a9))
+    (pin "2" (uuid 984560fb74124a199a9caa13fcb41008))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C24") (unit 1)
+          (reference "6C1") (unit 1)
         )
       )
     )
@@ -6386,8 +6386,8 @@
 
   (symbol (lib_id "Device:C") (at 457.2 248.92000000000002 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid ca6d3b39-80b3-4251-bc9e-4c3194b57ba8)
-    (property "Reference" "C25" (at 459.74 246.38000000000002 0)
+    (uuid fdd43904-67ee-4d3b-adc4-405de98feb9a)
+    (property "Reference" "6C2" (at 459.74 246.38000000000002 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "20p" (at 459.74 251.46 0)
@@ -6399,12 +6399,12 @@
     (property "Datasheet" "~" (at 457.2 248.92000000000002 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid edbade63f1f7451b9e809506031b3ae9))
-    (pin "2" (uuid 42f8b8de554147c9af41b39739b03a1a))
+    (pin "1" (uuid c8cc8b86f5af484ebf88ef8573956594))
+    (pin "2" (uuid f871d23b61474c2baedd1e454377449a))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C25") (unit 1)
+          (reference "6C2") (unit 1)
         )
       )
     )
@@ -6412,8 +6412,8 @@
 
   (symbol (lib_id "Device:C") (at 431.8 274.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid ee7a2d25-f2ff-46c7-a960-97345157289a)
-    (property "Reference" "C26" (at 434.34000000000003 271.78 0)
+    (uuid 612598ad-d8c3-45f6-96da-66fe4e173398)
+    (property "Reference" "6C3" (at 434.34000000000003 271.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10u" (at 434.34000000000003 276.86 0)
@@ -6425,12 +6425,12 @@
     (property "Datasheet" "~" (at 431.8 274.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 49c2d1e23bb8421d8ff437081e69637b))
-    (pin "2" (uuid 0ce9fae6ffac472daf2a683e198eecc0))
+    (pin "1" (uuid 2dee66a7bcc24a5e8dba1b1e0cd69068))
+    (pin "2" (uuid f7cf42de260749a8a1256b3d79bd310e))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C26") (unit 1)
+          (reference "6C3") (unit 1)
         )
       )
     )
@@ -6438,8 +6438,8 @@
 
   (symbol (lib_id "Device:C") (at 457.2 274.32 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 7cc8dcd5-b19b-4281-8958-737ea6d470e1)
-    (property "Reference" "C27" (at 459.74 271.78 0)
+    (uuid 2bccbb6c-2ca7-4281-b3e6-65b2b5db44fb)
+    (property "Reference" "6C4" (at 459.74 271.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "10u" (at 459.74 276.86 0)
@@ -6451,12 +6451,12 @@
     (property "Datasheet" "~" (at 457.2 274.32 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid e5d8da8fd8a741ba97c95ffef7d7dd87))
-    (pin "2" (uuid 77dc4c2e175444c9b4be328f267b33ca))
+    (pin "1" (uuid d6d7f4c983044770884c29e3de0af12e))
+    (pin "2" (uuid f94a9f7df6f142229bb5d2afae64a399))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C27") (unit 1)
+          (reference "6C4") (unit 1)
         )
       )
     )
@@ -6464,8 +6464,8 @@
 
   (symbol (lib_id "Device:C") (at 431.8 299.72 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid cbd6d21f-95ad-432c-a782-50bab192a610)
-    (property "Reference" "C28" (at 434.34000000000003 297.18 0)
+    (uuid 0db81ddc-6ab5-48c0-b155-71662fc203ce)
+    (property "Reference" "6C5" (at 434.34000000000003 297.18 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1u" (at 434.34000000000003 302.26000000000005 0)
@@ -6477,12 +6477,12 @@
     (property "Datasheet" "~" (at 431.8 299.72 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 75788c7add4846f59309df7661771290))
-    (pin "2" (uuid 1611e87b3e7046fd874601f158492324))
+    (pin "1" (uuid 1bfa0b25f1c94d09bfff27180cb3f873))
+    (pin "2" (uuid 633f540aa6094dc293be7c087d4240e1))
     (instances
       (project "tinyups"
         (path "/"
-          (reference "C28") (unit 1)
+          (reference "6C5") (unit 1)
         )
       )
     )
@@ -6490,7 +6490,7 @@
 
   (symbol (lib_id "power:PWR_FLAG") (at 25.4 25.4 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 585e5d21-ed6b-475e-889f-a49e913ec2df)
+    (uuid c65975b7-73b8-457b-b9ce-b812969e4d1e)
     (property "Reference" "#FLG" (at 27.939999999999998 22.86 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -6503,7 +6503,7 @@
     (property "Datasheet" "~" (at 25.4 25.4 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid d4384b380a6b4203abdc0834982460e5))
+    (pin "1" (uuid b0372baed1aa41abb8af6d160beb9d5a))
     (instances
       (project "tinyups"
         (path "/"
@@ -6515,7 +6515,7 @@
 
   (symbol (lib_id "power:PWR_FLAG") (at 25.4 50.8 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid bc31f4fd-dde6-4c0f-86a4-4fa13d537098)
+    (uuid d1e30d26-336d-4fc0-b968-44981bb430f9)
     (property "Reference" "#FLG" (at 27.939999999999998 48.26 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -6528,7 +6528,7 @@
     (property "Datasheet" "~" (at 25.4 50.8 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 28545ff58cff4ebd87d7de7177b73f4a))
+    (pin "1" (uuid 1df12e1e7975448db65d06bd392dc6c5))
     (instances
       (project "tinyups"
         (path "/"
@@ -6540,7 +6540,7 @@
 
   (symbol (lib_id "power:PWR_FLAG") (at 25.4 76.2 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 2ad1932e-4bc6-4c85-bea4-bcdf1640b015)
+    (uuid bc2a1cad-d2e0-461e-a998-a3d359bb3733)
     (property "Reference" "#FLG" (at 27.939999999999998 73.66 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -6553,7 +6553,7 @@
     (property "Datasheet" "~" (at 25.4 76.2 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid c816a6170adc4e3ca8109a13d92f8f66))
+    (pin "1" (uuid bb04669b8a51408db8378cad45e6c0c5))
     (instances
       (project "tinyups"
         (path "/"
@@ -6565,7 +6565,7 @@
 
   (symbol (lib_id "power:PWR_FLAG") (at 25.4 101.6 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid a4292b7e-a719-4f82-b943-1215e06bd597)
+    (uuid 13cf0f31-b333-4cc1-acdf-85df491860f2)
     (property "Reference" "#FLG" (at 27.939999999999998 99.05999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -6578,7 +6578,7 @@
     (property "Datasheet" "~" (at 25.4 101.6 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid e8334c4a412d42aab258d221cb8ba042))
+    (pin "1" (uuid 029d4cf49a85420d8314b164915d7d4f))
     (instances
       (project "tinyups"
         (path "/"
@@ -6590,7 +6590,7 @@
 
   (symbol (lib_id "power:PWR_FLAG") (at 25.4 127.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
-    (uuid 068971a1-a61e-4eb8-b4e8-8d08e9d13f47)
+    (uuid e70f5460-1148-400f-ab58-bdbb0072defe)
     (property "Reference" "#FLG" (at 27.939999999999998 124.46 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -6603,7 +6603,7 @@
     (property "Datasheet" "~" (at 25.4 127.0 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 8dbd354e491d4d379c6945fc7f10a442))
+    (pin "1" (uuid de60dba6afaf4b0a8efd3bbaa6dd5df4))
     (instances
       (project "tinyups"
         (path "/"

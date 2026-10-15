@@ -24,7 +24,9 @@ import pcbnew
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
 sys.path.insert(0, HERE)
-from power_map import marked_refs  # noqa: E402  (needs HERE on sys.path)
+from power_map import marked_refs  # noqa: E402
+from blocks import kind as _kind  # noqa: E402
+from blocks import CORRIDOR_MM  # noqa: E402
 
 # nets where copper length/loop area matters most (weight them)
 POWER_NETS = {
@@ -82,7 +84,7 @@ def main() -> int:
     ic_pins = []
     for fp in board.GetFootprints():
         ref = fp.GetReference()
-        if not ref.startswith("U"):
+        if _kind(ref) != "U":
             continue
         for pad in fp.Pads():
             nm = pad.GetNetname()
@@ -93,7 +95,7 @@ def main() -> int:
     for ref, num, nm, x, y in ic_pins:
         best = None
         for fp in board.GetFootprints():
-            if not fp.GetReference().startswith("C"):
+            if _kind(fp.GetReference()) != "C":
                 continue
             for pad in fp.Pads():
                 if pad.GetNetname() != nm:
@@ -118,7 +120,8 @@ def main() -> int:
     if pts:
         bb = board.GetBoardEdgesBoundingBox()
         cx = mm(bb.GetCenter().x)
-        dx = [abs(x - cx) for x, _y, _r in pts]
+        # distance to the *edge* of the reserved power corridor
+        dx = [max(0.0, abs(x - cx) - CORRIDOR_MM / 2) for x, _y, _r in pts]
         flow_pts = sorted(pts, key=lambda t: t[1])
         flow = sum(((flow_pts[i][0] - flow_pts[i - 1][0]) ** 2 +
                     (flow_pts[i][1] - flow_pts[i - 1][1]) ** 2) ** 0.5

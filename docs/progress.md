@@ -89,6 +89,20 @@ A "power part" is a **series element carrying ≥ 1 A, a capacitor carrying ≥ 
 of ripple, or any part dissipating ≥ 1 W** (25 parts on the current board:
 `C3 C4 C17 F1 J1 J2 L2 L3 Q1–Q12 R1 R9 R10 R18 R25`).
 
+### Power-path corridor (open)
+
+The pour needs width: IPC-2221, 10 °C rise → **20 A ≈ 19 mm on 1 oz outer
+copper, ≈ 10 mm on 2 oz**. Reserving a clear corridor in the middle was tried
+and **does not fit**: with the power parts pushed into two narrow flanking
+columns (and OR/CTL kept as separate bands) the bands reach **147–162 mm** vs a
+140 mm board. `blocks.CORRIDOR_MM` is therefore **0** for now (the metric
+measures `|dx|`); `CORRIDOR_TARGET_MM = 10`. Options to revisit: move the
+bottom-edge connectors (J3/J4/J5/J6/J7) to the side edges to free ~15–20 mm,
+2 oz copper, or route the path as a wide trace that weaves between the parts.
+
+Power parts are **rotated so their current-carrying axis runs along the flow**
+(vertical) — see `gen_pcb.py`.
+
 
 ## Gates & fab (rows = state)
 

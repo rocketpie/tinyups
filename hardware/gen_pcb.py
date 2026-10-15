@@ -19,6 +19,9 @@ import sys
 
 import pcbnew
 
+from blocks import (CORRIDOR_MM, CORRIDOR_TARGET_MM, PREFIXED_BLOCKS as BLOCKS,
+                    kind as _kind, label)  # noqa: E402
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 NETLIST = os.path.join(ROOT, "build", "tinyups.net")
@@ -167,31 +170,14 @@ def main() -> int:
         fp.SetFPID(pcbnew.LIB_ID(lib, name))
         bb = fp.GetBoundingBox()
         w, h = bb.GetWidth(), bb.GetHeight()
-        if ref.startswith("J"):        # connectors: reserve extra clearance
+        if _kind(ref) == "J":            # connectors: extra clearance
             w += pcbnew.FromMM(8)
             h += pcbnew.FromMM(8)
         loaded.append([ref, fp, w, h])
 
     # ---- block-aware placement ------------------------------------------- #
-    # group parts by functional block (same split as the schematic), lay each
-    # block out in a sub-rectangle, then pack the block rectangles into rows.
-    BLOCKS = {
-        "A": {"J1", "F1", "D1", "R1", "R2", "R3", "R4", "R5", "C1", "R6", "R7", "Q1", "U1"},
-        "B": {"U2", "Q2", "C2", "C3", "C4", "R8"},
-        "C": {"U3", "Q3", "Q4", "Q5", "Q6", "L2", "R9", "R10", "C5", "C6", "C7",
-              "C8", "R11", "R12", "R13", "R14", "R15", "R40", "C29", "C30",
-              "C31", "R41", "C32", "R42", "C33", "R43", "R44"},
-        "D": {"U4", "Q7", "Q8", "Q9", "Q10", "L3", "R16", "R17", "R18", "R19",
-              "R20", "R21", "R22", "R23", "R24", "C9", "C10", "C11", "C12",
-              "C13", "C14", "C15", "C16", "C17", "C18", "J2"},
-        "E": {"U5", "Q11", "Q12", "R25", "Rf0", "Rf1", "Rf2", "Rf3", "Rf4",
-              "Cf0", "Cf1", "Cf2", "Cf3", "Cf4", "C19", "C20", "C21", "C22",
-              "C23", "R26", "R27", "R28", "R29", "R30", "R45", "R46",
-              "J6", "J7"},
-        "F": {"U6", "U7", "U8", "J3", "J4", "J5", "Y1", "R31", "R36", "R37",
-              "R38", "R32", "R33", "R34", "R35", "D2", "D3", "D4", "D5",
-              "C24", "C25", "C26", "C27", "C28"},
-    }
+    # group parts by functional block (single source: hardware/blocks.py, which
+    # also defines the block-prefixed references)
     ref_block = {r: b for b, refs in BLOCKS.items() for r in refs}
 
     def shelf(items, maxw, gap=GAP, sort=True):
@@ -229,9 +215,9 @@ def main() -> int:
 
     def order_block(items):
         by_ref = {it[0]: it for it in items}
-        ics = sorted([r for r in by_ref if r.startswith("U")],
+        ics = sorted([r for r in by_ref if _kind(r) == "U"],
                      key=lambda r: -by_ref[r][3])
-        caps = sorted([r for r in by_ref if r.startswith("C")],
+        caps = sorted([r for r in by_ref if _kind(r) == "C"],
                       key=lambda r: -by_ref[r][3])
         used, out = set(), []
         for ic in ics:
@@ -248,9 +234,9 @@ def main() -> int:
     def block_units(items):
         """Group each IC with its decoupling caps, so a group stays together."""
         by_ref = {it[0]: it for it in items}
-        ics = sorted([r for r in by_ref if r.startswith("U")],
+        ics = sorted([r for r in by_ref if _kind(r) == "U"],
                      key=lambda r: -by_ref[r][3])
-        caps = sorted([r for r in by_ref if r.startswith("C")],
+        caps = sorted([r for r in by_ref if _kind(r) == "C"],
                       key=lambda r: -by_ref[r][3])
         used, units = set(), []
         for ic in ics:
@@ -271,50 +257,303 @@ def main() -> int:
     def ref_power(r):
         return component_is_power(r, comps[r]["value"], ref_nets.get(r, set()))
 
-    # ---- power-path bands ------------------------------------------------- #
-    # Each functional stage is a horizontal band: its power-handling parts sit
-    # on the centreline (in flow order) and its signal parts flank them, so the
-    # power parts cluster on the path without separating them from their
-    # decoupling/compensation parts.
-    BANDS = [["A"], ["C"], ["B", "E"], ["D", "F"]]   # back -> front (flow)
-    PW = 54.0                                   # power column width (mm)
-    X0, X1 = 4.0, BOARD_W - 4.0
-    flank = (X1 - X0 - PW) / 2.0
-    y = 20.0
-    for blocks in BANDS:
-        bname = "+".join(blocks)
-        items = [items_by_ref[r] for b in blocks for r in BLOCKS.get(b, [])
-                 if r in items_by_ref and r not in ANCHORS]
-        power = [it for it in items if ref_power(it[0])]
-        signal = order_block([it for it in items if not ref_power(it[0])])
-        pplaced, _pw, ph = shelf(power, PW - GAP, sort=True)
-        half = len(signal) // 2
-        lplaced, _lw, lh = shelf(signal[:half], flank - GAP)
-        rplaced, _rw, rh = shelf(signal[half:], flank - GAP)
-        band_h = max(ph, lh, rh, 1.0)
-        for ref, fp, cx, cy in pplaced:
-            fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(X0 + flank + cx),
-                                           pcbnew.FromMM(y + cy)))
-            board.Add(fp)
-        for ref, fp, cx, cy in lplaced:            # right-align to the spine
-            fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(X0 + flank - cx),
-                                           pcbnew.FromMM(y + cy)))
-            board.Add(fp)
-        for ref, fp, cx, cy in rplaced:
-            fp.SetPosition(pcbnew.VECTOR2I(
-                pcbnew.FromMM(X0 + flank + PW + cx), pcbnew.FromMM(y + cy)))
-            board.Add(fp)
-        y += band_h + GAP
-    if y - GAP > BOARD_H - 14:
-        print(f"  WARNING: bands reach {y - GAP:.1f} mm (board {BOARD_H})")
+    # ---- orient power parts ------------------------------------------------ #
+    # Each power part's "input" pad is the one on the net closest to the source
+    # (shallower in the net graph).  Rotate, snapped to 90 deg, so the input
+    # pad faces the power rail: east for parts left of the corridor, west for
+    # parts right of it.  2-pad parts (R, L) therefore only take 0 or 180.
+    import math
+    from collections import deque
+    from power_spec import DESIGN_CURRENT as _DC
+    POWER_NET_SET = set(_DC)
+    LEFT_BLOCKS = {"A", "B", "D", "F"}     # 1,3,5,6 -> left of the path
 
-    # connectors: anchored on the edges, placed first
-    for ref, (ax, ay) in ANCHORS.items():
-        it = items_by_ref.get(ref)
-        if it is None:
+    def pad_net(ref, pad):
+        return pin_net.get((ref, pad.GetNumber()), "").lstrip("/")
+
+    def power_pads(ref, fp):
+        return [p for p in fp.Pads() if pad_net(ref, p) in POWER_NET_SET]
+
+    nets_of: dict[str, set] = {}
+    comps_of: dict[str, set] = {}
+    for ref, fp, *_ in loaded:
+        for p in fp.Pads():
+            nm = pad_net(ref, p)
+            if nm in POWER_NET_SET:
+                nets_of.setdefault(ref, set()).add(nm)
+                comps_of.setdefault(nm, set()).add(ref)
+    depth: dict[str, int] = {"+12V_IN": 0}
+    q = deque(["+12V_IN"])
+    while q:
+        n = q.popleft()
+        for c in comps_of.get(n, ()):
+            for m in nets_of.get(c, ()):
+                if m not in depth:
+                    depth[m] = depth[n] + 1
+                    q.append(m)
+
+    def snap90(a):
+        return round(a / 90.0) * 90.0
+
+    # nets carried by the central pour (rails).  A power pad on one of these
+    # faces the corridor; a pad on a local node faces its partner part instead.
+    POUR_NETS = {"+12V_IN", "N_AF", "VIN_LM", "VIN_SYS", "VBAT", "VSYS",
+                 "VOUT12", "VBUS", "N_ACN", "N_CATH"}
+
+    # chain depth from the *input* rail only (+12V_IN), so the column index is
+    # monotonic from input to output: rail -> FET -> node -> L -> node -> FET.
+    comp_depth: dict[str, int] = {
+        c: 1 + min((depth.get(n, 99) for n in ns), default=99)
+        for c, ns in nets_of.items()}
+
+    for ref, fp, *_ in loaded:
+        if not ref_power(ref):
             continue
-        it[1].SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(ax), pcbnew.FromMM(ay)))
-        board.Add(it[1])
+        pp = power_pads(ref, fp)
+        if len(pp) < 2:
+            continue
+        pp.sort(key=lambda p: depth.get(pad_net(ref, p), 99))
+        in_pad = pp[0]
+        dx = in_pad.GetPosition().x - fp.GetPosition().x
+        dy = in_pad.GetPosition().y - fp.GetPosition().y
+        ang = math.degrees(math.atan2(dy, dx))
+        if pad_net(ref, in_pad) in POUR_NETS:
+            # input on the rail -> face the pour (east left / west right)
+            target = 0.0 if ref_block.get(ref) in LEFT_BLOCKS else 180.0
+        else:
+            # input on a local node -> point the upstream pad up (toward the
+            # previous part); screen y is down, so "up" is -90 deg
+            target = -90.0
+        fp.SetOrientationDegrees(snap90(target - ang))
+
+    # ---- staged placement -------------------------------------------------- #
+    # Stage 1: connectors + reserved power corridor (silkscreen box).
+    # Stage 2: power components, in path order, flanking the corridor.
+    # Stage 3: everything else fills the remaining space.
+    from collections import deque
+    STAGE = int(os.environ.get("PCB_STAGE", "3"))
+    CW = CORRIDOR_TARGET_MM
+    cx = BOARD_W / 2
+    cor_x0, cor_x1 = cx - CW / 2, cx + CW / 2
+    X0, X1 = 4.0, BOARD_W - 4.0
+    ANCHOR_REFS = {label(r) for r in ANCHORS}
+    LEFT_BLOCKS = {"A", "B", "D", "F"}     # 1,3,5,6 -> left of the path
+    RIGHT_BLOCKS = {"C", "E"}              # 2,4     -> right of the path
+
+    def side_of(ref):
+        return "L" if ref_block.get(ref) in LEFT_BLOCKS else "R"
+
+    def place(ref, x, y):
+        fp = items_by_ref[ref][1]
+        fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(x), pcbnew.FromMM(y)))
+        board.Add(fp)
+
+    def add_rect(x0, y0, x1, y1):
+        r = pcbnew.PCB_SHAPE(board)
+        r.SetShape(pcbnew.SHAPE_T_RECT)
+        r.SetStart(pcbnew.VECTOR2I(pcbnew.FromMM(x0), pcbnew.FromMM(y0)))
+        r.SetEnd(pcbnew.VECTOR2I(pcbnew.FromMM(x1), pcbnew.FromMM(y1)))
+        r.SetLayer(pcbnew.F_SilkS)
+        r.SetWidth(pcbnew.FromMM(0.25))
+        board.Add(r)
+
+    # stage 1: connectors + the reserved corridor
+    add_rect(cor_x0, 20.0, cor_x1, 120.0)
+    for ref, (ax, ay) in ANCHORS.items():
+        if label(ref) in items_by_ref:
+            place(label(ref), ax, ay)
+
+    # ---- power components, in path order (BFS over shared power nets) ------ #
+    by_net: dict[str, set] = {}
+    for ref, fp, *_ in loaded:
+        if ref in ANCHOR_REFS:
+            continue
+        for p in fp.Pads():
+            nm = pad_net(ref, p)
+            if nm in POWER_NET_SET:
+                by_net.setdefault(nm, set()).add(ref)
+    adj: dict[str, set] = {}
+    for refs in by_net.values():
+        for r in refs:
+            adj.setdefault(r, set()).update(refs - {r})
+
+    order, seen = [], set()
+    q = deque([label("J1")])
+    while q:
+        r = q.popleft()
+        if r in seen:
+            continue
+        seen.add(r)
+        if r not in ANCHOR_REFS and ref_power(r):
+            order.append(r)
+        for nb in sorted(adj.get(r, [])):
+            if nb not in seen:
+                q.append(nb)
+    for ref, fp, *_ in loaded:
+        if ref not in ANCHOR_REFS and ref_power(ref) and ref not in order:
+            order.append(ref)
+
+    # ---- stage 2: power components (PoC gradient-descent placement) -------- #
+    # Place the fixed connectors, then each power part in path order. For each:
+    # rotate (done above), drop it below the previous part, then line-search its
+    # position along the direction of the target pad: step, measure the routed
+    # length (grid A*), keep if shorter, reverse + halve if longer or illegal.
+    GRID = float(os.environ.get("PP_GRID", "2.0"))
+    CLEAR = float(os.environ.get("PP_CLEAR", "2.0"))
+    TARGET = float(os.environ.get("PP_TARGET", "2.0"))
+    MINSTEP = float(os.environ.get("PP_MINSTEP", "2.0"))
+    BRANCH = float(os.environ.get("PP_BRANCH", "10.0"))
+    MAXSTEPS = int(os.environ.get("PP_MAXSTEPS", "20"))
+
+    def bbox(fp):
+        bb = fp.GetBoundingBox(False, False)
+        return (pcbnew.ToMM(bb.GetX()), pcbnew.ToMM(bb.GetY()),
+                pcbnew.ToMM(bb.GetRight()), pcbnew.ToMM(bb.GetBottom()))
+
+    def hits(a, b, m):
+        return not (a[2] + m < b[0] or b[2] + m < a[0]
+                    or a[3] + m < b[1] or b[3] + m < a[1])
+
+    def pad_xy(fp, pad):
+        p = pad.GetPosition()
+        return (pcbnew.ToMM(p.x), pcbnew.ToMM(p.y))
+
+    def in_pad(ref, fp):
+        pp = power_pads(ref, fp)
+        if not pp:
+            return None
+        pp.sort(key=lambda p: depth.get(pad_net(ref, p), 99))
+        return pp[0]
+
+    placed_boxes: list = []
+    for ref, (ax, ay) in ANCHORS.items():
+        it = items_by_ref.get(label(ref))
+        if it:
+            placed_boxes.append(bbox(it[1]))
+
+    def legal(fp, x, y):
+        fp.SetPosition(pcbnew.VECTOR2I(pcbnew.FromMM(x), pcbnew.FromMM(y)))
+        b = bbox(fp)
+        if b[0] < 2 or b[1] < 2 or b[2] > BOARD_W - 2 or b[3] > BOARD_H - 2:
+            return False
+        return not any(hits(b, q, CLEAR) for q in placed_boxes)
+
+    def blocked():
+        cells = set()
+        for (x0, y0, x1, y1) in placed_boxes:
+            for i in range(int((x0 - CLEAR) / GRID), int((x1 + CLEAR) / GRID) + 2):
+                for j in range(int((y0 - CLEAR) / GRID), int((y1 + CLEAR) / GRID) + 2):
+                    cells.add((i, j))
+        return cells
+
+    import heapq
+
+    def route_len(p, q):
+        blk = blocked()
+        start = (int(p[0] / GRID), int(p[1] / GRID))
+        goal = (int(q[0] / GRID), int(q[1] / GRID))
+        g = {start: 0.0}
+        heap = [(0.0, start)]
+        while heap:
+            _f, cur = heapq.heappop(heap)
+            if cur == goal:
+                return g[cur] * GRID
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    if not (dx or dy):
+                        continue
+                    nb = (cur[0] + dx, cur[1] + dy)
+                    if nb in blk or not (0 <= nb[0] <= BOARD_W / GRID
+                                         and 0 <= nb[1] <= BOARD_H / GRID):
+                        continue
+                    ng = g[cur] + (1.4142 if dx and dy else 1.0)
+                    if ng < g.get(nb, 1e9):
+                        g[nb] = ng
+                        heapq.heappush(heap, (ng + math.hypot(
+                            nb[0] - goal[0], nb[1] - goal[1]), nb))
+        return None
+
+    if STAGE >= 2:
+        prev_ref = label("J1")
+        prev_pad = None
+        COLW = 11.0
+        col_y: dict = {}                            # (side, depth) -> y cursor
+        for ref in order:
+            fp = items_by_ref[ref][1]
+            my_pad = in_pad(ref, fp)
+            bb = fp.GetBoundingBox(False, False)
+            w, h = pcbnew.ToMM(bb.GetWidth()), pcbnew.ToMM(bb.GetHeight())
+            left = side_of(ref) == "L"
+            side = "L" if left else "R"
+            dep = min(comp_depth.get(ref, 1), 6)     # column = chain depth
+            key = (side, dep)
+            # branch/merge gap: shared net fans out to >=3 power parts
+            shared = nets_of.get(ref, set()) & nets_of.get(prev_ref, set())
+            branch = any(len(comps_of.get(n, ())) >= 3 for n in shared)
+            gap = BRANCH if branch else TARGET
+            y = col_y.get(key, 22.0) + gap + h / 2
+            x = (cor_x0 - 2.0 - w / 2 - (dep - 1) * COLW) if left \
+                else (cor_x1 + 2.0 + w / 2 + (dep - 1) * COLW)
+            # legalise downward
+            while not legal(fp, x, y) and y < BOARD_H - 4:
+                y += GRID
+            # target = previous part's pad on the shared net (or its in-pad)
+            tgt = None
+            if prev_pad is not None:
+                tgt = pad_xy(items_by_ref[prev_ref][1], prev_pad)
+            if tgt is None:
+                tgt = pad_xy(items_by_ref[prev_ref][1], in_pad(prev_ref,
+                             items_by_ref[prev_ref][1]))
+            # 2D hill-climb: at each step try the four grid directions and move
+            # to whichever shortens the routed length most; else halve the step
+            best_len = route_len(pad_xy(fp, my_pad), tgt) if (my_pad and tgt) else None
+            step = (math.hypot(tgt[0] - x, tgt[1] - y) / 3.0) if tgt else 0.0
+            cur = [x, y]
+            DIRS = ((1, 0), (-1, 0), (0, 1), (0, -1))
+            for _ in range(MAXSTEPS):
+                if step < MINSTEP or best_len is None:
+                    break
+                move = None
+                for dxn, dyn in DIRS:
+                    nx, ny = cur[0] + dxn * step, cur[1] + dyn * step
+                    if not legal(fp, nx, ny):
+                        continue
+                    l = route_len(pad_xy(fp, my_pad), tgt)
+                    if l is not None and l < best_len - 1e-6:
+                        if move is None or l < move[0]:
+                            move = (l, nx, ny)
+                if move:
+                    best_len, cur = move[0], [move[1], move[2]]
+                else:
+                    step /= 2.0
+            legal(fp, cur[0], cur[1])
+            board.Add(fp)
+            placed_boxes.append(bbox(fp))
+            col_y[key] = max(col_y.get(key, 22.0), cur[1] + h / 2)
+            prev_ref, prev_pad = ref, my_pad
+        left_y = max((v for (s, _d), v in col_y.items() if s == "L"), default=22.0)
+        right_y = max((v for (s, _d), v in col_y.items() if s == "R"), default=22.0)
+
+    # ---- stage 3: everything else fills the remaining space ---------------- #
+    if STAGE >= 3:
+        PW = 26.0                               # power strip width (for the fill)
+        rest = [it for it in loaded
+                if it[0] not in ANCHOR_REFS and not ref_power(it[0])]
+        left = order_block([it for it in rest if side_of(it[0]) == "L"])
+        right = order_block([it for it in rest if side_of(it[0]) == "R"])
+        lw = cor_x0 - 2.0 - PW - X0
+        rw = X1 - (cor_x1 + 2.0 + PW)
+        lplaced, _a, lh = shelf(left, lw)
+        rplaced, _b, rh = shelf(right, rw)
+        for ref, fp, px, py in lplaced:
+            place(ref, X0 + px, 22.0 + py)
+        for ref, fp, px, py in rplaced:
+            place(ref, cor_x1 + 2.0 + PW + px, 22.0 + py)
+        left_y = max(left_y, 22.0 + lh)
+        right_y = max(right_y, 22.0 + rh)
+    if STAGE >= 2 and max(left_y, right_y) > BOARD_H - 14:
+        print(f"  WARNING: parts reach {max(left_y, right_y):.1f} mm "
+              f"(board {BOARD_H})")
 
     # nets -> pads
     netcache = {}

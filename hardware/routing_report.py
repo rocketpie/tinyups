@@ -27,23 +27,7 @@ DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
 FAB_MIN_MM = float(os.environ.get("FAB_MIN_MM", "0.127"))
 
 # mirrors the block map in gen_pcb.py (schematic split A-F)
-BLOCKS = {
-    "A": {"J1", "F1", "D1", "R1", "R2", "R3", "R4", "R5", "C1", "R6", "R7", "Q1", "U1"},
-    "B": {"U2", "Q2", "C2", "C3", "C4", "R8"},
-    "C": {"U3", "Q3", "Q4", "Q5", "Q6", "L2", "R9", "R10", "C5", "C6", "C7",
-          "C8", "R11", "R12", "R13", "R14", "R15", "R40", "C29", "C30",
-          "C31", "R41", "C32", "R42", "C33", "R43", "R44"},
-    "D": {"U4", "Q7", "Q8", "Q9", "Q10", "L3", "R16", "R17", "R18", "R19",
-          "R20", "R21", "R22", "R23", "R24", "C9", "C10", "C11", "C12",
-          "C13", "C14", "C15", "C16", "C17", "C18", "J2"},
-    "E": {"U5", "Q11", "Q12", "R25", "Rf0", "Rf1", "Rf2", "Rf3", "Rf4",
-          "Cf0", "Cf1", "Cf2", "Cf3", "Cf4", "C19", "C20", "C21", "C22",
-          "C23", "R26", "R27", "R28", "R29", "R30", "R45", "R46",
-          "J6", "J7"},
-    "F": {"U6", "U7", "U8", "J3", "J4", "J5", "Y1", "R31", "R36", "R37",
-          "R38", "R32", "R33", "R34", "R35", "D2", "D3", "D4", "D5",
-          "C24", "C25", "C26", "C27", "C28"},
-}
+from blocks import PREFIXED_BLOCKS as BLOCKS
 REF_BLOCK = {r: b for b, refs in BLOCKS.items() for r in refs}
 
 
