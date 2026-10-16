@@ -26,7 +26,7 @@ WREF = 18.71
 MM_PER_IN = 25.4
 
 
-def build_dot(graph, engine, drop_ground):
+def build_dot(graph, engine):
     P = lambda k, d: float(os.environ.get(k, d))  # noqa: E731
     k = P("GV_K", 1.0)
     lines = ["graph G {"]
@@ -49,8 +49,6 @@ def build_dot(graph, engine, drop_ground):
         lines.append(f'  "{n["id"]}" [width={w:.3f}, height={h:.3f}, '
                      f'fillcolor="{fill}"];')
     for i, e in enumerate(graph["edges"]):
-        if drop_ground and e["net"] == "GND":
-            continue
         # len: wide nets sit farther apart; weight: pull strength
         ln = 1.5 + 3.5 * (e["width"] / WREF) ** 0.5
         wt = 1 + 8 * (e["width"] / WREF) ** 1.2
@@ -63,9 +61,8 @@ def build_dot(graph, engine, drop_ground):
 def main() -> int:
     graph_path, out_path = sys.argv[1], sys.argv[2]
     engine = sys.argv[3] if len(sys.argv) > 3 else os.environ.get("GV_ENGINE", "sfdp")
-    drop_ground = os.environ.get("DROP_GROUND") == "1"
     graph = json.load(open(graph_path))
-    dot = build_dot(graph, engine, drop_ground)
+    dot = build_dot(graph, engine)
     tmp = "/tmp/opencode/tinyups-layout.gv"
     os.makedirs(os.path.dirname(tmp), exist_ok=True)
     open(tmp, "w").write(dot)

@@ -15,7 +15,6 @@ const P = (k, d) => (process.env[k] !== undefined ? +process.env[k] : d);
 const DIRECTION = process.env.DIRECTION || "RIGHT";
 const NODE_NODE = P("NODE_NODE", 8);         // mm between nodes in a layer
 const NODE_LAYER = P("NODE_LAYER", 24);      // mm between layers
-const DROP_GROUND = process.env.DROP_GROUND === "1";
 const WREF = 18.71;
 
 const linkCount = {};
@@ -26,7 +25,6 @@ const children = G.nodes.map((n) => ({
 }));
 const edges = [];
 for (const [i, e] of G.edges.entries()) {
-  if (DROP_GROUND && e.net === "GND") continue;
   const per = 1 / linkCount[e.net];
   edges.push({
     id: "e" + i, sources: [e.source], targets: [e.target],

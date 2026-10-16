@@ -16,7 +16,6 @@ const P = (k, d) => (process.env[k] !== undefined ? +process.env[k] : d);
 const RANKDIR = process.env.RANKDIR || "LR";
 const NODESEP = P("NODESEP", 8);
 const RANKSEP = P("RANKSEP", 26);
-const DROP_GROUND = process.env.DROP_GROUND === "1";
 const WREF = 18.71;
 
 const g = new dagre.graphlib.Graph({ multigraph: true });
@@ -35,7 +34,6 @@ for (const e of G.edges) linkCount[e.net] = (linkCount[e.net] || 0) + 1;
 for (const n of G.nodes) g.setNode(n.id, { width: n.w, height: n.h });
 
 for (const [i, e] of G.edges.entries()) {
-  if (DROP_GROUND && e.net === "GND") continue;
   const per = 1 / linkCount[e.net];
   // wide nets: high weight (adjacent ranks), short minlen
   const weight = per * (1 + 8 * (e.width / WREF) ** 1.2);

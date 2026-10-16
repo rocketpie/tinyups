@@ -2,20 +2,26 @@
 """Legalise an engine's placement into a real board placement.
 
 Every layout engine returns *structure* (who sits near whom), not a legal PCB
-placement: parts overlap, sit outside the outline, intrude into the reserved
-power corridor and have no orientation.  This step turns any engine's raw
-coordinates into a legal placement:
+placement: parts overlap, sit outside the outline and have no orientation.  This
+step turns any engine's raw coordinates into a legal placement:
 
-  1. rotate   — pick the 0/90/180/270 orientation whose pads point at the
-                weighted centroid of the net's other pads (pads get closer to
-                where they are going; wide nets dominate because they are
-                weighted by required trace width).
-  2. de-overlap — push overlapping courtyards apart along the axis of least
-                penetration (spiral / relaxation), keeping a soft spring to the
-                engine's proposed position so the structure survives.
-  3. constrain — clamp inside the 150x140 outline, keep parts out of the power
-                corridor, pin the connectors to their anchors.
-  4. snap     — to a 0.5 mm placement grid.
+  1. rotate    — pick the 0/90/180/270 orientation whose pads point at the
+                 weighted centroid of the net's other pads (wide nets dominate
+                 because they are weighted by required trace width).
+  2. relax     — vectorised de-overlap (push apart along the axis of least
+                 penetration) with a soft spring back to the engine position,
+                 so the engine's structure survives.
+  3. hard pass — Gauss-Seidel fixed point, worst overlap first, that guarantees
+                 no courtyard overlap (residual overlap after this is reported).
+                 Its clearance is kept above the grid step, so the final snap
+                 cannot re-create an overlap.
+  4. snap      — to a 0.5 mm placement grid.
+
+The two power terminals (and any part an engine explicitly pinned, e.g. the ends
+of the incremental power chain) never move.
+
+There is deliberately no power-corridor keep-out: that belongs to the hand
+floorplan, not to a graph-derived placement (see layout_poc/README.md).
 
 Usage: legalize.py <positions.json> <out.json> [--iterations N]
 """
@@ -26,13 +32,14 @@ import math
 import os
 import sys
 
+import numpy as np
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 GRAPH = os.path.join(ROOT, "build", "layout", "graph.json")
 GRID = 0.5
-CLEAR = 0.6          # mm courtyard clearance
-SPRING = float(os.environ.get("SPRING", "0.02"))   # pull to the engine position
-CORRIDOR_PUSH = 0.5
+CLEAR = float(os.environ.get("CLEAR", "0.6"))     # relaxation clearance
+SPRING = float(os.environ.get("SPRING", "0.02"))  # pull to the engine position
 
 
 def rot(p, a):
@@ -59,14 +66,15 @@ def main() -> int:
     nodes = {n["id"]: n for n in graph["nodes"]}
     board = graph["board"]
     BW, BH = board["w"], board["h"]
-    cx0, cx1, cy0, cy1 = board["corridor"]
 
     ids = [r for r in raw if r in nodes]
     x = {r: raw[r]["x"] for r in ids}
     y = {r: raw[r]["y"] for r in ids}
-    fixed = {r for r in ids if nodes[r].get("anchor")}
+    # fixed = the two board anchors + anything the engine explicitly pinned
+    fixed = {r for r in ids if nodes[r].get("anchor") or raw[r].get("pin")}
     for r in fixed:
-        x[r], y[r] = nodes[r]["anchor"]
+        if nodes[r].get("anchor"):
+            x[r], y[r] = nodes[r]["anchor"]
     tx, ty = dict(x), dict(y)
     bb = {r: local_bbox(nodes[r], 0) for r in ids}
 
@@ -74,7 +82,6 @@ def main() -> int:
     net_w = {n: graph["nets"][n]["width"] for n in graph["nets"]}
     angle = {r: 0 for r in ids}
     for _round in range(3):
-        # centroid of every net's pads at the current angles
         acc: dict[str, list] = {}
         for r in ids:
             for p in nodes[r]["pads"]:
@@ -102,117 +109,68 @@ def main() -> int:
             angle[r] = best
         bb = {r: local_bbox(nodes[r], angle[r]) for r in ids}
 
-    def box(r, px=None, py=None):
-        px = x[r] if px is None else px
-        py = y[r] if py is None else py
-        b = bb[r]
-        return (px + b[0], py + b[1], px + b[2], py + b[3])
-
-    # ---- relaxation: de-overlap + soft spring + constraints ----------------
-    # vectorised: ~5k iterations over 124 parts is cheap with numpy.
-    import numpy as np
-    idx = {r: i for i, r in enumerate(ids)}
+    # ---- vectorised setup --------------------------------------------------
     n = len(ids)
     X = np.array([x[r] for r in ids])
     Y = np.array([y[r] for r in ids])
     TX = np.array([tx[r] for r in ids])
     TY = np.array([ty[r] for r in ids])
-    HX = np.array([(lambda r: (r[2] - r[0]) / 2)(local_bbox(nodes[r], angle[r]))
-                   for r in ids])
-    CY = np.array([(lambda r: (r[3] - r[1]) / 2)(local_bbox(nodes[r], angle[r]))
-                   for r in ids])
-    CX = np.array([(lambda r: (r[0] + r[2]) / 2)(local_bbox(nodes[r], angle[r]))
-                   for r in ids])
-    CYO = np.array([(lambda r: (r[1] + r[3]) / 2)(local_bbox(nodes[r], angle[r]))
-                    for r in ids])
-    fixedmask = np.array([r in fixed for r in ids])
-    inboard = np.ones(n, bool)
-    b = np.array([1.0] * n)
-    for i, r in enumerate(ids):
-        if nodes[r]["kind"] == "J":
-            inboard[i] = False
+    boxes = [local_bbox(nodes[r], angle[r]) for r in ids]
+    HX = np.array([(b[2] - b[0]) / 2 for b in boxes])
+    CY = np.array([(b[3] - b[1]) / 2 for b in boxes])
+    CX = np.array([(b[0] + b[2]) / 2 for b in boxes])
+    CYO = np.array([(b[1] + b[3]) / 2 for b in boxes])
+    FIX = np.array([r in fixed for r in ids])
 
-    for it in range(iters):
-        dx = X[:, None] - X[None, :]
-        dy = Y[:, None] - Y[None, :]
-        # centre offsets of the bbox relative to the footprint origin
-        cx = CX[:, None] - CX[None, :] + dx
-        cy = CYO[:, None] - CYO[None, :] + dy
-        ox = HX[:, None] + HX[None, :] + CLEAR - np.abs(cx)
-        oy = CY[:, None] + CY[None, :] + CLEAR - np.abs(cy)
-        mask = (ox > 0) & (oy > 0)
-        np.fill_diagonal(mask, False)
-        sx = np.where(cx >= 0, 1.0, -1.0)
-        sy = np.where(cy >= 0, 1.0, -1.0)
-        alongx = mask & (ox < oy)
-        alongy = mask & ~(ox < oy)
-        px = np.where(alongx, 0.5 * ox * sx, 0.0)
-        py = np.where(alongy, 0.5 * oy * sy, 0.0)
-        px[fixedmask, :] = 0.0          # fixed parts do not move
-        py[fixedmask, :] = 0.0
-        disp_x = px.sum(axis=1)
-        disp_y = py.sum(axis=1)
-        disp_x += SPRING * (TX - X)
-        disp_y += SPRING * (TY - Y)
-        # corridor keep-out
-        lo, hi = X + (CX - HX), X + (CX + HX)
-        ylo = Y + (CYO - CY)
-        yhi = Y + (CYO + CY)
-        inband = (lo < cx1) & (hi > cx0) & (ylo < cy1) & (yhi > cy0) & inboard
-        mid = (cx0 + cx1) / 2
-        disp_x = np.where(inband, disp_x + CORRIDOR_PUSH * (cx1 - cx0) / 2
-                          * np.where(X >= mid, 1.0, -1.0), disp_x)
-        disp_x = np.clip(disp_x, -3.0, 3.0)
-        disp_y = np.clip(disp_y, -3.0, 3.0)
-        X = X + np.where(fixedmask, 0.0, disp_x)
-        Y = Y + np.where(fixedmask, 0.0, disp_y)
+    def fields(eff):
+        dx = (X + CX)[:, None] - (X + CX)[None, :]
+        dy = (Y + CYO)[:, None] - (Y + CYO)[None, :]
+        ox = HX[:, None] + HX[None, :] + eff - np.abs(dx)
+        oy = CY[:, None] + CY[None, :] + eff - np.abs(dy)
+        m = (ox > 0) & (oy > 0)
+        np.fill_diagonal(m, False)
+        return m, dx, dy, ox, oy
+
+    # 2. relaxation: de-overlap + soft spring (structure survives)
+    for _ in range(iters):
+        m, dx, dy, ox, oy = fields(CLEAR)
+        np.fill_diagonal(m, False)
+        sx = np.where(dx >= 0, 1.0, -1.0)
+        sy = np.where(dy >= 0, 1.0, -1.0)
+        px = np.where(m & (ox <= oy), 0.5 * ox * sx, 0.0)
+        py = np.where(m & (ox > oy), 0.5 * oy * sy, 0.0)
+        px[FIX, :] = 0.0
+        py[FIX, :] = 0.0
+        X = X + np.where(FIX, 0.0, np.clip(px.sum(axis=1) + SPRING * (TX - X),
+                                           -3.0, 3.0))
+        Y = Y + np.where(FIX, 0.0, np.clip(py.sum(axis=1) + SPRING * (TY - Y),
+                                           -3.0, 3.0))
         X = np.clip(X, 1.0 - (CX - HX), BW - 1.0 - (CX + HX))
         Y = np.clip(Y, 1.0 - (CYO - CY), BH - 1.0 - (CYO + CY))
-        X[fixedmask] = TX[fixedmask]
-        Y[fixedmask] = TY[fixedmask]
-        if os.environ.get("DBG") and it % 1000 == 0:
-            print(f"    it {it:5} overlaps {int(mask.sum())//2:4} "
-                  f"maxpx {np.abs(disp_x).max():.2f}")
+        X[FIX], Y[FIX] = TX[FIX], TY[FIX]
 
-    for i, r in enumerate(ids):
-        x[r], y[r] = float(X[i]), float(Y[i])
-
-    # ---- hard pass: guarantee no courtyard overlap and no corridor intrude --
-    # The corridor is injected as one extra *fixed* obstacle node so the overlap
-    # solver and the keep-out share a single fixed point (two separate passes
-    # just oscillate against each other).  Gauss-Seidel: shove the movable part
-    # out of its worst overlap by the full penetration.
-    EFF = GRID + 0.1      # must exceed the grid step so snapping cannot overlap
-    midx, midy = (cx0 + cx1) / 2, (cy0 + cy1) / 2
-    CXe = np.append(CX, midx)
-    CYOe = np.append(CYO, midy)
-    HXe = np.append(HX, (cx1 - cx0) / 2)
-    CYe = np.append(CY, (cy1 - cy0) / 2)
-    fixede = np.append(fixedmask, True)
-    ignore = np.zeros((n + 1, n + 1), bool)
-    for i in np.argwhere(~inboard).ravel():      # connectors may sit in it
-        ignore[i, n] = ignore[n, i] = True
-    cxa = np.append(X + CX, midx)
-    cya = np.append(Y + CYO, midy)
-    for rnd in range(4000):
+    # 3. hard pass: Gauss-Seidel, worst overlap first.  EFF > GRID so the snap
+    #    below cannot reintroduce an overlap.
+    EFF = GRID + 0.1
+    cxa, cya = X + CX, Y + CYO
+    broke = -1
+    for rnd in range(20000):
         dx = cxa[:, None] - cxa[None, :]
         dy = cya[:, None] - cya[None, :]
-        ox = HXe[:, None] + HXe[None, :] + EFF - np.abs(dx)
-        oy = CYe[:, None] + CYe[None, :] + EFF - np.abs(dy)
-        mask = (ox > 0) & (oy > 0) & ~ignore
+        ox = HX[:, None] + HX[None, :] + EFF - np.abs(dx)
+        oy = CY[:, None] + CY[None, :] + EFF - np.abs(dy)
+        mask = (ox > 0) & (oy > 0)
         np.fill_diagonal(mask, False)
         pairs = np.argwhere(mask)
         if len(pairs) == 0:
+            broke = rnd
             break
+        sev = np.minimum(ox[pairs[:, 0], pairs[:, 1]], oy[pairs[:, 0], pairs[:, 1]])
+        pairs = pairs[np.argsort(-sev)]
         for i, j in pairs:
-            if fixede[i] and fixede[j]:
+            if FIX[i] and FIX[j]:
                 continue
-            # move the movable one; if both free, move the smaller (lighter)
-            if fixede[j] or (not fixede[i] and
-                             HXe[i] * CYe[i] <= HXe[j] * CYe[j]):
-                k = i
-            else:
-                k = j
+            k = i if (FIX[j] or (not FIX[i] and HX[i] * CY[i] <= HX[j] * CY[j])) else j
             if ox[i, j] < oy[i, j]:
                 s = 1.0 if dx[i, j] >= 0 else -1.0
                 cxa[k] += (s if k == i else -s) * (ox[i, j] + 0.02)
@@ -220,24 +178,35 @@ def main() -> int:
                 s = 1.0 if dy[i, j] >= 0 else -1.0
                 cya[k] += (s if k == i else -s) * (oy[i, j] + 0.02)
             if k < n:                              # keep the part on the board
-                cxa[k] = min(max(cxa[k], 1.0 + HXe[k]), BW - 1.0 - HXe[k])
-                cya[k] = min(max(cya[k], 1.0 + CYe[k]), BH - 1.0 - CYe[k])
-        cxa[n], cya[n] = midx, midy
-        for i in np.argwhere(fixedmask).ravel():
+                cxa[k] = min(max(cxa[k], 1.0 + HX[k]), BW - 1.0 - HX[k])
+                cya[k] = min(max(cya[k], 1.0 + CY[k]), BH - 1.0 - CY[k])
+        for i in np.argwhere(FIX).ravel():
             cxa[i], cya[i] = TX[i] + CX[i], TY[i] + CYO[i]
-    X, Y = cxa[:n] - CX, cya[:n] - CYO
-    for i, r in enumerate(ids):
-        x[r], y[r] = float(X[i]), float(Y[i])
-        if fixedmask[i]:
-            x[r], y[r] = nodes[r]["anchor"]
+    X, Y = cxa - CX, cya - CYO
+    if os.environ.get("DBG"):
+        left = 0
+        for i in range(n):
+            for j in range(i + 1, n):
+                if (min(X[i] + CX[i] + HX[i], X[j] + CX[j] + HX[j])
+                        - max(X[i] + CX[i] - HX[i], X[j] + CX[j] - HX[j]) > 0
+                        and min(Y[i] + CYO[i] + CY[i], Y[j] + CYO[j] + CY[j])
+                        - max(Y[i] + CYO[i] - CY[i], Y[j] + CYO[j] - CY[j]) > 0):
+                    left += 1
+        print(f"    hard pass broke at rnd {broke}, {left} residual overlaps")
 
     out = {}
-    for r in ids:
-        out[r] = {"x": round(x[r] / GRID) * GRID, "y": round(y[r] / GRID) * GRID,
+    for i, r in enumerate(ids):
+        if nodes[r].get("anchor"):
+            px, py = nodes[r]["anchor"]
+        elif FIX[i]:
+            px, py = TX[i], TY[i]          # engine-pinned: keep its seed
+        else:
+            px, py = float(X[i]), float(Y[i])
+        out[r] = {"x": round(px / GRID) * GRID, "y": round(py / GRID) * GRID,
                   "angle": angle[r]}
     json.dump({"engine": data.get("engine", "?") + "+legal",
                "positions": out}, open(dst, "w"), indent=1)
-    print(f"legalize {data.get('engine','?'):16} -> {dst}")
+    print(f"legalize {data.get('engine','?'):22} -> {dst}")
     return 0
 
 

@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
-"""Render an engine's placement to SVG and score it.
+"""Render an engine's placement to SVG/PNG and score it.
 
 Consumes build/layout/graph.json plus a positions JSON produced by any engine
-({"engine": name, "positions": {ref: {x, y, angle}}}), draws the board, the
-reserved power corridor, the nets (coloured / weighted by required width) and
-the components, then prints placement metrics:
+({"engine": name, "positions": {ref: {x, y, angle}}}), draws the board, the nets
+(coloured / weighted by required width) and the components (no GND, no corridor
+— see extract.py), then prints placement metrics:
 
-  HPWL          Σ per-net pad bounding-box (w+h)            (unweighted / by-width)
+  HPWL          Σ per-net pad bounding-box (w+h)            (plain / by-width)
   wire          Σ edge length (the spring graph)
   overlap       courtyards that intersect
   outside       parts past the board edge
-  corridor      parts intruding into the reserved band
+  path          Σ consecutive distance along the power order — how long the
+                power chain is (the hand R7-at-the-bottom problem)
+  straight      path / |input - output| — 1.0 is a perfectly straight chain
+  d_in, d_out   first power part -> input, last power part -> output (mm)
 
-Usage: render.py <positions.json> <out.svg> [--label]
+Usage: render.py <positions.json> <out.svg|png> [--label]
 """
 from __future__ import annotations
 
@@ -57,7 +60,6 @@ def metrics(graph, pos):
     board = graph["board"]
     placed = {r: p for r, p in pos.items() if r in nodes}
 
-    # HPWL over nets: bbox of all pads on the net
     net_pads: dict[str, list] = {}
     for ref, p in placed.items():
         for pad in nodes[ref]["pads"]:
@@ -70,18 +72,15 @@ def metrics(graph, pos):
         ys = [q[1] for q in pts]
         d = (max(xs) - min(xs)) + (max(ys) - min(ys))
         hpwl += d
-        w = graph["nets"][net]["width"]
-        whit += d * w
+        whit += d * graph["nets"][net]["width"]
 
-    wire = sum(math.dist((placed[e["source"]]["x"], placed[e["source"]]["y"]),
-                         (placed[e["target"]]["x"], placed[e["target"]]["y"]))
+    dist = lambda a, b: math.dist((a["x"], a["y"]), (b["x"], b["y"]))  # noqa: E731
+    wire = sum(dist(placed[e["source"]], placed[e["target"]])
                for e in graph["edges"]
                if e["source"] in placed and e["target"] in placed)
-    wirew = sum(e["width"] * math.dist(
-        (placed[e["source"]]["x"], placed[e["source"]]["y"]),
-        (placed[e["target"]]["x"], placed[e["target"]]["y"]))
-        for e in graph["edges"]
-        if e["source"] in placed and e["target"] in placed)
+    wirew = sum(e["width"] * dist(placed[e["source"]], placed[e["target"]])
+                for e in graph["edges"]
+                if e["source"] in placed and e["target"] in placed)
 
     boxes = {r: aabb(nodes[r], p["x"], p["y"], p.get("angle", 0))
              for r, p in placed.items()}
@@ -90,12 +89,46 @@ def metrics(graph, pos):
                   if inter(boxes[refs[i]], boxes[refs[j]]))
     outside = sum(1 for r in refs if boxes[r][0] < 0 or boxes[r][1] < 0
                   or boxes[r][2] > board["w"] or boxes[r][3] > board["h"])
-    cx0, cx1, cy0, cy1 = board["corridor"]
-    corridor = sum(1 for r in refs if nodes[r]["kind"] != "J" and inter(
-        boxes[r], (cx0, cy0, cx1, cy1)))
+
+    # power-path metrics: how long / how flow-ordered is the input -> output chain
+    order = [r for r in graph.get("power_order", []) if r in placed]
+    path = sum(dist(placed[order[i]], placed[order[i + 1]])
+               for i in range(len(order) - 1)) if len(order) > 1 else 0.0
+    arid = {n["id"]: n["anchor"] for n in graph["nodes"] if n.get("anchor")}
+    io = graph.get("io", {})
+    pin, pout = arid.get(io.get("in")), arid.get(io.get("out"))
+    span = math.dist(pin, pout) if pin and pout else 0.0
+    straight = path / span if span else 0.0
+    d_in = math.dist((placed[order[0]]["x"], placed[order[0]]["y"]), pin) \
+        if order and pin else 0.0
+    d_out = math.dist((placed[order[-1]]["x"], placed[order[-1]]["y"]), pout) \
+        if order and pout else 0.0
+    # flow-ordered?  correlation between a part's flow position (input=0 ..
+    # output=1, from the rail graph) and where it sits along the input->output
+    # axis.  1.0 = the power parts walk from the input to the output in order;
+    # ~0    = flow and geometry are unrelated (the R7-at-the-bottom problem).
+    axis_r = 0.0
+    if pin and pout and len(order) > 2:
+        ux, uy = pout[0] - pin[0], pout[1] - pin[1]
+        nrm = math.hypot(ux, uy) or 1.0
+        fs, us = [], []
+        for r in order:
+            f = nodes[r].get("flow")
+            if f is None:
+                continue
+            fs.append(f)
+            us.append(((placed[r]["x"] - pin[0]) * ux
+                       + (placed[r]["y"] - pin[1]) * uy) / nrm / nrm)
+        if len(fs) > 2:
+            mf, mu = sum(fs) / len(fs), sum(us) / len(us)
+            cov = sum((a - mf) * (b - mu) for a, b in zip(fs, us))
+            sf = math.sqrt(sum((a - mf) ** 2 for a in fs))
+            su = math.sqrt(sum((b - mu) ** 2 for b in us))
+            axis_r = cov / (sf * su) if sf and su else 0.0
     return {"hpwl": hpwl, "hpwl_w": whit, "wire": wire, "wire_w": wirew,
-            "overlap": overlap, "outside": outside, "corridor": corridor,
-            "n": len(placed)}
+            "overlap": overlap, "outside": outside, "path": path,
+            "straight": straight, "axis_r": axis_r,
+            "d_in": d_in, "d_out": d_out, "n": len(placed)}
 
 
 def color(current):
@@ -107,7 +140,15 @@ def color(current):
         return "#e6c700"
     if current > 0:
         return "#7f7f7f"
-    return "#cfcfcf"
+    return "#bfbfbf"
+
+
+def node_fill(n, anchored):
+    if anchored:
+        return "#ffd400"
+    if n["kind"] == "J":
+        return "#c8a2ff"
+    return "#ff3b3b" if n["power"] else "#2d6cdf"
 
 
 def render(graph, pos, out, label=True):
@@ -120,12 +161,10 @@ def render(graph, pos, out, label=True):
          f'height="{H:.0f}" viewBox="-3 -3 {b["w"] + 6} {b["h"] + 6}">',
          '<rect x="0" y="0" width="%.1f" height="%.1f" fill="#0f3d1a"/>'
          % (b["w"], b["h"])]
-    cx0, cx1, cy0, cy1 = b["corridor"]
-    L.append('<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" '
-             'fill="#00ff7f" fill-opacity="0.06" stroke="#00ff7f" '
-             'stroke-opacity="0.5" stroke-dasharray="1.5,1"/>'
-             % (cx0, cy0, cx1 - cx0, cy1 - cy0))
-    # edges under the parts
+    for rt in pos.get("__routes__", []):     # orthogonal routes (ELK)
+        L.append('<polyline fill="none" stroke="#00e5ff" stroke-width="0.18" '
+                 'stroke-opacity="0.5" points="%s"/>'
+                 % " ".join("%.1f,%.1f" % (p[0], p[1]) for p in rt["points"]))
     for e in graph["edges"]:
         if e["source"] not in placed or e["target"] not in placed:
             continue
@@ -137,26 +176,14 @@ def render(graph, pos, out, label=True):
                  'stroke="%s" stroke-width="%.2f" stroke-opacity="%.2f"/>'
                  % (a["x"], a["y"], t["x"], t["y"], color(e["current"]),
                     sw, op))
-    # orthogonal routes (ELK) under the edges
-    for rt in pos.get("__routes__", []):
-        pts = rt["points"]
-        L.append('<polyline fill="none" stroke="#00e5ff" stroke-width="0.18" '
-                 'stroke-opacity="0.5" points="%s"/>'
-                 % " ".join("%.1f,%.1f" % (p[0], p[1]) for p in pts))
-    # parts
     for r, p in placed.items():
         n = nodes[r]
         pts = " ".join("%.2f,%.2f" % q for q in
                        corners(n, p["x"], p["y"], p.get("angle", 0)))
-        fill = "#ff3b3b" if n["power"] else "#2d6cdf"
-        if n["kind"] == "J":
-            fill = "#c8a2ff"
-        if n["id"] in {x["id"] for x in graph["nodes"] if x.get("anchor")}:
-            fill = "#ffd400"
         L.append('<polygon points="%s" fill="%s" fill-opacity="%.2f" '
-                 'stroke="#000" stroke-width="0.15" '
-                 'stroke-opacity="0.8"/>'
-                 % (pts, fill, 0.55 if n["power"] else 0.7))
+                 'stroke="#000" stroke-width="0.15" stroke-opacity="0.8"/>'
+                 % (pts, node_fill(n, n.get("anchor")),
+                    0.55 if n["power"] else 0.7))
     if label:
         for r, p in placed.items():
             n = nodes[r]
@@ -182,9 +209,10 @@ def render_png(graph, pos, out, label=True):
     fig, ax = plt.subplots(figsize=(b["w"] / 12, b["h"] / 12), dpi=140)
     ax.set_facecolor("#0f3d1a")
     ax.add_patch(MRect((0, 0), b["w"], b["h"], fill=False, ec="#7fffa0", lw=1))
-    cx0, cx1, cy0, cy1 = b["corridor"]
-    ax.add_patch(MRect((cx0, cy0), cx1 - cx0, cy1 - cy0, fc="#00ff7f",
-                       alpha=0.07, ec="#00ff7f", ls="--", lw=0.8))
+    for rt in pos.get("__routes__", []):
+        xs = [p[0] for p in rt["points"]]
+        ys = [p[1] for p in rt["points"]]
+        ax.plot(xs, ys, color="#00e5ff", lw=0.3, alpha=0.5)
     for e in graph["edges"]:
         if e["source"] not in placed or e["target"] not in placed:
             continue
@@ -195,14 +223,9 @@ def render_png(graph, pos, out, label=True):
                 alpha=0.25 + 0.75 * (w / 18.71) ** 0.5, solid_capstyle="round")
     for r, p in placed.items():
         n = nodes[r]
-        pts = corners(n, p["x"], p["y"], p.get("angle", 0))
-        fill = "#ff3b3b" if n["power"] else "#2d6cdf"
-        if n["kind"] == "J":
-            fill = "#c8a2ff"
-        if n.get("anchor"):
-            fill = "#ffd400"
-        ax.add_patch(MPoly(pts, closed=True, fc=fill, alpha=0.75, ec="black",
-                           lw=0.4, zorder=3))
+        ax.add_patch(MPoly(corners(n, p["x"], p["y"], p.get("angle", 0)),
+                           closed=True, fc=node_fill(n, n.get("anchor")),
+                           alpha=0.75, ec="black", lw=0.4, zorder=3))
         if label:
             ax.text(p["x"], p["y"], r, ha="center", va="center",
                     fontsize=3.2, color="white", family="monospace", zorder=4)
@@ -226,11 +249,11 @@ def main() -> int:
         render_png(graph, pos, out, label="--label" in sys.argv)
     else:
         render(graph, pos, out, label="--label" in sys.argv)
-    print(f"  {data.get('engine','?'):14} n={m['n']:3} "
-          f"HPWL {m['hpwl']:7.0f} mm (w {m['hpwl_w']:8.0f}) "
-          f"wire {m['wire']:7.0f} mm  "
-          f"overlap {m['overlap']:3}  outside {m['outside']:2}  "
-          f"corridor {m['corridor']:2}")
+    print(f"  {data.get('engine','?'):22} n={m['n']:3} "
+          f"HPWL {m['hpwl']:6.0f} (w {m['hpwl_w']:7.0f}) "
+          f"wire {m['wire']:6.0f}  ovl {m['overlap']:3} out {m['outside']:2}  "
+          f"path {m['path']:6.0f} axisR {m['axis_r']:5.2f}  "
+          f"in {m['d_in']:5.0f} out {m['d_out']:5.0f}")
     return 0
 
 

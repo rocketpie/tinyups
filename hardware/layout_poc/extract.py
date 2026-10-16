@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """Extract a *placement graph* from the netlist for auto-layout experiments.
 
-Nodes  = components (footprint, size, per-pad local geometry, block, power flag)
-Anchors= the board connectors, pinned to the board edges (from gen_pcb.ANCHORS)
+Nodes  = components (footprint, courtyard size, pads, block, power flag)
+Anchors= only the two main connectors: 1J1 (XT60 input) and 5J2 (XT30 output).
 Edges  = net connectivity, decomposed as an MST per net (k-1 edges), with a
          required trace width derived from the net's design current (IPC-2221).
 
+**GND is dropped.**  It is a plane, so its traces are irrelevant to placement;
+including it (71 parts) just glues the whole design into a hairball.
+
 The same graph feeds every layout engine (d3-force, dagre, ELK, graphviz), so
-they can be compared apple-to-apple.
+they can be compared apple-to-apple.  It also carries `power_order` — the power
+components in power-flow order (BFS from the input over the rail nets) — which
+the incremental engine places one by one.
 
 Usage:
-    /opt/eda/venv/bin/python hardware/layout_poc/extract.py [--drop NETS]
+    /opt/eda/venv/bin/python hardware/layout_poc/extract.py [--keep-gnd] [--drop NETS]
 Writes:  build/layout/graph.json
 """
 from __future__ import annotations
@@ -19,6 +24,7 @@ import json
 import math
 import os
 import sys
+from collections import deque
 
 import pcbnew
 
@@ -27,14 +33,18 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.dirname(HERE))          # hardware/
 sys.path.insert(0, HERE)
 
-from blocks import PREFIXED_BLOCKS, kind                      # noqa: E402
+from blocks import PREFIXED_BLOCKS, kind, label                 # noqa: E402
 from gen_pcb import ANCHORS, BOARD_H, BOARD_W, parse, _find_all  # noqa: E402
-from power_spec import DESIGN_CURRENT                          # noqa: E402
-from power_map import component_is_power                       # noqa: E402
+from power_spec import DESIGN_CURRENT                           # noqa: E402
+from power_map import component_is_power                        # noqa: E402
 
 NETLIST = os.path.join(ROOT, "build", "tinyups.net")
 FP_ROOT = "/usr/share/kicad/footprints"
 OUT = os.path.join(ROOT, "build", "layout", "graph.json")
+
+# the two terminals of the power path: everything else is free to move.
+PINNED = ("J1", "J2")          # base refs -> 1J1 (XT60 in), 5J2 (XT30 out)
+DROP_DEFAULT = {"GND"}         # planes: no placement signal
 
 # IPC-2221 external-layer trace width for a given current (mm).
 #   I = k * dT**0.44 * A**0.725  (A in mil^2, k=0.048 external, 1 oz = 1.378 mil)
@@ -50,9 +60,11 @@ def ipc_width_mm(current_a: float, layers: int = 1) -> float:
 
 
 def main() -> int:
-    drop = set()
+    drop = set(DROP_DEFAULT)
+    if "--keep-gnd" in sys.argv:
+        drop = set()
     if "--drop" in sys.argv:
-        drop = set(sys.argv[sys.argv.index("--drop") + 1].split(","))
+        drop |= set(sys.argv[sys.argv.index("--drop") + 1].split(","))
 
     tree = parse(open(NETLIST).read())
 
@@ -76,9 +88,8 @@ def main() -> int:
                 nets.setdefault(name, []).append(ref)
 
     ref_block = {r: b for b, refs in PREFIXED_BLOCKS.items() for r in refs}
-    # gen_pcb ANCHORS use *base* refs (J1..); map to the prefixed netlist refs.
-    from blocks import label
-    anchors = {label(k): v for k, v in ANCHORS.items()}
+    # pin only the two power terminals; USB/SWD/PACK/CELLS/fan headers move free.
+    anchors = {label(k): v for k, v in ANCHORS.items() if k in PINNED}
 
     nodes = []
     for ref, info in sorted(comps.items()):
@@ -127,10 +138,8 @@ def main() -> int:
 
     # edges: MST per net over the distinct comps on it
     edges = []
-    skipped = []
     for net, refs in nets.items():
         if net in drop:
-            skipped.append(net)
             continue
         uniq = sorted(set(refs))
         if len(uniq) < 2:
@@ -139,7 +148,6 @@ def main() -> int:
         for i in range(len(uniq)):
             for j in range(i + 1, len(uniq)):
                 a, b = node_by_id[uniq[i]], node_by_id[uniq[j]]
-                # distance between footprint centres (start: schematic-square guess)
                 d = math.hypot(a["w"] + b["w"], a["h"] + b["h"])
                 cand.append((d, uniq[i], uniq[j]))
         cand.sort()
@@ -162,27 +170,74 @@ def main() -> int:
                 "width": net_width[net],
             })
 
+    # ---- power-flow order (BFS from the input over the rail nets) ----------
+    # the order the incremental engine places power parts in: rail -> FET ->
+    # node -> L -> node -> FET, so the chain runs input -> output.
+    rails = {n for n in nets if n in DESIGN_CURRENT}
+    adj: dict[str, set] = {}
+    for n in rails:                       # parts sharing a rail are adjacent
+        refs = set(nets[n])
+        for r in refs:
+            adj.setdefault(r, set()).update(refs - {r})
+
+    start, end = label("J1"), label("J2")
+
+    def bfs_depths(origin: str) -> dict[str, int]:
+        d = {origin: 0}
+        q = deque([origin])
+        while q:
+            r = q.popleft()
+            for nb in sorted(adj.get(r, ())):
+                if nb not in d:
+                    d[nb] = d[r] + 1
+                    q.append(nb)
+        return d
+
+    din, dout = bfs_depths(start), bfs_depths(end)
+    # flow position 0..1: hops from the input / (hops from input + from output).
+    # 0 = at the input, 1 = at the output, monotonic along the chain.
+    for n in nodes:
+        a, b = din.get(n["id"]), dout.get(n["id"])
+        n["flow_in"], n["flow_out"] = a, b
+        n["flow"] = (a / (a + b)) if (a is not None and b is not None and a + b) \
+            else None
+    # the power path, input-first / output-last.  The two ends are pinned by the
+    # incremental engine, so pick them explicitly: the part electrically closest
+    # to the input, and the one closest to the output.
+    cands = [n["id"] for n in nodes if n["power"] and n["id"] not in anchors]
+    flowof = lambda r: node_by_id[r]["flow"] if node_by_id[r]["flow"] is not None else 2.0  # noqa: E731
+    first = min(cands, key=lambda r: (node_by_id[r]["flow_in"] or 99, flowof(r)))
+    last = min(cands, key=lambda r: (node_by_id[r]["flow_out"] or 99, -flowof(r)))
+    middle = sorted((r for r in cands if r not in (first, last)),
+                    key=lambda r: (flowof(r), din.get(r, 99)))
+    power_order = [first, *middle, last]
+
     graph = {
-        "board": {
-            "w": BOARD_W, "h": BOARD_H,
-            "corridor": [BOARD_W / 2 - 10.0, BOARD_W / 2 + 10.0, 20.0, 120.0],
-        },
+        "board": {"w": BOARD_W, "h": BOARD_H},
+        "io": {"in": label("J1"), "out": label("J2")},
         "nodes": nodes,
         "edges": edges,
+        "power_order": power_order,
         "nets": {n: {"current": net_current[n], "width": net_width[n],
                      "comps": len(set(nets[n]))} for n in nets},
-        "dropped": skipped,
+        "dropped": sorted(drop),
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w") as f:
         json.dump(graph, f, indent=1)
     print(f"wrote {OUT}")
     print(f"  {len(nodes)} nodes, {len(edges)} edges "
-          f"({len(nets)} nets), anchors {len(anchors)}")
-    wide = sorted(net_width.items(), key=lambda kv: -kv[1])[:6]
+          f"({len(nets)} nets), pinned {sorted(anchors)}")
+    print(f"  dropped nets: {', '.join(sorted(drop)) or '(none)'}")
+    print(f"  power order ({len(power_order)}), "
+          f"{power_order[0]} (in) -> {power_order[-1]} (out): "
+          f"{' '.join(power_order[:5])} ... {' '.join(power_order[-4:])}")
+    onrail = [n for n in nodes if n["flow"] is not None]
+    print(f"  on the rails: {len(onrail)} parts, "
+          f"flow 0..1, input hops<= {max(n['flow_in'] for n in onrail)}, "
+          f"output hops<= {max(n['flow_out'] for n in onrail)}")
+    wide = sorted(net_width.items(), key=lambda kv: -kv[1])[:5]
     print("  widest nets: " + ", ".join(f"{n}={w}mm" for n, w in wide))
-    if skipped:
-        print("  dropped from springs: " + ", ".join(skipped))
     return 0
 
 

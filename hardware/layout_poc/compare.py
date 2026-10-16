@@ -29,23 +29,28 @@ def score(path):
 
 def main() -> int:
     graph = json.load(open(GRAPH))
-    ref = None  # reference: the current hand placement metrics (RESUME.md)
     rows = []
-    for eng in ("d3force", "dagre", "elk", "gv-sfdp", "gv-neato", "gv-dot"):
+    for eng in ("gv-sfdp", "gv-neato", "d3force", "d3force-incr",
+                "elk", "dagre", "gv-dot"):
         raw = os.path.join(OUT, f"pos-{eng}.json")
         leg = os.path.join(OUT, f"leg-{eng}.json")
         if os.path.exists(raw):
             rows.append(("raw", *score(raw)))
         if os.path.exists(leg):
             rows.append(("legal", *score(leg)))
-    print(f"{'stage':6} {'engine':16} {'HPWL':>7} {'wHPWL':>8} {'wire':>7} "
-          f"{'ovl':>4} {'out':>4} {'corr':>5}")
-    print("-" * 66)
+    print(f"{'stage':6} {'engine':22} {'HPWL':>7} {'wHPWL':>8} {'wire':>7} "
+          f"{'ovl':>4} {'out':>4} {'path':>6} {'axisR':>6} {'in':>5} {'out':>5}")
+    print("-" * 92)
     for stage, name, m in rows:
-        print(f"{stage:6} {name:16} {m['hpwl']:7.0f} {m['hpwl_w']:8.0f} "
+        print(f"{stage:6} {name:22} {m['hpwl']:7.0f} {m['hpwl_w']:8.0f} "
               f"{m['wire']:7.0f} {m['overlap']:4} {m['outside']:4} "
-              f"{m['corridor']:5}")
-    print("-" * 66)
+              f"{m['path']:6.0f} {m['axis_r']:6.2f} "
+              f"{m['d_in']:5.0f} {m['d_out']:5.0f}")
+    print("-" * 92)
+    print("path   = Σ consecutive distance along the power order (chain length)")
+    print("axisR  = corr(flow position, position along the input->output axis)")
+    print("         1.0 = the power parts walk input->output in order; ~0 = unrelated")
+    print("in/out = first power part -> input, last power part -> output (mm)")
     print("hand floorplan (RESUME.md): HPWL 8304, weighted 15476  "
           "(board 150x140, 124 parts)")
     return 0
