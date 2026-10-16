@@ -54,15 +54,12 @@ const nodes = G.nodes.map((n, i) => {
 });
 const N = new Map(nodes.map((n) => [n.id, n]));
 
-// A net's total spring weight is split over its MST edges, so a many-pad net
-// does not outweigh a 2-pad signal net just by having more edges (the standard
-// HPWL clique-normalisation).  GND is already gone: it is a plane (extract.py).
-const linkCount = {};
-for (const e of G.edges) linkCount[e.net] = (linkCount[e.net] || 0) + 1;
+// extract.py already splits each net's weight over its clique edges, so a
+// 21-pad supply rail cannot out-gun a 2-pad net.  GND is gone: it is a plane.
 const links = G.edges
   .map((e) => {
     const w = e.width;
-    const per = 1 / linkCount[e.net];
+    const per = e.weight;      // net's weight split over its clique edges
     return {
       source: e.source, target: e.target, width: w, current: e.current,
       distance: Math.min(DMAX, D0 + DK * (w / WREF)),

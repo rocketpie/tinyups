@@ -50,8 +50,8 @@ make mermaid       # the flowchart render
 
 | Decision | Choice | Why |
 | --- | --- | --- |
-| edge per net | **MST** (k−1 edges), candidates ordered by connection current first | a clique on a big net is quadratic and collapses the graph; ordering by current makes the tree link the current carriers rather than a random hub |
-| per-net weight | `f(width) / (k−1)` | a many-pin net must not outvote a 2-pin net (standard HPWL clique normalisation) |
+| force model per net | **clique**, total weight bounded by the net's required width | the textbook HPWL model: no part is special, and a 21-pad supply rail cannot out-gun a 2-pad net. See "Clique, not drop" |
+| drawing per net | current-ordered **path** if the net has current carriers, else a **star from the hub** | the solver's clique is too dense to look at, and an MST roots a supply rail at whichever part came first (`2R11`'s degree-12) |
 | edge width | **IPC-2221**, 20 A → **18.7 mm** | the only physically meaningful "springiness" |
 | **GND** | **dropped** | a plane, not something placement should chase |
 | pins | **only `1J1` + `5J2`** | the two power terminals |
@@ -64,24 +64,24 @@ compared on identical input.
 
 ```
 stage  engine                    HPWL    wHPWL    wire  ovl  out   path  axisR    in   out
---------------------------------------------------------------------------------------------
-legal  graphviz:sfdp+legal       2929    11094    2705    0    0    660   0.75    59    53   <<
-legal  graphviz:neato+legal      3194    12941    3113    0    0    791   0.60    57    31
-legal  d3-force+legal            6079    19632    6212    0    0    836   0.70    28    34
-legal  d3-force-incr+legal       5745    18432    6214    1    0    955   0.48    16    16
-legal  elk+legal                 6543    23876    7096    5    0    861   0.64    41    40
-legal  dagre+legal               5414    21143    5593   14    0   1007   0.34    71    89
+legal  graphviz:sfdp+legal       3288    11435    3703    0    0    700   0.59    62    16   <<
+legal  graphviz:neato+legal      3861    12855    4006    0    0    768   0.53    73    27
+legal  d3-force+legal            5840    16839    6100    0    0    999   0.76    44    18
+legal  d3-force-incr+legal       5672    17573    6162    1    0    885   0.66    17    16
+legal  elk+legal                 4398    15234    5520    9    0    557   0.74    23    45
+legal  dagre+legal               5115    15672    6031   20    0    750   0.59    58    78
+legal  graphviz:dot+legal        4983    12425    5699   16    0    539   0.67    58     9
 legal  graphviz:dot+legal        4596    16284    4957   12    0    732   0.45    11    67
 --------------------------------------------------------------------------------------------
 hand floorplan (RESUME.md): HPWL 8304 · weighted 15476
 ```
 
-* **`sfdp` now leads on both**: best wirelength (HPWL 2929, -65 % vs the hand
-  floorplan) *and* the most coherent flow (axisR +0.75) — once every engine gets
-  the same free-orientation choice (see below).
-* **`d3-force-incr` still wins the chain *endpoints***: its first and last power
-  parts sit 16 mm from the input and output terminals; sfdp leaves them 53-59 mm
-  away.
+* **`sfdp` still leads on wirelength** (HPWL 3288, -60 % vs the hand floorplan)
+  and legalises to zero overlaps.
+* **`d3-force` has the most coherent flow** (`axisR 0.76`), and
+  **`d3-force-incr` wins the chain *endpoints*** (17/16 mm vs sfdp's 62/16).
+* The clique model costs the layered engines some overlap (dagre 20, dot 16) —
+  the extra edges pull them tighter before the legaliser runs.
 
 ### Orientation: why sfdp's correlation was negative
 
@@ -138,102 +138,43 @@ This fixed two bugs the renders exposed:
    tree link the current carriers — now **16** thick edges forming a proper
    input -> fuse -> shunt -> FETs -> inductor -> FETs -> output spine.
 
-### Known artefact: high-fanout nets get a fake hub
+### Clique, not drop: +3V3 and high-fanout nets
 
-Nearest-neighbour *degree* in this graph is **not** a real connectivity measure.
-`2R11` (= base `R43`, a 10k pull-up) shows degree 12, which looks absurd — it is
-on `+3V3`, a net with **21 pads across 12 components**. A net is electrically one
-node, so *any* spanning tree is valid, and the MST happens to root `+3V3` at
-`2R11`. The same is true of `2U1` (degree 27) and `6U1` (24).
+`2R11` (= base `R43`, a 10k pull-up) showed nearest-neighbour degree 12, which
+looks absurd. It is on `+3V3`, a net with **21 pads across 12 components**. A net
+is electrically one node, so *any* spanning tree is valid — the MST just happened
+to root `+3V3` at `2R11`. Degree here is **not** connectivity (same for `2U1` 27,
+`6U1` 24).
 
-Consequence: that part is pulled by 11 spurious springs toward the centroid of
-everything on `+3V3`. The standard fix is the **clique model** — every pair gets
-weight `1/(k-1)`, so no part becomes a hub and every part is pulled equally
-toward the net's centre (this is also the exact HPWL model). It costs ~625 edges
-instead of 197, so the plan is: clique for the *force model*, MST for *drawing*.
-Not implemented yet.
+Is `+3V3` "like GND", i.e. droppable? It is a distribution rail (1 A logic), not
+a plane, so unlike GND it does need routing. Two things decided against dropping
+it:
 
-### The force model (why the first version scattered the power parts)
+* **It buys almost nothing.** Net total weight is already proportional to required
+  width, so `+3V3` carries `0.39` against the power rails' `10.8` — ~28x weaker.
+* **It would strand `6C4`**, the only part connected *solely* to `+3V3`/GND (the
+  eight pull-ups all have a signal net too).
 
-Three bugs made the first round wrong; all are now fixed in the d3 engines:
+So the model is the **clique**: every pair on a net gets an equal share, and the
+net's total weight stays bounded by its width. No part is special, so there is no
+fake hub, and no supply rail can bundle unrelated components.
 
-| Symptom | Cause | Fix |
-| --- | --- | --- |
-| power parts formed a **ring** around the outside | `distance = D0 + DK*sqrt(width)` gave a 20 A net a **17 mm** rest length vs 7 mm for a signal — the wide nets literally asked to be *spread apart* | `D0 + DK*(width/WREF)` → signal 2 mm, power 4 mm. Wide traces need *width*, not *length* |
-| power traces refused to get shorter | strength was only ~**5:1**. There are far fewer power edges than signal edges, so the aggregate signal pull won | signal `0.1` vs power `10` → **100:1 per edge** |
-| big power parts pushed each other away | repulsion scaled with part size, so a 15 mm FET repelled ~10× a 1 mm cap | constant repulsion (`CHARGE 4`); **collision** does the spacing |
-| knobs had no effect / forces went inert | d3 decays `alpha` to ~0 after ~300 ticks, so most iterations did nothing | `alphaDecay` tied to the iteration count; the incremental engine re-heats per phase |
+Two graphs are emitted and used for different jobs:
 
-Plus a stronger pull to the centreline (`CENTER_X 0.15`) — both terminals are on
-the centreline, so the design should compact around it.
+| job | decomposition |
+| --- | --- |
+| solving (force, ranks, ELK priorities) | the **clique** (416 edges), total bounded per net |
+| drawing | the current-ordered **path** where the net has current carriers, else a **star from the hub** (the largest part) |
 
-### The flow metric
+That is why `+3V3` now reads as a fan of thin lines out of `6U1` (the RP2040)
+rather than out of a 10k pull-up, and `2R11` has a single drawn edge.
 
-`axisR` = correlation between a part's **flow position** (0 at the input, 1 at
-the output; from the rail graph) and where it sits **along the input→output
-axis**. `1.0` means the power parts walk input→output in electrical order;
-`~0` means flow and geometry are unrelated; **negative** means the path is
-roughly *reversed* — which is what `dot`/`sfdp` produce and what the maintainer
-spotted by eye.
+### Deferred: best-of-N per engine
 
-## The new engine: `d3-force-incremental`
-
-Instead of relaxing the whole graph at once — which lets the power path wander —
-grow the placement along the flow:
-
-1. **Both terminals are pinned** (input top, output bottom): they are the poles
-   the chain spans between.
-2. **The ends of the chain are pinned too**: the power part electrically closest
-   to the input, and the one closest to the output.
-3. **Power components are added one at a time** in flow order, each seeded at its
-   flow position along the axis and beside its already-placed neighbours, with a
-   short relax after every addition — so a part only meets the graph once its
-   upstream neighbour is on the board.
-4. Everything else joins afterwards, then the whole design relaxes freely.
-
-Two bugs worth recording, because both silently produced a "worst of both"
-layout:
-
-* **d3 caches force strengths at `initialize()`.** Gating charge/collision on a
-  per-node `active` flag froze *every* strength at its all-inactive value (0), so
-  the chain collapsed into a 9 mm-wide column and the `CHARGE` knob did nothing.
-  Re-assigning the forces after each activation fixes it.
-* **A spring tree folds, it does not stretch.** Pinning only the two ends left
-  everything piled near the input with a gap in the middle. Seeding each part at
-  its *flow position* on the axis is what makes the chain span the board.
-* **d3 decays `alpha` to ~0 after ~300 ticks**, so every later addition was
-  inert. The engine re-heats `alpha` per phase now.
-
-### Renderings
-
-* `build/layout/contact-sheet.png` — all seven legalised placements side by side
-* `build/layout/<engine>.png|.svg` — per engine, 2× (≈3500 px) so the reference
-  designators are readable
-* `build/layout/graph.mmd`, `mermaid.svg|png` — the flowchart
-
-### Reading a render
-
-Labels carry the block mnemonic (`extract.py` derives it from the ref's leading
-digit, using `blocks.py` as the single source):
-
-```
-1=IP   2=CHG   3=PP   4=BMS   5=OR   6=CTL
-IP-1F1  CHG-2Q1  PP-3Q1  BMS-4Q1  OR-5U1  CTL-6U2
-```
-
-Two **different** scales are in play, which is worth knowing before the colours
-look inconsistent:
-
-* a part's **fill** says what the part *is* — red = power-handling, blue =
-  signal, purple = connector, yellow = pinned terminal;
-* a **trace's** colour and width say what its *net* carries — grey → yellow →
-  orange → red for 0 → 1 → 5 → 17 A, i.e. by IPC-2221 width.
-
-So a *red trace between two parts* does not mean they are power parts: it means
-that connection carries ≥ 15 A, i.e. **both** parts conduct that current on the
-shared net. `5Q1`↔`5Q2` share `SW1_OUT` (17 A) and both are FETs, so their link
-is red. `5Q2`↔`5U1` share `N_CS` too, but `5U1`'s pin is a *sense* input, so
-`min(17 A, 0.1 A)` = 0.1 A and the link is thin — see "What a link means".
+Reseeding sfdp moves `|axisR|` by 0.2-0.3 and HPWL by a few percent
+(`experiments/sfdp_seeds.py`), so a best-of-5 run would make the numbers fairer
+and less noisy. Deliberately deferred until the large-net decomposition above is
+settled, since a graph change invalidates every pass.
 
 ## The legaliser is the reusable part
 
@@ -283,17 +224,26 @@ drives head-to-head with the others.
 
 1. **Anchoring.** Force engines honour pins natively; layered engines ignore
    them, so `fitpos.py` snaps the connectors afterwards. A real integration
-   should model anchors as constrained nodes.
+   should model anchors as constrained nodes — see `RESUME.md` §9A for the
+   decaying-tether idea.
 2. **`axisR` is a proxy, not the goal.** It measures flow *readability*; the
-   thing that actually matters is that the board routes. `sfdp`'s −61 % HPWL may
+   thing that actually matters is that the board routes. `sfdp`'s −60 % HPWL may
    or may not survive routing.
 3. **Residual overlaps** for tight engine layouts (see above).
-4. **Nets are still MST-approximated.** A star/clique-with-weight model (or a
-   real quadratic placer) would model HPWL exactly.
+4. **The clique is an approximation.** Total per-net weight is bounded by the
+   net's width, which is deliberate, but the textbook `1/(k−1)` weighting is
+   unbeaten for exact HPWL. See `RESUME.md` §9B for the alternatives
+   (stress majorization, quadratic placement).
 5. **Signal parts are unconstrained.** Decoupling-cap proximity to its IC is only
-   implicitly encoded via the block structure.
-6. **Not wired into `gen_pcb.py`.** The PoC writes only into `build/layout/`;
+   implicitly encoded — a cap is pulled toward its net's *centre*, not its IC.
+6. **Staging (solve the power parts first, freeze, fit the rest) was tried and
+   rejected.** It shortens the power chain but costs wirelength in every case and
+   wrecks the flow. Removed from the tree; do not re-add without a new idea.
+7. **Not wired into `gen_pcb.py`.** The PoC writes only into `build/layout/`;
    replacing the BFS/`col_y`/A\* code needs an ADR.
+
+The forward plan, the force-model options and the prior-art reading list live in
+[`RESUME.md`](../../RESUME.md) §8–§10.
 
 ## Files
 

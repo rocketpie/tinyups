@@ -57,7 +57,7 @@ def build_dot(graph, engine, seed=None, shuffle=False):
     for i, e in enumerate(graph["edges"]):
         # len: wide nets sit farther apart; weight: pull strength
         ln = 1.5 + 3.5 * (e["width"] / WREF) ** 0.5
-        wt = 1 + 8 * (e["width"] / WREF) ** 1.2
+        wt = e.get("weight", 0.5) * (1 + 8 * (e["width"] / WREF) ** 1.2)
         lines.append(f'  "{e["source"]}" -- "{e["target"]}" '
                      f'[len={ln:.2f}, weight={wt:.2f}];')
     lines.append("}")

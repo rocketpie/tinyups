@@ -180,27 +180,33 @@ def main() -> int:
     net_current = {n: DESIGN_CURRENT.get(n, 0.0) for n in nets}
     net_width = {n: round(ipc_width_mm(c), 2) for n, c in net_current.items()}
 
-    # edges: MST per net over the distinct comps on it
+    # edges: for the *force model*, the clique of each net — every pair gets an
+    # equal share of the net's total weight.  A net is electrically one node, so
+    # an MST is equally "valid", but it makes whichever part the tree happens to
+    # root look like a hub (2R11 with degree 12 on +3V3, 2U1 with 27).  The
+    # clique is the textbook HPWL model: no part is special, and the net's total
+    # pull is bounded by its required width, so a 21-pad supply rail cannot
+    # out-gun a 2-pad one and bundle unrelated parts.
+    # `draw` marks the MST subset, which is what the renderer draws (a clique
+    # would put ~625 lines on the picture).
     edges = []
     for net, refs in nets.items():
         if net in drop:
             continue
         uniq = sorted(set(refs))
-        if len(uniq) < 2:
+        k = len(uniq)
+        if k < 2:
             continue
-        # candidate edges, ordered so the MST links the *current-carrying* parts
-        # together first (and attaches the sense/supply stubs afterwards).
-        # Otherwise a size-based distance happily wires a FET to the chip.
         share = {r: conducted(r, node_by_id[r]["kind"],
                              node_by_id[r]["value"], net) for r in uniq}
-        cand = []
-        for i in range(len(uniq)):
-            for j in range(i + 1, len(uniq)):
+        pairs = []
+        for i in range(k):
+            for j in range(i + 1, k):
                 a, b = node_by_id[uniq[i]], node_by_id[uniq[j]]
                 d = math.hypot(a["w"] + b["w"], a["h"] + b["h"])
-                cand.append((-min(share[uniq[i]], share[uniq[j]]), d,
-                             uniq[i], uniq[j]))
-        cand.sort()
+                pairs.append((-min(share[uniq[i]], share[uniq[j]]), d,
+                              uniq[i], uniq[j]))
+        # MST over the same ordering, only to pick a readable subset to draw
         parent = {r: r for r in uniq}
 
         def find(x):
@@ -209,11 +215,29 @@ def main() -> int:
                 x = parent[x]
             return x
 
-        for _n, _d, a, b in cand:
+        mst = set()
+        for _n, _d, a, b in sorted(pairs):
             ra, rb = find(a), find(b)
-            if ra == rb:
-                continue
-            parent[ra] = rb
+            if ra != rb:
+                parent[ra] = rb
+                mst.add(frozenset((a, b)))
+
+        # What to DRAW.  For a net with real current carriers, draw the
+        # current-ordered path (informative: it is the trace).  For a pure
+        # distribution rail (all stubs — +3V3, or GND if kept) there is no path
+        # to draw, and an MST would root it at whichever part came first
+        # (2R11's degree-12).  Draw a star from the net's hub instead — the
+        # largest part, which is the meaningful one (the RP2040, not a pull-up).
+        carriers = [r for r in uniq if share[r] > STUB_A * 1.5]
+        if len(carriers) >= 2:
+            draw_set = mst
+        else:
+            hub = max(uniq, key=lambda r: node_by_id[r]["w"] * node_by_id[r]["h"])
+            draw_set = {frozenset((hub, r)) for r in uniq if r != hub}
+
+        # equal share per clique edge, so the net's TOTAL weight is bounded
+        wfrac = 2.0 / (k * (k - 1))
+        for _n, _d, a, b in pairs:
             # the *connection* current, not the whole rail: a sense pin on a
             # 17 A net carries milliamps, a FET carries the rail
             ecur = min(share[a], share[b])
@@ -221,6 +245,8 @@ def main() -> int:
                 "source": a, "target": b, "net": net,
                 "current": round(ecur, 3),
                 "width": round(ipc_width_mm(ecur), 2),
+                "weight": round(wfrac, 6),
+                "draw": frozenset((a, b)) in draw_set,
             })
 
     # ---- power-flow order (BFS from the input over the rail nets) ----------

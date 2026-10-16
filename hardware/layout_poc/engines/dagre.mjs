@@ -29,14 +29,11 @@ g.setGraph({
 });
 g.setDefaultEdgeLabel(() => ({}));
 
-const linkCount = {};
-for (const e of G.edges) linkCount[e.net] = (linkCount[e.net] || 0) + 1;
 for (const n of G.nodes) g.setNode(n.id, { width: n.w, height: n.h });
 
 for (const [i, e] of G.edges.entries()) {
-  const per = 1 / linkCount[e.net];
   // wide nets: high weight (adjacent ranks), short minlen
-  const weight = per * (1 + 8 * (e.width / WREF) ** 1.2);
+  const weight = e.weight * (1 + 8 * (e.width / WREF) ** 1.2);
   const minlen = e.width > 6 ? 1 : 2;
   g.setEdge(e.source, e.target, { weight, minlen, width: e.width }, "e" + i);
 }

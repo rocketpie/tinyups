@@ -17,15 +17,11 @@ const NODE_NODE = P("NODE_NODE", 8);         // mm between nodes in a layer
 const NODE_LAYER = P("NODE_LAYER", 24);      // mm between layers
 const WREF = 18.71;
 
-const linkCount = {};
-for (const e of G.edges) linkCount[e.net] = (linkCount[e.net] || 0) + 1;
-
 const children = G.nodes.map((n) => ({
   id: n.id, width: Math.max(n.w, 2), height: Math.max(n.h, 2),
 }));
 const edges = [];
 for (const [i, e] of G.edges.entries()) {
-  const per = 1 / linkCount[e.net];
   edges.push({
     id: "e" + i, sources: [e.source], targets: [e.target],
     // ELK uses `weight` only via priority; we encode the width in the label
@@ -33,7 +29,7 @@ for (const [i, e] of G.edges.entries()) {
     layouts: {},
     labels: [],
     width: e.width,
-    priority: Math.round(per * (1 + 8 * (e.width / WREF) ** 1.2) * 100),
+    priority: Math.round(e.weight * (1 + 8 * (e.width / WREF) ** 1.2) * 100),
   });
 }
 

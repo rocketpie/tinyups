@@ -79,13 +79,10 @@ const nodes = G.nodes.map((n) => ({
 }));
 const N = new Map(nodes.map((n) => [n.id, n]));
 
-const linkCount = {};
-for (const e of G.edges) linkCount[e.net] = (linkCount[e.net] || 0) + 1;
 const specs = G.edges.map((e) => ({
   source: e.source, target: e.target,
   distance: Math.min(DMAX, D0 + DK * (e.width / WREF)),
-  strength: (1 / linkCount[e.net])
-    * (SIG_STR + (POW_STR - SIG_STR) * (e.width / WREF) ** 1.2),
+  strength: e.weight * (SIG_STR + (POW_STR - SIG_STR) * (e.width / WREF) ** 1.2),
   ok: false,
 }));
 const neigh = new Map();

@@ -75,11 +75,12 @@ def metrics(graph, pos):
         whit += d * graph["nets"][net]["width"]
 
     dist = lambda a, b: math.dist((a["x"], a["y"]), (b["x"], b["y"]))  # noqa: E731
+    drawn = [e for e in graph["edges"] if e.get("draw", True)]
     wire = sum(dist(placed[e["source"]], placed[e["target"]])
-               for e in graph["edges"]
+               for e in drawn
                if e["source"] in placed and e["target"] in placed)
     wirew = sum(e["width"] * dist(placed[e["source"]], placed[e["target"]])
-                for e in graph["edges"]
+                for e in drawn
                 if e["source"] in placed and e["target"] in placed)
 
     boxes = {r: aabb(nodes[r], p["x"], p["y"], p.get("angle", 0))
@@ -151,7 +152,7 @@ def node_fill(n, anchored):
     return "#ff3b3b" if n["power"] else "#2d6cdf"
 
 
-def render(graph, pos, out, label=True):
+def render(graph, pos, out, label=True, all_edges=False):
     nodes = {n["id"]: n for n in graph["nodes"]}
     b = graph["board"]
     placed = {r: p for r, p in pos.items() if r in nodes}
@@ -166,6 +167,8 @@ def render(graph, pos, out, label=True):
                  'stroke-opacity="0.5" points="%s"/>'
                  % " ".join("%.1f,%.1f" % (p[0], p[1]) for p in rt["points"]))
     for e in graph["edges"]:
+        if not all_edges and not e.get("draw", True):
+            continue                      # clique is for the solver, not the eye
         if e["source"] not in placed or e["target"] not in placed:
             continue
         a, t = placed[e["source"]], placed[e["target"]]
@@ -197,7 +200,7 @@ def render(graph, pos, out, label=True):
     open(out, "w").write("\n".join(L))
 
 
-def render_png(graph, pos, out, label=True, scale=2.0):
+def render_png(graph, pos, out, label=True, scale=2.0, all_edges=False):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -216,6 +219,8 @@ def render_png(graph, pos, out, label=True, scale=2.0):
         ys = [p[1] for p in rt["points"]]
         ax.plot(xs, ys, color="#00e5ff", lw=0.3, alpha=0.5)
     for e in graph["edges"]:
+        if not all_edges and not e.get("draw", True):
+            continue
         if e["source"] not in placed or e["target"] not in placed:
             continue
         a, t = placed[e["source"]], placed[e["target"]]
@@ -267,10 +272,11 @@ def main() -> int:
     pos = data["positions"]
     pos["__routes__"] = data.get("routes", [])
     m = metrics(graph, pos)
+    ae = "--all-edges" in sys.argv
     if out.endswith(".png"):
-        render_png(graph, pos, out, label="--label" in sys.argv)
+        render_png(graph, pos, out, label="--label" in sys.argv, all_edges=ae)
     else:
-        render(graph, pos, out, label="--label" in sys.argv)
+        render(graph, pos, out, label="--label" in sys.argv, all_edges=ae)
     print(f"  {data.get('engine','?'):22} n={m['n']:3} "
           f"HPWL {m['hpwl']:6.0f} (w {m['hpwl_w']:7.0f}) "
           f"wire {m['wire']:6.0f}  ovl {m['overlap']:3} out {m['outside']:2}  "
