@@ -22,13 +22,13 @@ render() {          # render() <name>
 if run d3force; then
   ITERS="${ITERS:-1200}" CHARGE="${CHARGE:-30}" \
     node engines/d3force.mjs "$OUT/graph.json" "$OUT/raw-d3force.json"
-  cp "$OUT/raw-d3force.json" "$OUT/pos-d3force.json"   # already board coords
+  $PY fitpos.py "$OUT/raw-d3force.json" "$OUT/pos-d3force.json" --keep-scale >/dev/null
   render d3force
 fi
 
 if run d3force-incr; then
   node engines/d3force_incremental.mjs "$OUT/graph.json" "$OUT/raw-d3force-incr.json"
-  cp "$OUT/raw-d3force-incr.json" "$OUT/pos-d3force-incr.json"
+  $PY fitpos.py "$OUT/raw-d3force-incr.json" "$OUT/pos-d3force-incr.json" --keep-scale >/dev/null
   render d3force-incr
 fi
 

@@ -187,11 +187,11 @@ def render(graph, pos, out, label=True):
     if label:
         for r, p in placed.items():
             n = nodes[r]
-            fs = max(1.6, min(n["w"], n["h"]) * 0.55)
+            fs = max(1.5, min(n["w"], n["h"]) * 0.5)
             L.append('<text x="%.1f" y="%.1f" font-size="%.1f" '
                      'text-anchor="middle" dominant-baseline="central" '
                      'fill="#fff" font-family="monospace">%s</text>'
-                     % (p["x"], p["y"], fs, r))
+                     % (p["x"], p["y"], fs, n.get("label", r)))
     L.append("</svg>")
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     open(out, "w").write("\n".join(L))
@@ -229,8 +229,8 @@ def render_png(graph, pos, out, label=True, scale=2.0):
                            closed=True, fc=node_fill(n, n.get("anchor")),
                            alpha=0.75, ec="black", lw=0.4, zorder=3))
         if label:
-            ax.text(p["x"], p["y"], r, ha="center", va="center",
-                    fontsize=3.2, color="white", family="monospace", zorder=4)
+            ax.text(p["x"], p["y"], n.get("label", r), ha="center", va="center",
+                    fontsize=2.9, color="white", family="monospace", zorder=4)
     # legend: part fills vs. trace colours are two different scales
     fills = [Patch(fc="#ff3b3b", alpha=0.75, ec="black", lw=0.4,
                    label="power-handling part"),

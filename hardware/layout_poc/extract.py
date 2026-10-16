@@ -33,7 +33,8 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.dirname(HERE))          # hardware/
 sys.path.insert(0, HERE)
 
-from blocks import PREFIXED_BLOCKS, kind, label                 # noqa: E402
+from blocks import (BLOCK_NUM, PREFIX, PREFIXED_BLOCKS, kind,      # noqa: E402
+                    label)
 from gen_pcb import ANCHORS, BOARD_H, BOARD_W, parse, _find_all  # noqa: E402
 from power_spec import (CAP_ESR, DESIGN_CURRENT, RIPPLE_V_RMS,   # noqa: E402
                         SW_FREQ)
@@ -43,6 +44,16 @@ from power_map import (_cap, _num, component_is_power,           # noqa: E402
 NETLIST = os.path.join(ROOT, "build", "tinyups.net")
 FP_ROOT = "/usr/share/kicad/footprints"
 OUT = os.path.join(ROOT, "build", "layout", "graph.json")
+
+# leading digit of the ref -> block mnemonic, e.g. 2R11 -> CHG-2R11
+# (single source: blocks.py; 1=IP 2=CHG 3=PP 4=BMS 5=OR 6=CTL)
+DIGIT_MNEMONIC = {str(BLOCK_NUM[b]): PREFIX[b] for b in PREFIX}
+
+
+def mnemonic(ref: str) -> str:
+    """'2R11' -> 'CHG-2R11'.  Labels never need to be short here."""
+    m = DIGIT_MNEMONIC.get(ref[:1])
+    return f"{m}-{ref}" if m else ref
 
 # the two terminals of the power path: everything else is free to move.
 PINNED = ("J1", "J2")          # base refs -> 1J1 (XT60 in), 5J2 (XT30 out)
@@ -152,6 +163,7 @@ def main() -> int:
         nets_of = {p["net"] for p in pads if p["net"]}
         nodes.append({
             "id": ref,
+            "label": mnemonic(ref),
             "value": info["value"],
             "fp": info["fp"],
             "kind": kind(ref),

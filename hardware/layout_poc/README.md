@@ -50,7 +50,7 @@ make mermaid       # the flowchart render
 
 | Decision | Choice | Why |
 | --- | --- | --- |
-| edge per net | **MST** (k−1 edges) | a clique on a big net is quadratic and collapses the graph |
+| edge per net | **MST** (k−1 edges), candidates ordered by connection current first | a clique on a big net is quadratic and collapses the graph; ordering by current makes the tree link the current carriers rather than a random hub |
 | per-net weight | `f(width) / (k−1)` | a many-pin net must not outvote a 2-pin net (standard HPWL clique normalisation) |
 | edge width | **IPC-2221**, 20 A → **18.7 mm** | the only physically meaningful "springiness" |
 | **GND** | **dropped** | a plane, not something placement should chase |
@@ -65,22 +65,47 @@ compared on identical input.
 ```
 stage  engine                    HPWL    wHPWL    wire  ovl  out   path  axisR    in   out
 --------------------------------------------------------------------------------------------
-legal  graphviz:sfdp+legal       3018    13050    2866    0    0    659  -0.76   104   116
-legal  graphviz:neato+legal      3490    14903    3451    0    0    852  -0.06    99    73
+legal  graphviz:sfdp+legal       2929    11094    2705    0    0    660   0.75    59    53   <<
+legal  graphviz:neato+legal      3194    12941    3113    0    0    791   0.60    57    31
 legal  d3-force+legal            6079    19632    6212    0    0    836   0.70    28    34
-legal  d3-force-incr+legal       5745    18432    6214    1    0    955   0.48    16    16   <<
-legal  elk+legal                 6721    24854    7567    6    0    894   0.44    68    70
-legal  dagre+legal               5279    18718    5527   13    0   1001  -0.24     9   123
-legal  graphviz:dot+legal        3911    16109    4014    9    0    696  -0.47   127    53
+legal  d3-force-incr+legal       5745    18432    6214    1    0    955   0.48    16    16
+legal  elk+legal                 6543    23876    7096    5    0    861   0.64    41    40
+legal  dagre+legal               5414    21143    5593   14    0   1007   0.34    71    89
+legal  graphviz:dot+legal        4596    16284    4957   12    0    732   0.45    11    67
 --------------------------------------------------------------------------------------------
 hand floorplan (RESUME.md): HPWL 8304 · weighted 15476
 ```
 
-* **`d3-force` / `d3-force-incr` are the only engines that get the power flow
-  ordered** (`axisR +0.70` / `+0.48`) and the only ones whose chain ends sit at
-  the two terminals (16-28 mm vs 99-127 mm).
-* **`sfdp` still wins wirelength** (HPWL 3018, -64 % vs the hand floorplan) and
-  legalises perfectly - but it has the *worst* flow order (`axisR -0.76`).
+* **`sfdp` now leads on both**: best wirelength (HPWL 2929, -65 % vs the hand
+  floorplan) *and* the most coherent flow (axisR +0.75) — once every engine gets
+  the same free-orientation choice (see below).
+* **`d3-force-incr` still wins the chain *endpoints***: its first and last power
+  parts sit 16 mm from the input and output terminals; sfdp leaves them 53-59 mm
+  away.
+
+### Orientation: why sfdp's correlation was negative
+
+`axisR` was **negative for sfdp, neato and dot** in the first rounds. The
+hypothesis was a seeding artefact, so `experiments/sfdp_seeds.py` re-runs sfdp
+with a randomised seed *and* shuffled node/edge order:
+
+```
+pass    seed    HPWL   axisR  axisR(mirror)  |axisR|
+    0 273470    3830   -0.38           0.38     0.38
+    1 677277    3823   -0.71           0.71     0.71
+    2 479288    3584   -0.69           0.69     0.69
+```
+
+* mirroring flips the sign **exactly** (`corr(f, u) -> corr(f, 1-u) = -corr`);
+* the sign **never flips across seeds** — so it is *not* a seeding artefact;
+* `|axisR|` *does* move with the seed (0.38-0.71): seeding affects magnitude only.
+
+The real cause is that a layered / stress engine **has no idea which end is the
+input** — its orientation is free. So `fitpos.py` now tries the **8 orientations**
+(4 rotations x mirror) and keeps whichever maximises `axisR`. That is a generic
+post-step, applied to *every* engine (the d3 engines pass `--keep-scale`, since
+they already work in board millimetres). Effect: sfdp **-0.76 -> +0.75**, neato
+-0.06 -> +0.60, dot -0.47 -> +0.45 — and HPWL improved too.
 
 ### What a link *means* (why 5Q2 -> 5U1 is thin, not red)
 
@@ -112,6 +137,21 @@ This fixed two bugs the renders exposed:
    came out >= 15 A. Ordering candidates by connection current first makes the
    tree link the current carriers — now **16** thick edges forming a proper
    input -> fuse -> shunt -> FETs -> inductor -> FETs -> output spine.
+
+### Known artefact: high-fanout nets get a fake hub
+
+Nearest-neighbour *degree* in this graph is **not** a real connectivity measure.
+`2R11` (= base `R43`, a 10k pull-up) shows degree 12, which looks absurd — it is
+on `+3V3`, a net with **21 pads across 12 components**. A net is electrically one
+node, so *any* spanning tree is valid, and the MST happens to root `+3V3` at
+`2R11`. The same is true of `2U1` (degree 27) and `6U1` (24).
+
+Consequence: that part is pulled by 11 spurious springs toward the centroid of
+everything on `+3V3`. The standard fix is the **clique model** — every pair gets
+weight `1/(k-1)`, so no part becomes a hub and every part is pulled equally
+toward the net's centre (this is also the exact HPWL model). It costs ~625 edges
+instead of 197, so the plan is: clique for the *force model*, MST for *drawing*.
+Not implemented yet.
 
 ### The force model (why the first version scattered the power parts)
 
@@ -172,6 +212,14 @@ layout:
 * `build/layout/graph.mmd`, `mermaid.svg|png` — the flowchart
 
 ### Reading a render
+
+Labels carry the block mnemonic (`extract.py` derives it from the ref's leading
+digit, using `blocks.py` as the single source):
+
+```
+1=IP   2=CHG   3=PP   4=BMS   5=OR   6=CTL
+IP-1F1  CHG-2Q1  PP-3Q1  BMS-4Q1  OR-5U1  CTL-6U2
+```
 
 Two **different** scales are in play, which is worth knowing before the colours
 look inconsistent:

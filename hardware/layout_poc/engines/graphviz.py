@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import subprocess
 import sys
 
@@ -26,7 +27,7 @@ WREF = 18.71
 MM_PER_IN = 25.4
 
 
-def build_dot(graph, engine):
+def build_dot(graph, engine, seed=None, shuffle=False):
     P = lambda k, d: float(os.environ.get(k, d))  # noqa: E731
     k = P("GV_K", 1.0)
     lines = ["graph G {"]
@@ -37,10 +38,15 @@ def build_dot(graph, engine):
     else:
         lines += [f"  graph [overlap=prism, splines=true, "
                   f"sep=\"+{P('SEP',4)/MM_PER_IN:.3f}\", "
-                  f"K={k}, start=13];"]
+                  f"K={k}, start={seed if seed is not None else 13}];"]
     lines += ["  node [shape=box, fixedsize=true, label=\"\", style=filled];",
               "  edge [len=2];"]
-    for n in graph["nodes"]:
+    nodes = list(graph["nodes"])
+    edges = list(graph["edges"])
+    if shuffle:                       # order-sensitive tie-breaking
+        random.Random(seed).shuffle(nodes)
+        random.Random(seed + 1).shuffle(edges)
+    for n in nodes:
         w = max(n["w"], 2) / MM_PER_IN
         h = max(n["h"], 2) / MM_PER_IN
         fill = "#ff3b3b" if n["power"] else "#2d6cdf"
@@ -62,7 +68,9 @@ def main() -> int:
     graph_path, out_path = sys.argv[1], sys.argv[2]
     engine = sys.argv[3] if len(sys.argv) > 3 else os.environ.get("GV_ENGINE", "sfdp")
     graph = json.load(open(graph_path))
-    dot = build_dot(graph, engine)
+    seed = int(os.environ["GV_SEED"]) if "GV_SEED" in os.environ else None
+    shuffle = os.environ.get("GV_SHUFFLE") == "1"
+    dot = build_dot(graph, engine, seed, shuffle)
     tmp = "/tmp/opencode/tinyups-layout.gv"
     os.makedirs(os.path.dirname(tmp), exist_ok=True)
     open(tmp, "w").write(dot)
