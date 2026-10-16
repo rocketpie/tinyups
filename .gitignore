@@ -31,3 +31,7 @@ __pycache__/
 *.py[cod]
 .venv/
 *.egg-info/
+
+# Auto-placement PoC: npm dependencies are installed on demand (`make layout`)
+node_modules/
+package-lock.json

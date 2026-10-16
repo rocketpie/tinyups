@@ -26,7 +26,7 @@ export KICAD9_3DMODEL_DIR   ?= /usr/share/kicad/3dmodels
 RENDER_ROTATE ?= -15,0,-5
 RENDER_ZOOM   ?= 0.95
 
-.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power check clean
+.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power layout mermaid check clean
 
 all: help
 
@@ -115,6 +115,24 @@ silk: | $(OUT) ## 2D view with red power-silkscreen markers
 power: | $(REPORTS) ## Power / ampacity check (design current per net)
 	$(call require,$(PCB))
 	@set -o pipefail; $(PYTHON) hardware/power_report.py $(PCB) | tee $(REPORTS)/power.rpt
+
+# --- auto-placement PoC (hardware/layout_poc) -------------------------------
+# Netlist -> placement graph -> d3-force / dagre / ELK / graphviz -> legalise ->
+# SVG+PNG renders + score table.  See hardware/layout_poc/README.md.
+LAYOUT_DIR ?= hardware/layout_poc
+layout: | $(OUT) ## Auto-placement PoC: run all layout engines + render
+	@test -f $(OUT)/$(NAME).net || $(MAKE) --no-print-directory netlist
+	cd $(LAYOUT_DIR) && { [ -d node_modules ] || npm install --no-audit --no-fund; }
+	$(PYTHON) $(LAYOUT_DIR)/extract.py
+	cd $(LAYOUT_DIR) && ./run_all.sh
+	$(PYTHON) $(LAYOUT_DIR)/compare.py
+	$(PYTHON) $(LAYOUT_DIR)/contact_sheet.py
+
+mermaid: | $(OUT) ## Render the placement graph as a mermaid flowchart (SVG)
+	@test -f $(OUT)/$(NAME).net || $(MAKE) --no-print-directory netlist
+	@test -d $(LAYOUT_DIR)/node_modules || (cd $(LAYOUT_DIR) && npm install --no-audit --no-fund)
+	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(LAYOUT_DIR)/extract.py
+	cd $(LAYOUT_DIR) && ./render_mermaid.sh
 
 # --- simulation ------------------------------------------------------------
 sim: ## Run all ngspice simulations in sim/
