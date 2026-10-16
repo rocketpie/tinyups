@@ -65,24 +65,67 @@ compared on identical input.
 ```
 stage  engine                    HPWL    wHPWL    wire  ovl  out   path  axisR    in   out
 --------------------------------------------------------------------------------------------
-legal  graphviz:sfdp+legal       3259    12653    3053    0    0    699  -0.71    97   104
-legal  graphviz:neato+legal      3536    16968    3511    0    0    920   0.16   114    55
-legal  d3-force+legal            6702    23743    6983    0    0   1281   0.49    69    16
-legal  d3-force-incr+legal       6515    24945    6733    0    0   1697   0.61    16    16   <<
-legal  elk+legal                 4887    16300    5513    3    0    592   0.31    68    40
-legal  dagre+legal               5234    14207    5672   13    0    785  -0.37    51    88
-legal  graphviz:dot+legal        4670    15080    4581    3    0    596  -0.70   128    81
+legal  graphviz:sfdp+legal       3018    13050    2866    0    0    659  -0.76   104   116
+legal  graphviz:neato+legal      3490    14903    3451    0    0    852  -0.06    99    73
+legal  d3-force+legal            6079    19632    6212    0    0    836   0.70    28    34
+legal  d3-force-incr+legal       5745    18432    6214    1    0    955   0.48    16    16   <<
+legal  elk+legal                 6721    24854    7567    6    0    894   0.44    68    70
+legal  dagre+legal               5279    18718    5527   13    0   1001  -0.24     9   123
+legal  graphviz:dot+legal        3911    16109    4014    9    0    696  -0.47   127    53
 --------------------------------------------------------------------------------------------
 hand floorplan (RESUME.md): HPWL 8304 · weighted 15476
 ```
 
-* **`sfdp` wins on wirelength** (HPWL 3259, −61 % vs the hand floorplan) and
-  legalises perfectly — but it has the *worst* flow order (`axisR −0.71`).
-* **`d3-force-incr` wins on the power path**: `axisR 0.61` and the chain's two
-  ends sit **16 mm from the input and 16 mm from the output**. Every other
-  engine leaves the first power part 51–128 mm from the input — that is exactly
-  the "1R7, wired straight to the input, ends up at the bottom" problem.
-* So it is a genuine trade-off: wirelength vs. a readable power flow.
+* **`d3-force` / `d3-force-incr` are the only engines that get the power flow
+  ordered** (`axisR +0.70` / `+0.48`) and the only ones whose chain ends sit at
+  the two terminals (16-28 mm vs 99-127 mm).
+* **`sfdp` still wins wirelength** (HPWL 3018, -64 % vs the hand floorplan) and
+  legalises perfectly - but it has the *worst* flow order (`axisR -0.76`).
+
+### What a link *means* (why 5Q2 -> 5U1 is thin, not red)
+
+An edge's weight is the current that flows **through that connection**, not the
+whole rail's design current:
+
+```
+connection_current(a, b) = min(conducted(a, net), conducted(b, net))
+```
+
+`conducted()` says what a part actually carries on that net:
+
+| part | conducted current on the net |
+| --- | --- |
+| FET, inductor, fuse, connector | the net's design current (series element) |
+| resistor < 1 ohm | the net's design current (shunt) |
+| capacitor | its ripple RMS, from `power_map`'s impedance model |
+| IC, diode, bias resistor | `0.1 A` — a sense/supply pin carries milliamps |
+| `power_map.OVERRIDES` | fan header 0.2 A, cell-sense header 0.01 A |
+
+This fixed two bugs the renders exposed:
+
+1. **The whole net's current was applied to every part on it.** `5U1` (LM5176)
+   has pins on `N_CS` and `SW1_OUT` (17 A each), but they are the current-sense
+   and switch-node *sense* pins. The chip got a fat 17 A link **and** a
+   100:1-strength spring dragging it into the power cluster.
+2. **The MST linked a FET to the chip rather than to the neighbouring FET.** The
+   tree was built on a size-based pseudo-distance, so only **2 of 197** edges
+   came out >= 15 A. Ordering candidates by connection current first makes the
+   tree link the current carriers — now **16** thick edges forming a proper
+   input -> fuse -> shunt -> FETs -> inductor -> FETs -> output spine.
+
+### The force model (why the first version scattered the power parts)
+
+Three bugs made the first round wrong; all are now fixed in the d3 engines:
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| power parts formed a **ring** around the outside | `distance = D0 + DK*sqrt(width)` gave a 20 A net a **17 mm** rest length vs 7 mm for a signal — the wide nets literally asked to be *spread apart* | `D0 + DK*(width/WREF)` → signal 2 mm, power 4 mm. Wide traces need *width*, not *length* |
+| power traces refused to get shorter | strength was only ~**5:1**. There are far fewer power edges than signal edges, so the aggregate signal pull won | signal `0.1` vs power `10` → **100:1 per edge** |
+| big power parts pushed each other away | repulsion scaled with part size, so a 15 mm FET repelled ~10× a 1 mm cap | constant repulsion (`CHARGE 4`); **collision** does the spacing |
+| knobs had no effect / forces went inert | d3 decays `alpha` to ~0 after ~300 ticks, so most iterations did nothing | `alphaDecay` tied to the iteration count; the incremental engine re-heats per phase |
+
+Plus a stronger pull to the centreline (`CENTER_X 0.15`) — both terminals are on
+the centreline, so the design should compact around it.
 
 ### The flow metric
 
@@ -118,12 +161,31 @@ layout:
 * **A spring tree folds, it does not stretch.** Pinning only the two ends left
   everything piled near the input with a gap in the middle. Seeding each part at
   its *flow position* on the axis is what makes the chain span the board.
+* **d3 decays `alpha` to ~0 after ~300 ticks**, so every later addition was
+  inert. The engine re-heats `alpha` per phase now.
 
 ### Renderings
 
 * `build/layout/contact-sheet.png` — all seven legalised placements side by side
-* `build/layout/<engine>.png|.svg` — per engine
+* `build/layout/<engine>.png|.svg` — per engine, 2× (≈3500 px) so the reference
+  designators are readable
 * `build/layout/graph.mmd`, `mermaid.svg|png` — the flowchart
+
+### Reading a render
+
+Two **different** scales are in play, which is worth knowing before the colours
+look inconsistent:
+
+* a part's **fill** says what the part *is* — red = power-handling, blue =
+  signal, purple = connector, yellow = pinned terminal;
+* a **trace's** colour and width say what its *net* carries — grey → yellow →
+  orange → red for 0 → 1 → 5 → 17 A, i.e. by IPC-2221 width.
+
+So a *red trace between two parts* does not mean they are power parts: it means
+that connection carries ≥ 15 A, i.e. **both** parts conduct that current on the
+shared net. `5Q1`↔`5Q2` share `SW1_OUT` (17 A) and both are FETs, so their link
+is red. `5Q2`↔`5U1` share `N_CS` too, but `5U1`'s pin is a *sense* input, so
+`min(17 A, 0.1 A)` = 0.1 A and the link is thin — see "What a link means".
 
 ## The legaliser is the reusable part
 

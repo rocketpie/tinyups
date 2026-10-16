@@ -27,7 +27,7 @@ ORDER = [
 def main() -> int:
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(OUT, "contact-sheet.png")
     cols = 3
-    cell = 520
+    cell = 780
     rows = (len(ORDER) + cols - 1) // cols
     sheet = Image.new("RGB", (cols * cell, rows * (cell + 22)), "#101010")
     d = ImageDraw.Draw(sheet)

@@ -197,16 +197,18 @@ def render(graph, pos, out, label=True):
     open(out, "w").write("\n".join(L))
 
 
-def render_png(graph, pos, out, label=True):
+def render_png(graph, pos, out, label=True, scale=2.0):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Polygon as MPoly, Rectangle as MRect
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch, Polygon as MPoly, Rectangle as MRect
 
     nodes = {n["id"]: n for n in graph["nodes"]}
     b = graph["board"]
     placed = {r: p for r, p in pos.items() if r in nodes}
-    fig, ax = plt.subplots(figsize=(b["w"] / 12, b["h"] / 12), dpi=140)
+    dpi = int(140 * scale)
+    fig, ax = plt.subplots(figsize=(b["w"] / 12, b["h"] / 12), dpi=dpi)
     ax.set_facecolor("#0f3d1a")
     ax.add_patch(MRect((0, 0), b["w"], b["h"], fill=False, ec="#7fffa0", lw=1))
     for rt in pos.get("__routes__", []):
@@ -229,6 +231,26 @@ def render_png(graph, pos, out, label=True):
         if label:
             ax.text(p["x"], p["y"], r, ha="center", va="center",
                     fontsize=3.2, color="white", family="monospace", zorder=4)
+    # legend: part fills vs. trace colours are two different scales
+    fills = [Patch(fc="#ff3b3b", alpha=0.75, ec="black", lw=0.4,
+                   label="power-handling part"),
+             Patch(fc="#2d6cdf", alpha=0.75, ec="black", lw=0.4,
+                   label="signal part"),
+             Patch(fc="#c8a2ff", alpha=0.75, ec="black", lw=0.4,
+                   label="connector (free)"),
+             Patch(fc="#ffd400", alpha=0.75, ec="black", lw=0.4,
+                   label="pinned terminal")]
+    trails = [Line2D([0], [0], color=color(c), lw=0.4 + 3.5 * (w / 18.71) ** 0.6,
+                     alpha=0.6, label=f"{c:g} A")
+              for c, w in ((0.0, 0.25), (1.0, 1.0), (5.0, 5.0), (17.0, 17.0))]
+    leg = ax.legend(handles=fills + trails, loc="lower left", fontsize=6.5,
+                    ncol=4, framealpha=0.85, facecolor="#101010",
+                    edgecolor="#555", labelcolor="white", borderpad=0.5,
+                    handlelength=1.4, columnspacing=1.0,
+                    title="fill = part type     trace colour/width = net current",
+                    title_fontsize=6.5)
+    leg.get_title().set_color("#9fe8b0")
+    leg.set_zorder(10)
     ax.set_xlim(-3, b["w"] + 3)
     ax.set_ylim(b["h"] + 3, -3)
     ax.set_aspect("equal")

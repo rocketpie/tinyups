@@ -35,8 +35,10 @@ sys.path.insert(0, HERE)
 
 from blocks import PREFIXED_BLOCKS, kind, label                 # noqa: E402
 from gen_pcb import ANCHORS, BOARD_H, BOARD_W, parse, _find_all  # noqa: E402
-from power_spec import DESIGN_CURRENT                           # noqa: E402
-from power_map import component_is_power                        # noqa: E402
+from power_spec import (CAP_ESR, DESIGN_CURRENT, RIPPLE_V_RMS,   # noqa: E402
+                        SW_FREQ)
+from power_map import (_cap, _num, component_is_power,           # noqa: E402
+                        OVERRIDES)
 
 NETLIST = os.path.join(ROOT, "build", "tinyups.net")
 FP_ROOT = "/usr/share/kicad/footprints"
@@ -45,11 +47,41 @@ OUT = os.path.join(ROOT, "build", "layout", "graph.json")
 # the two terminals of the power path: everything else is free to move.
 PINNED = ("J1", "J2")          # base refs -> 1J1 (XT60 in), 5J2 (XT30 out)
 DROP_DEFAULT = {"GND"}         # planes: no placement signal
+STUB_A = 0.1                   # current a sense / supply / bias pin really carries
 
 # IPC-2221 external-layer trace width for a given current (mm).
 #   I = k * dT**0.44 * A**0.725  (A in mil^2, k=0.048 external, 1 oz = 1.378 mil)
 K_EXT, THICK_MIL, DT_C = 0.048, 1.378, 10.0
 SIG_WIDTH_MM = 0.25            # default width for nets with no design current
+
+
+def conducted(ref: str, kind_: str, value: str, net: str) -> float:
+    """Current that actually flows *through this part* on this net.
+
+    A rail's design current is carried by its **series** elements (FETs,
+    inductors, shunts, fuses, connectors).  An IC's sense/supply pin sitting on
+    that same net — 5U1's N_CS and SW1_OUT pins, say — carries milliamps.  Using
+    the net current for those pins gives a bogus 17 A link and a bogus 100:1
+    spring that drags the chip into the power cluster.
+
+    Per-component overrides (fan header, cell-sense header) win, matching
+    power_map.py.
+    """
+    if ref in OVERRIDES:
+        return float(OVERRIDES[ref])
+    cu = DESIGN_CURRENT.get(net, 0.0)
+    if kind_ in ("Q", "L", "F", "J"):
+        return cu
+    if kind_ == "R":
+        r = _num(value)
+        return cu if (r is not None and r < 1.0) else STUB_A     # shunt vs bias
+    if kind_ == "C":
+        c = _cap(value)
+        if not c:
+            return STUB_A
+        z = CAP_ESR + 1.0 / (2 * math.pi * SW_FREQ * c)         # |Z| at fsw
+        return min(cu or 1e9, RIPPLE_V_RMS / z)                  # ripple RMS
+    return STUB_A
 
 
 def ipc_width_mm(current_a: float, layers: int = 1) -> float:
@@ -144,12 +176,18 @@ def main() -> int:
         uniq = sorted(set(refs))
         if len(uniq) < 2:
             continue
+        # candidate edges, ordered so the MST links the *current-carrying* parts
+        # together first (and attaches the sense/supply stubs afterwards).
+        # Otherwise a size-based distance happily wires a FET to the chip.
+        share = {r: conducted(r, node_by_id[r]["kind"],
+                             node_by_id[r]["value"], net) for r in uniq}
         cand = []
         for i in range(len(uniq)):
             for j in range(i + 1, len(uniq)):
                 a, b = node_by_id[uniq[i]], node_by_id[uniq[j]]
                 d = math.hypot(a["w"] + b["w"], a["h"] + b["h"])
-                cand.append((d, uniq[i], uniq[j]))
+                cand.append((-min(share[uniq[i]], share[uniq[j]]), d,
+                             uniq[i], uniq[j]))
         cand.sort()
         parent = {r: r for r in uniq}
 
@@ -159,15 +197,18 @@ def main() -> int:
                 x = parent[x]
             return x
 
-        for _d, a, b in cand:
+        for _n, _d, a, b in cand:
             ra, rb = find(a), find(b)
             if ra == rb:
                 continue
             parent[ra] = rb
+            # the *connection* current, not the whole rail: a sense pin on a
+            # 17 A net carries milliamps, a FET carries the rail
+            ecur = min(share[a], share[b])
             edges.append({
                 "source": a, "target": b, "net": net,
-                "current": net_current[net],
-                "width": net_width[net],
+                "current": round(ecur, 3),
+                "width": round(ipc_width_mm(ecur), 2),
             })
 
     # ---- power-flow order (BFS from the input over the rail nets) ----------

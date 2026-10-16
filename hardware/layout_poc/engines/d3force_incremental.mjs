@@ -27,12 +27,17 @@ const P = (k, d) => (process.env[k] !== undefined ? +process.env[k] : d);
 const TICKS_STEP = P("TICKS_STEP", 45);    // relax after each addition
 const TICKS_TAIL = P("TICKS_TAIL", 60);    // relax after each signal part
 const TICKS_END = P("TICKS_END", 900);     // free relax at the end
-const CHARGE = P("CHARGE", 60);
-const D0 = P("D0", 6);
-const DK = P("DK", 2.6);
+const CHARGE = P("CHARGE", 4);
+const CHARGE_SIZE = process.env.CHARGE_SIZE === "1";   // scale repulsion by part size?
+const CENTER_X = P("CENTER_X", 0.15);
+const CENTER_Y = P("CENTER_Y", 0.05);
+const D0 = P("D0", 2.0);
+const DK = P("DK", 2.0);
 const DMAX = P("DMAX", 26);
-const BASE_STR = P("BASE_STR", 0.18);
-const NORM = P("NORM", 3.0);
+// signal nets pull weakly, the 20 A power path ~50x harder: the power parts
+// collapse into a tight spine, the small traces just hang off it.
+const SIG_STR = P("SIG_STR", 0.1);
+const POW_STR = P("POW_STR", 10.0);
 const BOUND = P("BOUND", 60);
 const SEED = P("SEED", 20260516);
 const WREF = 18.71;
@@ -78,9 +83,9 @@ const linkCount = {};
 for (const e of G.edges) linkCount[e.net] = (linkCount[e.net] || 0) + 1;
 const specs = G.edges.map((e) => ({
   source: e.source, target: e.target,
-  distance: Math.min(DMAX, D0 + DK * Math.sqrt(e.width)),
+  distance: Math.min(DMAX, D0 + DK * (e.width / WREF)),
   strength: (1 / linkCount[e.net])
-    * Math.min(0.95, NORM * (BASE_STR + 0.8 * (e.width / WREF) ** 1.1)),
+    * (SIG_STR + (POW_STR - SIG_STR) * (e.width / WREF) ** 1.2),
   ok: false,
 }));
 const neigh = new Map();
@@ -100,13 +105,14 @@ const act = (id) => N.get(id).active;
 function resync() {
   const live = specs.filter((e) => act(e.source) && act(e.target));
   sim.force("charge", d3.forceManyBody()
-    .strength((d) => (d.active ? -CHARGE * Math.max(d.w, d.h) : 0))
+    .strength((d) => (d.active
+      ? -CHARGE * (CHARGE_SIZE ? Math.max(d.w, d.h) : 1) : 0))
     .distanceMax(40));
   sim.force("collide", d3.forceCollide()
     .radius((d) => (d.active ? 0.5 * Math.hypot(d.w, d.h) + 1.0 : 0))
     .iterations(3));
-  sim.force("x", d3.forceX(B.w / 2).strength((d) => (d.active ? 0.02 : 0)));
-  sim.force("y", d3.forceY(B.h / 2).strength((d) => (d.active ? 0.02 : 0)));
+  sim.force("x", d3.forceX(B.w / 2).strength((d) => (d.active ? CENTER_X : 0)));
+  sim.force("y", d3.forceY(B.h / 2).strength((d) => (d.active ? CENTER_Y : 0)));
   sim.force("link", d3.forceLink(live.map((e) => ({
     source: e.source, target: e.target,
     distance: e.distance, strength: e.strength,
@@ -164,10 +170,13 @@ activate(G.io.out, false);
 resync();
 
 // 2. the power path, one component at a time, in power-flow order (the first
-//    and last are pinned to the two ends of the chain by activate())
+//    and last are pinned to the two ends of the chain by activate()).
+//    Reheat alpha each round: d3 decays it to ~0 after ~300 ticks, which would
+//    make every later addition inert.
 for (const id of order) {
   activate(id, true);
   resync();
+  sim.alpha(0.5);
   for (let i = 0; i < TICKS_STEP; i++) sim.tick();
 }
 
@@ -177,10 +186,12 @@ const tail = G.nodes.map((n) => n.id)
 for (const id of tail) {
   activate(id, true);
   resync();
+  sim.alpha(0.35);
   for (let i = 0; i < TICKS_TAIL; i++) sim.tick();
 }
 
 // 4. free relax
+sim.alpha(Math.max(sim.alpha(), 0.2));
 for (let i = 0; i < TICKS_END; i++) sim.tick();
 
 const positions = {};
