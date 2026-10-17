@@ -1,0 +1,24 @@
+{
+ "_comment": "The placement engine's tuning, as a tracked artifact — edited from the Engine panel of `make place` (hardware/layout_poc/web/), which writes this file on every change. Keys are the engine's parameter names (engines/d3force.mjs reads the same names from the environment), so one tuning serves both. Values below are the PoC's current config. Delete a key to fall back to the built-in default; `order` is the panel's row order and is absent while it is the default.",
+ "params": {
+  "SIG_STR": 0.1,
+  "POW_STR": 10,
+  "WREF": 18.71,
+  "D0": 2,
+  "DK": 2,
+  "DMAX": 26,
+  "LINK_ITER": 2,
+  "CHARGE": 30,
+  "CHARGE_SIZE": false,
+  "CHARGE_MAX": 40,
+  "COLLIDE_PAD": 1,
+  "RECT_COLLIDE": true,
+  "CENTER_X": 0.15,
+  "CENTER_Y": 0.05,
+  "BOUND": 60,
+  "MAX_V": 3,
+  "VEL_DECAY": 0.4,
+  "ITERS": 1200,
+  "SEED": 12345
+ }
+}

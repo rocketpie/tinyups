@@ -39,15 +39,18 @@
       </div>
       <div class="row">
         <button id="reset" title="Restore the seed positions and unpin everything but the terminals">↺ Reset</button>
-        <button id="scatter" title="Randomise the starts (uses SEED) and solve">✳ Scatter</button>
+        <button id="scatter" title="Random start: fresh random seed each click, written back into SEED">✳ Scatter</button>
       </div>
+      <label class="switch" title="Off = every Scatter rolls a new random seed; on = Scatter reuses the SEED value so a start can be reproduced"><input type="checkbox" id="scatterFixed">
+        Scatter reuses SEED (reproducible)</label>
       <div class="row">
         <button id="fit" title="Fit the board to the window">⤢ Fit</button>
         <button id="unpin" title="Release every pinned part">⊘ Unpin all</button>
       </div>
       <p class="hint">Drag a part to move it — it is <b>pinned</b> (fx/fy) and the
       engine solves the rest around it. Right-click a part to unpin. Drag empty
-      space to pan, scroll to zoom. Click a part to inspect it.</p>
+      space to pan, scroll to zoom. Click a part to inspect it, click empty space
+      (or Esc) to clear the selection.</p>
     </section>
 
     <section>
@@ -57,6 +60,7 @@
       <label class="switch"><input type="checkbox" id="showLabels" checked>
         component labels</label>
       <div id="params"></div>
+      <p class="hint" id="paramNote"></p>
       <p class="hint" id="engineNote"></p>
     </section>
 

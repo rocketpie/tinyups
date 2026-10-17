@@ -40,8 +40,12 @@ make baseline          # materialise the adopted placement
 `make place` starts a browser UI (`hardware/layout_poc/web/`) that loads this
 graph and runs **d3-force live** while you drag parts (a dragged part is pinned
 and the engine solves the rest around it), with every engine parameter editable.
-See [`web/README.md`](web/README.md) and
-[ADR-0009](../../docs/decisions/0009-interactive-placement.md).
+The tuning those sliders carry is itself a tracked artifact:
+[`params.json`](params.json) in this directory, written by the UI on change, so
+the knobs that matter are reviewable in `git log`. See
+[`web/README.md`](web/README.md),
+[ADR-0009](../../docs/decisions/0009-interactive-placement.md) and
+[ADR-0010](../../docs/decisions/0010-placement-params-source-of-truth.md).
 
 > The `d3-force` row in the table above predates a fix to the engine's link
 > model; see [`docs/history/`](../../docs/history/). Re-run `make layout` to

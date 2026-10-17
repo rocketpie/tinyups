@@ -8,6 +8,7 @@
 //   /graph.json       build/layout/graph.json (extract.py's placement graph)
 //   /api/seeds        the position files it can start from (leg-*/pos-*/raw-*)
 //   /api/seed?name=X  one of them
+//   /api/params       GET the tracked tuning (params.json); POST/PUT to write it
 //   /api/save         POST -> write build/layout/interactive-<name>.json
 //   /api/apply        POST -> run apply.py on a saved file (+ KiCad DRC)
 //   /vendor/<pkg>/... node_modules for the vendored d3-force ES modules
@@ -30,6 +31,10 @@ const PUBLIC = path.join(HERE, "public");
 const LAYOUT = path.join(ROOT, "build", "layout");
 const GRAPH = path.join(LAYOUT, "graph.json");
 const NETLIST = path.join(ROOT, "build", "tinyups.net");
+// The tracked tuning file.  Unlike everything else the UI writes, this one is
+// *in* the repo on purpose: the tuning is a reviewable, revertable artifact
+// (see docs/decisions/0010-placement-params-source-of-truth.md).
+const PARAMS = path.join(POC, "params.json");
 const VENDOR = path.join(POC, "node_modules");
 const VENDOR_PKGS = new Set(["d3-force", "d3-dispatch", "d3-quadtree", "d3-timer"]);
 const PY = process.env.PYTHON || "/opt/eda/venv/bin/python";
@@ -77,7 +82,7 @@ function listSeeds() {
   if (!fs.existsSync(LAYOUT)) return [];
   const out = [];
   for (const f of fs.readdirSync(LAYOUT)) {
-    if (!/^(leg|pos|raw)-[\w.-]+\.json$/.test(f)) continue;
+    if (!/^(leg|pos|raw|interactive)-[\w.-]+\.json$/.test(f)) continue;
     const name = f.replace(/\.json$/, "");
     let engine = "?", n = 0;
     try {
@@ -108,6 +113,42 @@ function readBody(req) {
   });
 }
 
+// --- params.json (the tracked tuning) --------------------------------------
+const KEY_RE = /^[A-Z][A-Z0-9_]{0,23}$/;
+const rel = (f) => path.relative(ROOT, f);
+
+function readParams() {
+  try {
+    const j = JSON.parse(fs.readFileSync(PARAMS, "utf8"));
+    return (j && typeof j === "object") ? j : {};
+  } catch { return {}; }
+}
+
+// Keep unknown top-level keys (the file's _comment) when writing.
+function writeParams(body) {
+  const p = body.params;
+  if (!p || typeof p !== "object" || Array.isArray(p)) throw new Error("params must be an object");
+  const clean = {};
+  for (const [k, v] of Object.entries(p)) {
+    if (!KEY_RE.test(k)) throw new Error(`bad parameter name: ${k}`);
+    if (typeof v === "boolean") clean[k] = v;
+    else if (typeof v === "number" && Number.isFinite(v)) clean[k] = v;
+    else throw new Error(`bad value for ${k}: ${JSON.stringify(v)}`);
+  }
+  const cur = readParams();
+  const out = {};
+  if (typeof cur._comment === "string") out._comment = cur._comment;
+  out.params = clean;
+  // order === null means "back to the built-in order": drop the override.
+  if (body.order === null) { /* omit */ }
+  else if (body.order === undefined) { if (cur.order) out.order = cur.order; }
+  else if (Array.isArray(body.order) && body.order.every((k) => typeof k === "string" && KEY_RE.test(k))) {
+    out.order = body.order;
+  } else throw new Error("bad order");
+  fs.writeFileSync(PARAMS, JSON.stringify(out, null, 1) + "\n");
+  return out;
+}
+
 // --- request handler -------------------------------------------------------
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
@@ -136,6 +177,23 @@ const server = http.createServer(async (req, res) => {
         return sendJSON(res, 404, { error: "no such seed: " + name });
       }
       return serveFile(res, f);
+    }
+    if (req.method === "GET" && p === "/api/params") {
+      const j = readParams();
+      return sendJSON(res, 200, {
+        file: rel(PARAMS), exists: fs.existsSync(PARAMS),
+        params: (j.params && typeof j.params === "object") ? j.params : {},
+        order: Array.isArray(j.order) ? j.order : null,
+      });
+    }
+    if ((req.method === "POST" || req.method === "PUT") && p === "/api/params") {
+      const body = JSON.parse(await readBody(req) || "{}");
+      const out = writeParams(body);
+      return sendJSON(res, 200, {
+        ok: true, file: rel(PARAMS),
+        values: Object.keys(out.params).length,
+        order: out.order ? out.order.length : null,
+      });
     }
     if (req.method === "POST" && p === "/api/save") {
       const body = JSON.parse(await readBody(req) || "{}");

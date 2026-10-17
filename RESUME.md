@@ -8,7 +8,7 @@
 | --- | --- |
 | Schematic | ✅ generated, ERC-clean (124 parts, 115 nets) |
 | Placement | ✅ **PoC concluded** — graph-derived placement beats the hand floorplan and is adopted as the **baseline** ([`hardware/layout_poc/README.md`](hardware/layout_poc/README.md)) |
-| Interactive placement | ✅ **built** — browser UI, drag + live d3-force with editable params ([`hardware/layout_poc/web/README.md`](hardware/layout_poc/web/README.md)) |
+| Interactive placement | ✅ **built** — browser UI, drag/pin + live d3-force, reorderable params persisted in the tracked [`hardware/layout_poc/params.json`](hardware/layout_poc/params.json) ([`hardware/layout_poc/web/README.md`](hardware/layout_poc/web/README.md), [ADR-0010](docs/decisions/0010-placement-params-source-of-truth.md)); saved sessions reload from the seed list |
 | Routing | ⬜ not routed (nothing has been routed on the new baseline) |
 | Power / ampacity | ⬜ `make power` FAIL — no pours yet |
 | Test plan / DVT | not started |

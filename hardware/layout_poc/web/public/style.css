@@ -56,10 +56,16 @@ label.switch { display: flex; gap: 7px; align-items: center; color: var(--dim);
 
 /* ---- parameter controls ---- */
 .param { margin-bottom: 7px; }
-.param .lbl { display: flex; justify-content: space-between; gap: 6px;
+.param .lbl { display: flex; justify-content: flex-start; gap: 6px;
   align-items: baseline; margin-bottom: 2px; }
 .param .lbl .name { font-size: 11.5px; }
-.param .lbl .key { color: var(--dim); font-size: 10px; font-family: ui-monospace, monospace; }
+.param .lbl .key { color: var(--dim); font-size: 10px; font-family: ui-monospace, monospace; margin-left: auto; }
+.param .lbl.handle { cursor: grab; }
+.param .lbl.handle .grip { color: var(--dim); opacity: .55; font-size: 11px; line-height: 1; }
+.param .lbl.handle:hover .grip { opacity: 1; color: var(--accent); }
+.param .lbl.handle .switch { margin: 0; }
+.param.dragging { opacity: .45; }
+.param.dragging .lbl .name { color: var(--accent); }
 .param .ctl { display: flex; gap: 6px; align-items: center; }
 .param input[type=range] { flex: 1; accent-color: var(--accent); height: 16px; }
 .param .help { color: var(--dim); font-size: 10px; margin-top: 1px; }
@@ -112,6 +118,9 @@ label.switch { display: flex; gap: 7px; align-items: center; color: var(--dim);
   pointer-events: none; user-select: none; }
 .node.dragging .courtyard { stroke: var(--pinned); stroke-width: .7; stroke-dasharray: 2 1; }
 .node.pinned .courtyard { stroke: var(--pinned); stroke-width: .55; }
+/* selection is an outline, not a fade — the rest of the board stays readable */
+.node.selected .courtyard { stroke: var(--accent); stroke-width: .6; }
+.node.selected text { font-weight: 600; }
 .node.dim { opacity: .28; }
 .edge { stroke-linecap: round; }
 .edge.dim { opacity: .05; }
