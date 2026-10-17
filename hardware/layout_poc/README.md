@@ -35,6 +35,18 @@ make baseline          # materialise the adopted placement
 * `make layout` still runs all 7 engines so the comparison stays honest; sfdp
   merely wins it.
 
+### Interactive placement (web UI)
+
+`make place` starts a browser UI (`hardware/layout_poc/web/`) that loads this
+graph and runs **d3-force live** while you drag parts (a dragged part is pinned
+and the engine solves the rest around it), with every engine parameter editable.
+See [`web/README.md`](web/README.md) and
+[ADR-0009](../../docs/decisions/0009-interactive-placement.md).
+
+> The `d3-force` row in the table above predates a fix to the engine's link
+> model; see [`docs/history/`](../../docs/history/). Re-run `make layout` to
+> refresh the scores.
+
 ### What we did *not* solve
 
 1. **Every number here is a pre-route proxy.** HPWL and `axisR` say nothing
@@ -54,16 +66,11 @@ make baseline          # materialise the adopted placement
 5. **Touching `gen_pcb.py`**: the PoC writes only into `build/layout/`. Wiring
    the pipeline in needs an ADR.
 
-### A bug worth recording
+### Sanity note
 
-Validating the baseline against KiCad's DRC caught a genuine bug: the
-legaliser and renderer rotated parts in the **math (Y-up) convention**, while a
-KiCad board is **Y-down**. Identical for a symmetric courtyard, *mirrored* for
-an asymmetric one — `TO-252-2`'s courtyard sits 0.84 mm off-centre, which is why
-two courtyard overlaps (`4Q1↔4Q2`, `2Q3↔2Q4`) slipped past our own metric while
-KiCad found them. Fixed in `legalize.py` + `render.py`; the baseline went from 2
-overlaps + 1 edge violation to **0 + 0**. Lesson: our internal metrics are not a
-substitute for running the real DRC.
+Our internal metrics are not a substitute for running the real KiCad DRC — a
+fixed Y-up vs Y-down rotation bug is the case in point, recorded in
+[`docs/history/`](../../docs/history/).
 
 ---
 

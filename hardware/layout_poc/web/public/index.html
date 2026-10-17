@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TinyUPS — interactive placement</title>
+<link rel="stylesheet" href="/style.css">
+<!-- d3-force is served straight out of node_modules; the import map resolves
+     its internal bare specifiers (d3-dispatch / d3-quadtree / d3-timer) so the
+     very same engine the PoC uses runs live in the browser. -->
+<script type="importmap">
+{
+  "imports": {
+    "d3-force": "/vendor/d3-force/src/index.js",
+    "d3-dispatch": "/vendor/d3-dispatch/src/index.js",
+    "d3-quadtree": "/vendor/d3-quadtree/src/index.js",
+    "d3-timer": "/vendor/d3-timer/src/index.js"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app">
+  <aside id="panel">
+    <header>
+      <h1>TinyUPS <span>placement</span></h1>
+      <div class="sub" id="boardInfo">…</div>
+    </header>
+
+    <section>
+      <h2>Start from</h2>
+      <div class="row">
+        <select id="seed" title="Position file loaded at start"></select>
+        <button id="load" title="Reload this seed">Load</button>
+      </div>
+      <div class="row">
+        <button id="solve" class="primary" title="Reheat the engine (alpha = 1)">▶ Solve</button>
+        <button id="pause" title="Pause / resume the simulation">⏸ Pause</button>
+      </div>
+      <div class="row">
+        <button id="reset" title="Restore the seed positions and unpin everything but the terminals">↺ Reset</button>
+        <button id="scatter" title="Randomise the starts (uses SEED) and solve">✳ Scatter</button>
+      </div>
+      <div class="row">
+        <button id="fit" title="Fit the board to the window">⤢ Fit</button>
+        <button id="unpin" title="Release every pinned part">⊘ Unpin all</button>
+      </div>
+      <p class="hint">Drag a part to move it — it is <b>pinned</b> (fx/fy) and the
+      engine solves the rest around it. Right-click a part to unpin. Drag empty
+      space to pan, scroll to zoom. Click a part to inspect it.</p>
+    </section>
+
+    <section>
+      <h2>Engine <span class="tag">d3-force</span></h2>
+      <label class="switch"><input type="checkbox" id="onlyDraw" checked>
+        draw only the trace-ordered edges (not the full clique)</label>
+      <label class="switch"><input type="checkbox" id="showLabels" checked>
+        component labels</label>
+      <div id="params"></div>
+      <p class="hint" id="engineNote"></p>
+    </section>
+
+    <section>
+      <h2>Metrics <span class="tag">live</span></h2>
+      <table id="metrics"></table>
+      <p class="hint">HPWL is a pre-route proxy — the field's yardstick is
+      <i>routed</i> wirelength after FreeRouting. “overlap” counts courtyard
+      (courtyard-AABB) intersections; 0 is the goal.</p>
+    </section>
+
+    <section>
+      <h2>Pinned <span class="tag" id="pinCount">0</span></h2>
+      <div id="pins" class="pins"></div>
+    </section>
+
+    <section>
+      <h2>Write back</h2>
+      <div class="row">
+        <input id="saveName" value="baseline" title="File name suffix">
+        <button id="save" title="Write build/layout/interactive-<name>.json">💾 Save</button>
+      </div>
+      <button id="apply" disabled title="Run apply.py + KiCad DRC on the saved file">⇢ Apply to board + DRC</button>
+      <pre id="io" class="io">not saved yet</pre>
+    </section>
+
+    <section id="inspect"><h2>Selected</h2><div id="inspBody" class="hint">nothing selected</div></section>
+  </aside>
+
+  <main id="stage">
+    <svg id="board" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+          <path d="M10 0H0V10" fill="none" stroke="#12351f" stroke-width="0.35"/>
+        </pattern>
+      </defs>
+      <rect id="canvasBg" x="-500" y="-500" width="1200" height="1200" fill="#0b0f0c"/>
+      <g id="viewport">
+        <rect id="boardRect" fill="#0f3d1a" stroke="#7fffa0" stroke-width="0.5"/>
+        <rect id="gridRect" fill="url(#grid)" stroke="none"/>
+        <g id="edges"></g>
+        <g id="nodes"></g>
+      </g>
+    </svg>
+    <div id="legend"></div>
+    <div id="tooltip" class="tooltip" hidden></div>
+    <div id="status" class="status">loading…</div>
+  </main>
+</div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

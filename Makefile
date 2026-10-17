@@ -26,7 +26,7 @@ export KICAD9_3DMODEL_DIR   ?= /usr/share/kicad/3dmodels
 RENDER_ROTATE ?= -15,0,-5
 RENDER_ZOOM   ?= 0.95
 
-.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power layout mermaid baseline check clean
+.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power layout mermaid baseline place place-render place-apply check clean
 
 all: help
 
@@ -146,6 +146,25 @@ baseline: | $(OUT) ## Materialise the adopted (sfdp) placement as the baseline b
 		{ echo "error: run 'make layout' first"; exit 1; }
 	$(PYTHON) $(LAYOUT_DIR)/apply.py $(OUT)/layout/leg-$(BASELINE_ENGINE).json \
 		$(OUT)/layout/baseline.kicad_pcb
+
+# --- interactive placement (hardware/layout_poc/web) ------------------------
+# Browser UI: drag parts around (a dragged part is pinned / fixed for the
+# solver), with a live d3-force engine whose parameters are all editable.  The
+# server only serves files + a save/apply API; the solver runs in the browser.
+# See hardware/layout_poc/web/README.md.
+PLACE_PORT ?= 4097
+F ?= $(OUT)/layout/interactive-baseline.json
+place: | $(OUT) ## Interactive placement UI (http://localhost:4097)
+	@test -f $(OUT)/$(NAME).net || $(MAKE) --no-print-directory netlist
+	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(LAYOUT_DIR)/extract.py
+	@test -d $(LAYOUT_DIR)/node_modules || (cd $(LAYOUT_DIR) && npm install --no-audit --no-fund)
+	PORT=$(PLACE_PORT) node $(LAYOUT_DIR)/web/server.mjs
+
+place-render: | $(OUT) ## Render a saved interactive placement (F=<positions.json>)
+	$(PYTHON) $(LAYOUT_DIR)/render.py $(F) $(OUT)/layout/interactive.png --label
+
+place-apply: | $(OUT) ## Apply a saved interactive placement to a board + DRC (F=<positions.json>)
+	$(PYTHON) $(LAYOUT_DIR)/apply.py $(F) $(OUT)/layout/interactive.kicad_pcb
 
 # --- simulation ------------------------------------------------------------
 sim: ## Run all ngspice simulations in sim/

@@ -38,7 +38,7 @@ KiBot (ERC/DRC-HTML-Reports, CI-Berichte) läuft zusätzlich per
 
 Versionsstand: [`docs/toolchain.md`](docs/toolchain.md).
 
-## Umgebung (verifiziert)
+## Umgebung
 
 - `kicad-cli` (KiCad 9.0.8), `ngspice` 45.2, `sigrok-cli` 0.7.2
 - `/opt/eda/venv` (Python 3.14): KiBot 1.9.1, KiUtils, PyVISA, PyMeasure,
@@ -68,3 +68,24 @@ Versionsstand: [`docs/toolchain.md`](docs/toolchain.md).
 - work through the `Makefile`; every schematic/layout change ends
   with `make check`; design decisions get an ADR in `docs/decisions/`;
   output artifacts (`build/`, `reports/`, `gerbers/`) are not versioned.
+
+## Documentation: history vs. timeless docs
+
+- **Never spread fixed bug reports, gotchas, "was broken, now fixed"
+  narratives, reverts or one-off findings through the long-lived docs.** They
+  are point-in-time and rot; a stale story in a timeless doc is worse than no
+  story.
+- **`docs/history/` is where they go** — one file per finding,
+  `NNNN-<slug>.md` with the same fixed-width counter as the ADRs (see
+  [`docs/history/README.md`](docs/history/README.md)). No dates in names (git
+  holds chronology). Append-only: do not rewrite an old entry, add a new one.
+- **Timeless docs stay clean of point-in-time state.** `README.md`, `AGENTS.md`,
+  `docs/requirements.md`, `docs/architecture.md`, `hardware/**/README.md` and
+  `docs/decisions/*` describe *how things are*, never *what happened* or *what's
+  currently broken*. At most, link to the `docs/history/` entry.
+- **ADRs are decisions, not changelogs.** Keep the decision and its rationale in
+  the ADR; put the defect that motivated it (and its numbers) in
+  `docs/history/` and reference it.
+- **`RESUME.md` is the one allowed exception:** it is current session state, so
+  it may carry a short, up-to-date status — but it points at `docs/history/` for
+  the story instead of retelling it.

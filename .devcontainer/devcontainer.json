@@ -2,7 +2,11 @@
     "build": {
         "dockerfile": "Dockerfile"
     },
-    "runArgs": ["-p", "4096:4096", "-p", "6080:6080"],
+    "runArgs": [
+        "-p", "4096:4096",
+        "-p", "4097:4097",
+        "-p", "6080:6080" 
+    ],
     "mounts": [
         {
             "source": "${localWorkspaceFolder}",
@@ -13,7 +17,12 @@
     "features": {
         "ghcr.io/devcontainers/features/desktop-lite:1": {}
     },
-    "forwardPorts": [4096, 6080],
+    "forwardPorts": [4096, 4097, 6080],
+    "portsAttributes": {
+        "4096": { "label": "browser access to opencode web UI", "onAutoForward": "silent" },
+        "4097": { "label": "TinyUPS placement UI", "onAutoForward": "notify" },
+        "6080": { "label": "noVNC desktop for KiCad GUI access", "onAutoForward": "silent" }
+    },
     "postCreateCommand": "kicad-cli version >/dev/null && ngspice --version >/dev/null 2>&1 && python -c 'import kiutils, pyvisa, kibot; print(\"EDA toolchain OK\")'",
     "postStartCommand": "opencode service set hostname 0.0.0.0 && opencode service set port 4096 && opencode service start"
 }

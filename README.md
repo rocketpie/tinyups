@@ -14,6 +14,8 @@ shutdown signal go to the host over USB.
 - [Architecture](docs/architecture.md)
 - [Component selection & BOM](docs/bom.md)
 - [Schematic (generated)](hardware/README.md)
+- [Placement PoC](hardware/layout_poc/README.md)
+- [Interactive placement (browser)](hardware/layout_poc/web/README.md)
 - [Test plan](docs/test-plan.md)
 - [Toolchain status](docs/toolchain.md)
 - [Decision records](docs/decisions/)
@@ -40,6 +42,7 @@ make drc        # pcb design rule check
 make gerbers    # fabrication outputs
 make bom        # bill of materials
 make sim        # SPICE simulations
+make place      # interactive placement UI (http://localhost:4097)
 make check      # everything above (used by CI)
 ```
 
