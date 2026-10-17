@@ -9,7 +9,9 @@
 //
 // Dragging a part pins it (fx/fy) so the engine treats it as fixed and solves
 // the rest around it; right-click releases it again.
-import * as d3 from "d3-force";
+import * as M from "./model.js";
+
+const DEFAULTS = M.DEFAULTS;   // one truth for values, shared with ab.mjs
 
 const NS = "http://www.w3.org/2000/svg";
 const svg = document.getElementById("board");
@@ -28,43 +30,49 @@ const $ = (s) => document.querySelector(s);
 // PoC and a session here are tunable to the same config.
 // ---------------------------------------------------------------------------
 const PARAM_SPEC = [
-  { key: "SIG_STR", label: "Signal trace link force", min: 0, max: 5, step: 0.01, d: 0.1, group: "links",
+  { key: "SIG_STR", label: "Signal trace link force", min: 0, max: 5, step: 0.01, d: DEFAULTS.SIG_STR, group: "links",
     help: "Link strength for a zero-width (signal) net. Low = signals barely pull." },
-  { key: "POW_STR", label: "Power trace link force", min: 0, max: 60, step: 0.1, d: 10, group: "links",
+  { key: "POW_STR", label: "Power trace link force", min: 0, max: 60, step: 0.1, d: DEFAULTS.POW_STR, group: "links",
     help: "Link strength a full-width (WREF) power trace reaches. High = the power path collapses into a tight spine." },
-  { key: "WREF", label: "Reference width (mm)", min: 1, max: 25, step: 0.01, d: 18.71, group: "links",
+  { key: "WREF", label: "Reference width (mm)", min: 1, max: 25, step: 0.01, d: DEFAULTS.WREF, group: "links",
     help: "Trace width treated as 'full power' — the IPC-2221 width of a 20 A net." },
-  { key: "D0", label: "Link rest distance (mm)", min: 0, max: 40, step: 0.5, d: 2, group: "links",
+  { key: "D0", label: "Link rest distance (mm)", min: 0, max: 40, step: 0.5, d: DEFAULTS.D0, group: "links",
     help: "Base preferred link length (a signal connection wants to be this long)." },
-  { key: "DK", label: "Link distance per width (mm)", min: 0, max: 40, step: 0.5, d: 2, group: "links",
+  { key: "DK", label: "Link distance per width (mm)", min: 0, max: 40, step: 0.5, d: DEFAULTS.DK, group: "links",
     help: "Extra preferred length for a wide trace: D0 + DK·(width/WREF)." },
-  { key: "DMAX", label: "Max link distance (mm)", min: 1, max: 80, step: 1, d: 26, group: "links",
+  { key: "DMAX", label: "Max link distance (mm)", min: 1, max: 80, step: 1, d: DEFAULTS.DMAX, group: "links",
     help: "Cap on the preferred link length." },
-  { key: "LINK_ITER", label: "Link solver iterations", min: 1, max: 8, step: 1, d: 2, group: "links",
+  { key: "LINK_ITER", label: "Link solver iterations", min: 1, max: 8, step: 1, d: DEFAULTS.LINK_ITER, group: "links",
     help: "d3 forceLink constraint iterations per tick (stiffer convergence)." },
-  { key: "CHARGE", label: "Repulsion strength", min: 0, max: 300, step: 1, d: 30, group: "spread",
+  { key: "CHARGE", label: "Repulsion strength", min: 0, max: 300, step: 1, d: DEFAULTS.CHARGE, group: "spread",
     help: "Many-body repulsion (forceManyBody). The PoC's adopted run uses 30." },
-  { key: "CHARGE_SIZE", label: "Repulsion scales with part size", type: "check", d: false, group: "spread",
+  { key: "CHARGE_SIZE", label: "Repulsion scales with part size", type: "check", d: DEFAULTS.CHARGE_SIZE, group: "spread",
     help: "Off = a constant charge; on = bigger parts push harder." },
-  { key: "CHARGE_MAX", label: "Repulsion range (mm)", min: 5, max: 200, step: 5, d: 40, group: "spread",
+  { key: "CHARGE_MAX", label: "Repulsion range (mm)", min: 5, max: 200, step: 5, d: DEFAULTS.CHARGE_MAX, group: "spread",
     help: "distanceMax: beyond this a part feels no repulsion." },
-  { key: "COLLIDE_PAD", label: "Courtyard clearance (mm)", min: 0, max: 5, step: 0.1, d: 1.0, group: "spread",
+  { key: "COLLIDE_PAD", label: "Courtyard clearance (mm)", min: 0, max: 5, step: 0.1, d: DEFAULTS.COLLIDE_PAD, group: "spread",
     help: "Required gap between courtyards (the collision force's +N)." },
-  { key: "RECT_COLLIDE", label: "Rectangular courtyard collision", type: "check", d: true, group: "spread",
+  { key: "RECT_COLLIDE", label: "Rectangular courtyard collision", type: "check", d: DEFAULTS.RECT_COLLIDE, group: "spread",
     help: "On = resolve courtyard AABB overlaps directly (like legalize.py); off = d3 circle collision (exactly the PoC)." },
-  { key: "CENTER_X", label: "Pull to board centre X", min: 0, max: 1, step: 0.01, d: 0.15, group: "spread",
+  { key: "CENTER_X", label: "Pull to board centre X", min: 0, max: 1, step: 0.01, d: DEFAULTS.CENTER_X, group: "spread",
     help: "Constant force towards the board centre (X)." },
-  { key: "CENTER_Y", label: "Pull to board centre Y", min: 0, max: 1, step: 0.01, d: 0.05, group: "spread",
+  { key: "CENTER_Y", label: "Pull to board centre Y", min: 0, max: 1, step: 0.01, d: DEFAULTS.CENTER_Y, group: "spread",
     help: "Constant force towards the board centre (Y)." },
-  { key: "BOUND", label: "Board keep-in force", min: 0, max: 400, step: 5, d: 60, group: "spread",
+  { key: "BOUND", label: "Board keep-in force", min: 0, max: 400, step: 5, d: DEFAULTS.BOUND, group: "spread",
     help: "How hard the board edge pushes parts back inside." },
-  { key: "MAX_V", label: "Max move per tick (mm)", min: 0.5, max: 30, step: 0.5, d: 3, group: "solver",
+  { key: "HOST_STR", label: "Belongs-to force (small part → its IC)", min: 0, max: 20, step: 0.5, d: DEFAULTS.HOST_STR, group: "host",
+    help: "Every small part (R/C/D/L) is pulled onto a ring around the IC it belongs to. Which IC: the one it shares the most *specific* net with (a 2-pad boot cap counts 1.0, a 12-pad rail 0.09); a tie (a bulk cap on a rail) goes to the nearest IC. 0 = off. Without it a controller's parts are held only by the nets, and a net's pull is toward its own centroid — which is why they drift to the middle." },
+  { key: "HOST_D", label: "Belongs-to ring (mm)", min: 1, max: 30, step: 0.5, d: DEFAULTS.HOST_D, group: "host",
+    help: "Preferred distance from the host: farther and the small part is pulled in, closer and it is pushed out. Only the small part moves — the controller stays put and its parts fan out around it." },
+  { key: "HOST_POWER", label: "Belongs-to also for power-flagged parts", type: "check", d: DEFAULTS.HOST_POWER, group: "host",
+    help: "Off = only the small parts that are *not* on the power path get a host ring. On = every small passive does, including the passives the power chain runs through (sense resistors, snubbers) — which can kink the input→output flow (the `axisR` metric in `make ab`)." },
+  { key: "MAX_V", label: "Max move per tick (mm)", min: 0.5, max: 30, step: 0.5, d: DEFAULTS.MAX_V, group: "solver",
     help: "Velocity clamp. With the link distance/strength actually wired in (see README), d3-force diverges on a dense start — a 2-part net gets weight 1 and up to POW_STR. Clamping tames it." },
-  { key: "VEL_DECAY", label: "Velocity decay", min: 0, max: 0.95, step: 0.05, d: 0.4, group: "solver",
+  { key: "VEL_DECAY", label: "Velocity decay", min: 0, max: 0.95, step: 0.05, d: DEFAULTS.VEL_DECAY, group: "solver",
     help: "d3's velocityDecay (0.4 = its default): how much speed is lost each tick." },
-  { key: "ITERS", label: "Run length (alpha decay)", min: 100, max: 6000, step: 100, d: 1200, group: "solver",
+  { key: "ITERS", label: "Run length (alpha decay)", min: 100, max: 6000, step: 100, d: DEFAULTS.ITERS, group: "solver",
     help: "Ticks for alpha to fall to ~0.001 — the 'solve' budget." },
-  { key: "SEED", label: "Scatter seed", min: 1, max: 999999, step: 1, d: 12345, group: "solver",
+  { key: "SEED", label: "Scatter seed", min: 1, max: 999999, step: 1, d: DEFAULTS.SEED, group: "solver",
     help: "RNG seed used by 'Scatter' for the starting positions." },
 ];
 
@@ -92,7 +100,7 @@ const dropLS = (key) => { try { localStorage.removeItem(key); } catch { /* ignor
 const S = {
   graph: null, board: { w: 150, h: 140 },
   nodes: [], edges: [], byId: new Map(),
-  params: {}, paramOrder: [], paramSource: "defaults",
+  params: {}, paramOrder: [], paramSource: "defaults", model: null,
   repo: { file: "hardware/layout_poc/params.json", exists: false, values: 0 },
   repoState: "idle",
   sim: null, linkForce: null, chargeForce: null,
@@ -108,26 +116,8 @@ const S = {
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const fmt = (v, d = 1) => (v == null || Number.isNaN(v) ? "–" : (+v).toFixed(d));
 
-// --- geometry (KiCad Y-DOWN board frame; same convention as render.py) ------
-const rot = (p, a) => {
-  const c = Math.cos((a * Math.PI) / 180), s = Math.sin((a * Math.PI) / 180);
-  return [p[0] * c + p[1] * s, -p[0] * s + p[1] * c];
-};
-const cornersRel = (n) => {
-  const [bx, by, bw, bh] = n.bbox;
-  return [[bx, by], [bx + bw, by], [bx + bw, by + bh], [bx, by + bh]].map((p) => rot(p, n.angle));
-};
-function setExtents(n) {
-  const pts = cornersRel(n);
-  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
-  n._pts = pts;
-  n.hx = (Math.max(...xs) - Math.min(...xs)) / 2;
-  n.hy = (Math.max(...ys) - Math.min(...ys)) / 2;
-  n.cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-  n.cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-}
-const padXY = (n, pad) => { const [rx, ry] = rot([pad.dx, pad.dy], n.angle); return [n.x + rx, n.y + ry]; };
-const isFixed = (n) => n.anchor != null || n.fx != null;
+// geometry + extents come from the shared model (KiCad Y-DOWN frame)
+const { setExtents, padXY, isFixed } = M;
 
 // --- load -------------------------------------------------------------------
 async function boot() {
@@ -150,7 +140,8 @@ async function boot() {
   for (const s of seeds.seeds) {
     const o = document.createElement("option");
     o.value = s.name;
-    o.textContent = `${s.name}  ·  ${s.engine}  ·  ${s.n} parts`;
+    o.textContent = `${s.name}  ·  ${s.engine}  ·  ${s.n} parts` +
+      (s.tracked ? "  ·  saved" : "");
     if (s.name === (qs || seeds.default)) o.selected = true;
     sel.appendChild(o);
   }
@@ -193,13 +184,19 @@ async function loadSeed(name, force = false) {
   S.nodes = S.graph.nodes.map((gn) => {
     const p = data.positions[gn.id] || { x: S.board.w / 2, y: S.board.h / 2, angle: 0 };
     const n = { ...gn, x: p.x, y: p.y, angle: p.angle || 0, pinned: false };
-    if (gn.anchor) { n.x = gn.anchor[0]; n.y = gn.anchor[1]; }
+    // The two power terminals are *pinned*, but the seed decides where they are:
+    // the graph's anchor is the hand floorplan's position ("XT60 — back centre")
+    // and is only the fallback for a seed that has no position for them.  Taking
+    // it as the position silently discarded a moved terminal on every load (and
+    // fabricated courtyard overlaps the file did not have) — docs/history/0004.
+    if (gn.anchor && !data.positions[gn.id]) { n.x = gn.anchor[0]; n.y = gn.anchor[1]; }
     setExtents(n);
     if (gn.anchor || (p.pin && !gn.anchor)) { n.fx = n.x; n.fy = n.y; }
     if (p.pin && !gn.anchor) n.pinned = true;
     return n;
   });
   S.byId = new Map(S.nodes.map((n) => [n.id, n]));
+  M.assignHosts(S.nodes, S.graph, S.byId, { includePower: S.params.HOST_POWER });
   S.edges = S.graph.edges.map((e) => ({ ...e }));   // strings; forceLink rewrites to refs
   S.selected = null;
   $("#boardInfo").textContent =
@@ -218,129 +215,23 @@ async function loadSeed(name, force = false) {
 }
 
 // --- simulation -------------------------------------------------------------
-// d3-force caches each force's strength/distance/radius arrays at initialize
-// time, so every accessor pulls from S.params *live* and `applyParams` re-sets
-// the accessor to force a recompute.
-const linkDistance = (d) => Math.min(S.params.DMAX, S.params.D0 + S.params.DK * (d.width / S.params.WREF));
-const linkStrength = (d) => d.weight * (S.params.SIG_STR + (S.params.POW_STR - S.params.SIG_STR) * Math.pow(d.width / S.params.WREF, 1.2));
-const chargeStrength = (d) => -S.params.CHARGE * (S.params.CHARGE_SIZE ? Math.max(d.w, d.h) : 1);
-const collideRadius = (d) => 0.5 * Math.hypot(d.w, d.h) + S.params.COLLIDE_PAD;
-
-function forceBounds() {
-  let nodes = [];
-  function force(alpha) {
-    const m = 2, B = S.params.BOUND;
-    for (const n of nodes) {
-      if (isFixed(n)) continue;
-      const hw = n.hx, hh = n.hy;
-      if (n.x + n.cx - hw < m) n.vx += B * alpha;
-      if (n.x + n.cx + hw > S.board.w - m) n.vx -= B * alpha;
-      if (n.y + n.cy - hh < m) n.vy += B * alpha;
-      if (n.y + n.cy + hh > S.board.h - m) n.vy -= B * alpha;
-    }
-  }
-  force.initialize = (n) => { nodes = n; };
-  return force;
-}
-
-// Clamp |v| so a stiff link cannot throw a part across the board in one tick.
-function forceLimit() {
-  let nodes = [];
-  function force() {
-    const v = S.params.MAX_V;
-    for (const n of nodes) {
-      if (isFixed(n)) continue;
-      n.vx = clamp(n.vx || 0, -v, v);
-      n.vy = clamp(n.vy || 0, -v, v);
-    }
-  }
-  force.initialize = (n) => { nodes = n; };
-  return force;
-}
-
-// Rectangular courtyard collision: pushes AABB pairs apart along the axis of
-// least penetration.  This is the interactive cousin of legalize.py's relaxation
-// — real courtyards, not the d3 circle proxy.
-function forceRectCollide() {
-  let nodes = [];
-  function force() {
-    const pad = S.params.COLLIDE_PAD;
-    for (let i = 0; i < nodes.length; i++) {
-      const a = nodes[i];
-      for (let j = i + 1; j < nodes.length; j++) {
-        const b = nodes[j];
-        if (isFixed(a) && isFixed(b)) continue;
-        const dx = (a.x + a.cx) - (b.x + b.cx);
-        const dy = (a.y + a.cy) - (b.y + b.cy);
-        const ox = a.hx + b.hx + pad - Math.abs(dx);
-        const oy = a.hy + b.hy + pad - Math.abs(dy);
-        if (ox <= 0 || oy <= 0) continue;
-        if (ox < oy) {
-          const s = dx >= 0 ? 1 : -1, m = 0.5 * ox;
-          if (!isFixed(a)) a.x += s * m;
-          if (!isFixed(b)) b.x -= s * m;
-        } else {
-          const s = dy >= 0 ? 1 : -1, m = 0.5 * oy;
-          if (!isFixed(a)) a.y += s * m;
-          if (!isFixed(b)) b.y -= s * m;
-        }
-      }
-    }
-  }
-  force.initialize = (n) => { nodes = n; };
-  return force;
-}
-function makeCollide() {
-  S.collideType = S.params.RECT_COLLIDE;
-  if (S.params.RECT_COLLIDE) return forceRectCollide();
-  return d3.forceCollide()
-    .radius((d) => 0.5 * Math.hypot(d.w, d.h) + S.params.COLLIDE_PAD)
-    .iterations(3);
-}
-
+// The model itself (links, repulsion, centre pull, keep-in, collision, clamp,
+// belongs-to ring) lives in model.js so the browser UI, the A/B runner and (later)
+// the headless engine all run the *same* code.
 function buildSim() {
   if (S.sim) S.sim.stop();
-  const p = S.params, B = S.board;
-  const link = d3.forceLink(S.edges).id((d) => d.id)
-    .distance(linkDistance).strength(linkStrength).iterations(p.LINK_ITER);
-  const charge = d3.forceManyBody()
-    .strength(chargeStrength).distanceMax(p.CHARGE_MAX);
-  const cx = d3.forceX(B.w / 2).strength(p.CENTER_X);
-  const cy = d3.forceY(B.h / 2).strength(p.CENTER_Y);
-  const collide = makeCollide();
-  S.sim = d3.forceSimulation(S.nodes)
-    .force("link", link)
-    .force("charge", charge)
-    .force("centerx", cx)
-    .force("centery", cy)
-    .force("bounds", forceBounds())
-    .force("collide", collide)
-    .force("limit", forceLimit())
-    .alphaDecay(1 - Math.pow(0.001, 1 / p.ITERS))
-    .velocityDecay(p.VEL_DECAY)
-    .on("tick", onTick)
-    .on("end", () => setStatus("settled"));
-  S.linkForce = link; S.chargeForce = charge;
-  S.xForce = cx; S.yForce = cy; S.collideForce = collide;
-  S.sim.stop();
+  const m = M.buildSim(S.nodes, S.edges, S.board, S.params);
+  S.model = m; S.sim = m.sim;
+  S.linkForce = m.link; S.chargeForce = m.charge;
+  S.xForce = m.cx; S.yForce = m.cy; S.collideForce = m.collide;
+  S.collideType = m.collideType;
+  S.sim.on("tick", onTick).on("end", () => setStatus("settled"));
 }
 
 function applyParams(reheat = true) {
-  const p = S.params;
-  if (!S.sim) return;
-  // Re-set each accessor: d3 caches strengths/distances/radii at initialize time,
-  // so this is what makes a moved slider actually change the force.
-  S.linkForce.distance(linkDistance).strength(linkStrength).iterations(p.LINK_ITER);
-  S.chargeForce.strength(chargeStrength).distanceMax(p.CHARGE_MAX);
-  S.xForce.strength(p.CENTER_X);
-  S.yForce.strength(p.CENTER_Y);
-  S.sim.velocityDecay(p.VEL_DECAY).alphaDecay(1 - Math.pow(0.001, 1 / p.ITERS));
-  if (p.RECT_COLLIDE !== S.collideType) {
-    S.collideForce = makeCollide();
-    S.sim.force("collide", S.collideForce);
-  } else if (S.collideForce && !p.RECT_COLLIDE) {
-    S.collideForce.radius(collideRadius).iterations(3);
-  }
+  if (!S.sim || !S.model) return;
+  M.applyParamsToSim(S.model, S.params);
+  S.collideForce = S.model.collide; S.collideType = S.model.collideType;
   if (reheat) solve(Math.max(S.sim.alpha(), 0.6));
 }
 
@@ -477,12 +368,20 @@ function touchesNode(h, id) {
     (e.source.id === h && e.target.id === id) || (e.target.id === h && e.source.id === id));
 }
 
-// --- pads of the selected part ---------------------------------------------
+// --- pads and the "belongs-to" line of the selected part --------------------
 function drawPads() {
   let layer = document.getElementById("pads");
   if (!layer) { layer = document.createElementNS(NS, "g"); layer.id = "pads"; viewport.appendChild(layer); }
   layer.replaceChildren();
   const n = S.selected ? S.byId.get(S.selected) : null; if (!n) return;
+  const h = n.host ? S.byId.get(n.host) : null;
+  if (h) {                                  // show who it belongs to
+    const l = document.createElementNS(NS, "line");
+    l.setAttribute("x1", fmt(n.x + n.cx, 2)); l.setAttribute("y1", fmt(n.y + n.cy, 2));
+    l.setAttribute("x2", fmt(h.x + h.cx, 2)); l.setAttribute("y2", fmt(h.y + h.cy, 2));
+    l.setAttribute("class", "hostlink");
+    layer.appendChild(l);
+  }
   for (const p of n.pads) {
     const [x, y] = padXY(n, p);
     const c = document.createElementNS(NS, "circle");
@@ -495,70 +394,10 @@ function drawPads() {
 }
 
 // --- metrics ----------------------------------------------------------------
+// The metric set lives in model.js (same numbers as ab.mjs); render.py computes
+// the same set in python for the boards it renders.
 function metrics() {
-  const m = {};
-  const netPts = new Map();
-  for (const n of S.nodes) {
-    for (const p of n.pads) {
-      if (!p.net) continue;
-      if (!netPts.has(p.net)) netPts.set(p.net, []);
-      netPts.get(p.net).push(padXY(n, p));
-    }
-  }
-  m.hpwl = 0; m.hpwl_w = 0;
-  for (const [net, pts] of netPts) {
-    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
-    const d = (Math.max(...xs) - Math.min(...xs)) + (Math.max(...ys) - Math.min(...ys));
-    m.hpwl += d;
-    m.hpwl_w += d * ((S.graph.nets[net] || {}).width || 0.25);
-  }
-  m.wire = 0; m.wire_w = 0;
-  for (const e of S.edges) {
-    if (!e.draw) continue;
-    const d = Math.hypot(e.source.x - e.target.x, e.source.y - e.target.y);
-    m.wire += d; m.wire_w += d * e.width;
-  }
-  const boxes = S.nodes.map((n) => ({
-    id: n.id, x0: n.x + n.cx - n.hx, y0: n.y + n.cy - n.hy,
-    x1: n.x + n.cx + n.hx, y1: n.y + n.cy + n.hy,
-  }));
-  m.overlap = 0;
-  for (let i = 0; i < boxes.length; i++)
-    for (let j = i + 1; j < boxes.length; j++) {
-      const a = boxes[i], b = boxes[j];
-      if (!(a.x1 <= b.x0 || b.x1 <= a.x0 || a.y1 <= b.y0 || b.y1 <= a.y0)) m.overlap++;
-    }
-  m.outside = boxes.filter((b) => b.x0 < 0 || b.y0 < 0 || b.x1 > S.board.w || b.y1 > S.board.h).length;
-
-  const order = S.graph.power_order.filter((r) => S.byId.has(r));
-  m.path = 0;
-  for (let i = 0; i + 1 < order.length; i++) {
-    const a = S.byId.get(order[i]), b = S.byId.get(order[i + 1]);
-    m.path += Math.hypot(a.x - b.x, a.y - b.y);
-  }
-  const pin = S.byId.get(S.graph.io.in), pout = S.byId.get(S.graph.io.out);
-  const span = pin && pout ? Math.hypot(pout.x - pin.x, pout.y - pin.y) : 0;
-  m.straight = span ? m.path / span : 0;
-  m.d_in = pin && order.length ? Math.hypot(S.byId.get(order[0]).x - pin.x, S.byId.get(order[0]).y - pin.y) : 0;
-  m.d_out = pout && order.length ? Math.hypot(S.byId.get(order[order.length - 1]).x - pout.x, S.byId.get(order[order.length - 1]).y - pout.y) : 0;
-  // flow-ordered? correlation of flow position with position along the in->out axis
-  m.axis_r = 0;
-  if (pin && pout && order.length > 2) {
-    const ux = pout.x - pin.x, uy = pout.y - pin.y, nrm = Math.hypot(ux, uy) || 1;
-    const fs = [], us = [];
-    for (const r of order) {
-      const n = S.byId.get(r); if (n.flow == null) continue;
-      fs.push(n.flow);
-      us.push(((n.x - pin.x) * ux + (n.y - pin.y) * uy) / nrm / nrm);
-    }
-    if (fs.length > 2) {
-      const mf = fs.reduce((a, b) => a + b) / fs.length, mu = us.reduce((a, b) => a + b) / us.length;
-      let cov = 0, sf = 0, su = 0;
-      for (let i = 0; i < fs.length; i++) { cov += (fs[i] - mf) * (us[i] - mu); sf += (fs[i] - mf) ** 2; su += (us[i] - mu) ** 2; }
-      m.axis_r = sf && su ? cov / Math.sqrt(sf * su) : 0;
-    }
-  }
-  return m;
+  return M.metrics(S.nodes, S.edges, S.graph, S.board, S.byId);
 }
 
 function renderMetrics() {
@@ -575,6 +414,13 @@ function renderMetrics() {
     ["flow axisR", fmt(m.axis_r, 2), m.axis_r > 0.4 ? "good" : ""],
     ["in / out (mm)", `${fmt(m.d_in, 0)} / ${fmt(m.d_out, 0)}`, ""],
   ];
+  // The "fan" per controller — the thing the belongs-to force is for: how far
+  // its small parts sit (d), whether they are all on the centre side (bias) and
+  // how much room they have (spacing).  Same numbers ab.mjs reports.
+  for (const [ref, f] of Object.entries(m.fan || {})) {
+    rows.push([`${ref} fan · d/bias/sp`, `${fmt(f.d, 1)} / ${fmt(f.bias, 2)} / ${fmt(f.spacing, 1)}`,
+      f.bias < 0.25 && f.d < 25 ? "good" : ""]);
+  }
   $("#metrics").innerHTML = rows.map(([k, v, cls]) =>
     `<tr class="${cls}"><td>${k}</td><td>${v}</td></tr>`).join("");
   const a = S.sim ? S.sim.alpha() : 0;
@@ -613,6 +459,7 @@ function renderInspect() {
       <tr><td>courtyard</td><td>${fmt(n.w)} × ${fmt(n.h)} mm</td></tr>
       <tr><td>rotation</td><td>${n.angle}° (seed)</td></tr>
       <tr><td>pinned</td><td>${n.pinned ? "yes" : n.anchor != null ? "terminal" : "no"}</td></tr>
+      ${n.host ? `<tr><td>belongs to</td><td>${n.host}${n.hostScore ? ` (net score ${fmt(n.hostScore, 2)})` : " (nearest IC)"}</td></tr>` : ""}
     </table>
     <table id="metrics" style="margin-top:6px">${nets}</table>`;
 }
@@ -770,8 +617,8 @@ function resetToSeed() {
     const p = data.positions[n.id]; if (!p) continue;
     n.x = p.x; n.y = p.y; n.angle = p.angle || 0; setExtents(n);
     n.pinned = false; n.fx = null; n.fy = null;
-    if (n.anchor) { n.x = n.anchor[0]; n.y = n.anchor[1]; n.fx = n.x; n.fy = n.y; }
-    if (p.pin) { n.pinned = true; n.fx = n.x; n.fy = n.y; }
+    // the seed's position stands, even for an anchored terminal (see loadSeed)
+    if (n.anchor || p.pin) { n.pinned = !n.anchor && !!p.pin; n.fx = n.x; n.fy = n.y; }
     n._el.setAttribute("transform", `translate(${n.x},${n.y})`);
     n._el.querySelector(".courtyard").setAttribute("points", n._pts.map((q) => q.join(",")).join(" "));
     n._el.querySelector("text").setAttribute("x", fmt(n.cx, 2));
@@ -780,13 +627,12 @@ function resetToSeed() {
   styleNodes(); renderPins(); draw(); solve(1);
 }
 
-function mulberry32(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const randomSeed = () => 1 + Math.floor(Math.random() * 999999);
 
-// Scatter = uniform-random start over the whole board.  It rolls a fresh seed
-// every click and writes it back into the SEED field, so a start you like is
-// reproducible: tick "reuse SEED" and click again.  (The old version was a
-// fixed 12-column grid + jitter, so even a new seed barely changed the picture.)
+// Scatter = uniform-random start over the whole board, from the model's shared
+// generator (`ab.mjs` uses the very same one for a neutral headless start).  It
+// rolls a fresh seed every click and writes it back into SEED, so a start you
+// like is reproducible: tick "reuse SEED" and click again.
 function scatter() {
   const seed = S.scatterFixed ? Math.round(S.params.SEED) : randomSeed();
   if (!S.scatterFixed) {
@@ -794,17 +640,7 @@ function scatter() {
     syncParamInputs();
     scheduleRepoWrite();
   }
-  const rnd = mulberry32(seed);
-  for (const n of S.nodes) {
-    if (n.anchor) continue;
-    // n.x/n.y is the courtyard's *origin*, so the keep-in range is shifted by
-    // the rotated bbox centre (n.cx/n.cy) and shrunk by its half-extents.
-    const lox = n.hx - n.cx, hix = S.board.w - n.hx - n.cx;
-    const loy = n.hy - n.cy, hiy = S.board.h - n.hy - n.cy;
-    n.x = lox + rnd() * Math.max(0, hix - lox);
-    n.y = loy + rnd() * Math.max(0, hiy - loy);
-    unpin(n);
-  }
+  M.scatterPositions(S.nodes, S.board, seed);
   styleNodes(); renderPins(); solve(1);
   setStatus(`scatter · seed ${seed}${S.scatterFixed ? " (fixed)" : ""}`);
 }
@@ -1113,7 +949,7 @@ function setStatus(msg) { statusEl.textContent = msg; }
 // Expose the state for debugging / power users from the console.
 S.metrics = metrics; S.renderMetrics = renderMetrics; S.draw = draw; S.solve = solve;
 S.scatter = scatter; S.resetParams = resetParams; S.saveUI = saveUI; S.setSelected = setSelected;
-S.writeRepo = writeRepo; S.LS = LS;
+S.writeRepo = writeRepo; S.LS = LS; S.model = M;   // place.assignHosts(nodes, graph, byId) re-derives hosts
 globalThis.place = S;
 
 boot().catch((e) => {

@@ -26,7 +26,7 @@ export KICAD9_3DMODEL_DIR   ?= /usr/share/kicad/3dmodels
 RENDER_ROTATE ?= -15,0,-5
 RENDER_ZOOM   ?= 0.95
 
-.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power layout mermaid baseline place place-render place-apply check clean
+.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power layout mermaid baseline place place-render place-apply ab check clean
 
 all: help
 
@@ -128,8 +128,7 @@ layout: | $(OUT) ## Auto-placement PoC: run all layout engines + render
 	$(PYTHON) $(LAYOUT_DIR)/compare.py
 	$(PYTHON) $(LAYOUT_DIR)/contact_sheet.py
 
-mermaid: | $(OUT) ## Render the placement graph as a mermaid flowchart (SVG)
-	@test -f $(OUT)/$(NAME).net || $(MAKE) --no-print-directory netlist
+mermaid: | $(OUT) ## Render the placement graph as a mermaid flowchart (SVG)	@test -f $(OUT)/$(NAME).net || $(MAKE) --no-print-directory netlist
 	@test -d $(LAYOUT_DIR)/node_modules || (cd $(LAYOUT_DIR) && npm install --no-audit --no-fund)
 	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(LAYOUT_DIR)/extract.py
 	cd $(LAYOUT_DIR) && ./render_mermaid.sh
@@ -165,6 +164,22 @@ place-render: | $(OUT) ## Render a saved interactive placement (F=<positions.jso
 
 place-apply: | $(OUT) ## Apply a saved interactive placement to a board + DRC (F=<positions.json>)
 	$(PYTHON) $(LAYOUT_DIR)/apply.py $(F) $(OUT)/layout/interactive.kicad_pcb
+
+# --- A/B the placement model (hardware/layout_poc/ab.mjs) --------------------
+# One row per config, N runs on a *neutral* start (scatter by default — never a
+# hand placement: that one is half-solved by a human and its pins encode that
+# intent).  The model and the metrics come from web/public/model.js, the same
+# module the browser UI runs, so a row here is reproducible in the UI.
+#   make ab
+#   make ab AB='--runs 5 --start build/layout/pos-gv-sfdp.json'
+#   make ab AB='--config "a:HOST_STR=0" --config "b:HOST_STR=1.5,HOST_D=5"'
+AB ?= --runs 3 --json $(OUT)/layout/ab.json \
+	--config "host off:HOST_STR=0" \
+	--config "host 1.5/5:HOST_STR=1.5,HOST_D=5"
+ab: | $(OUT) ## A/B the placement force model on neutral (scatter) starts
+	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(LAYOUT_DIR)/extract.py
+	@test -d $(LAYOUT_DIR)/node_modules || (cd $(LAYOUT_DIR) && npm install --no-audit --no-fund)
+	node $(LAYOUT_DIR)/ab.mjs $(AB)
 
 # --- simulation ------------------------------------------------------------
 sim: ## Run all ngspice simulations in sim/

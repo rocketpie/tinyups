@@ -35,3 +35,7 @@ allowed and expected to age, to be superseded, and to be wrong in the future.
 
 - [0001 – legaliser/renderer rotated in the wrong Y convention](0001-y-down-rotation-bug.md)
 - [0002 – d3-force link parameters were inert](0002-d3force-inert-link-params.md)
+- [0003 – a live `POST /api/save` silently overwrote a saved placement](0003-save-endpoint-clobbered-a-placement.md)
+- [0004 – anchored terminals snapped back to the hand floorplan on every load](0004-anchored-terminals-snap-back-on-load.md)
+- [0005 – the netlist cannot hold a small part beside its IC](0005-the-netlist-cannot-hold-satellites.md)
+- [0006 – the belongs-to ring on a neutral start: HPWL/wire down, flow order pays](0006-host-force-on-neutral-starts.md)

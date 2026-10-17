@@ -125,3 +125,5 @@ label.switch { display: flex; gap: 7px; align-items: center; color: var(--dim);
 .edge { stroke-linecap: round; }
 .edge.dim { opacity: .05; }
 .pad { stroke: #000; stroke-width: .1; }
+/* the selected part's "belongs-to" link to its host IC */
+.hostlink { stroke: var(--accent); stroke-width: .3; stroke-dasharray: 1.6 1.2; opacity: .85; }

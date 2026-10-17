@@ -78,13 +78,17 @@
     </section>
 
     <section>
-      <h2>Write back</h2>
+      <h2>Write back <span class="tag">tracked</span></h2>
       <div class="row">
-        <input id="saveName" value="baseline" title="File name suffix">
-        <button id="save" title="Write build/layout/interactive-<name>.json">💾 Save</button>
+        <input id="saveName" value="try1" title="File name — hardware/layout_poc/placements/<name>.json">
+        <button id="save" title="Write hardware/layout_poc/placements/<name>.json (tracked in git)">💾 Save</button>
       </div>
       <button id="apply" disabled title="Run apply.py + KiCad DRC on the saved file">⇢ Apply to board + DRC</button>
       <pre id="io" class="io">not saved yet</pre>
+      <p class="hint">Saves go to the repo
+      (<code>hardware/layout_poc/placements/</code>), so an experiment is undone
+      with <code>git checkout</code> and the saved file reappears in the seed
+      drop-down. Nothing generated (graph, boards, DRC) is tracked.</p>
     </section>
 
     <section id="inspect"><h2>Selected</h2><div id="inspBody" class="hint">nothing selected</div></section>

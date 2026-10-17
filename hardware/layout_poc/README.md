@@ -40,12 +40,21 @@ make baseline          # materialise the adopted placement
 `make place` starts a browser UI (`hardware/layout_poc/web/`) that loads this
 graph and runs **d3-force live** while you drag parts (a dragged part is pinned
 and the engine solves the rest around it), with every engine parameter editable.
-The tuning those sliders carry is itself a tracked artifact:
-[`params.json`](params.json) in this directory, written by the UI on change, so
-the knobs that matter are reviewable in `git log`. See
-[`web/README.md`](web/README.md),
-[ADR-0009](../../docs/decisions/0009-interactive-placement.md) and
-[ADR-0010](../../docs/decisions/0010-placement-params-source-of-truth.md).
+Both things the human decides here are tracked artifacts — the tuning in
+[`params.json`](params.json) and every placement you save in
+[`placements/`](placements/) — so an experiment is reviewable in `git log` and
+revertable with `git checkout`. See [`web/README.md`](web/README.md),
+[ADR-0009](../../docs/decisions/0009-interactive-placement.md),
+[ADR-0010](../../docs/decisions/0010-placement-params-source-of-truth.md),
+[ADR-0011](../../docs/decisions/0011-placements-are-tracked.md),
+[ADR-0012](../../docs/decisions/0012-belongs-to-force.md).
+
+The force model itself — and the metrics — live in one module,
+`web/public/model.js`, shared by the UI and by the headless A/B runner
+(`make ab`), which answers "is this force change actually better?" on *neutral*
+starts (a scatter, or an engine output) over several seeds, rather than on a
+placement a human already half-solved. Motivation and rules:
+[ADR-0013](../../docs/decisions/0013-one-model-and-neutral-ab.md).
 
 > The `d3-force` row in the table above predates a fix to the engine's link
 > model; see [`docs/history/`](../../docs/history/). Re-run `make layout` to
@@ -265,6 +274,7 @@ make mermaid       # the flowchart render
 | edge width | **IPC-2221**, 20 A → **18.7 mm** | the only physically meaningful "springiness" |
 | **GND** | **dropped** | a plane, not something placement should chase |
 | pins | **only `1J1` + `5J2`** | the two power terminals |
+| small parts | pinned to their IC by a **belongs-to ring** (interactive UI) | the netlist ties a cap to its IC only through `GND` (a plane, dropped) or a wide rail, so the clique pulls it toward the rail's centroid instead — see [`docs/history/0005`](../../docs/history/0005-the-netlist-cannot-hold-satellites.md) |
 | flow position | BFS hops from input / (hops from input + hops from output) | 0 at the input, 1 at the output — used to order *and* to seed the chain |
 
 `extract.py` is deliberately the single source of the graph so every engine is
