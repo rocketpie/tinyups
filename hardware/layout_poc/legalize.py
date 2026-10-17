@@ -43,8 +43,17 @@ SPRING = float(os.environ.get("SPRING", "0.02"))  # pull to the engine position
 
 
 def rot(p, a):
-    c, s = round(math.cos(math.radians(a))), round(math.sin(math.radians(a)))
-    return (p[0] * c - p[1] * s, p[0] * s + p[1] * c)
+    """Rotate a local offset by `a` degrees in KiCad's Y-DOWN board frame.
+
+    A PCB's y axis grows downward, so a rotation by a is
+    (x, y) -> (x cos a + y sin a, -x sin a + y cos a).  Using the textbook
+    Y-up form instead is its inverse: identical for a symmetric courtyard,
+    mirrored for an asymmetric one (e.g. TO-252-2, whose courtyard sits
+    0.84 mm off-centre) — which is how two courtyard overlaps slipped past the
+    legaliser while KiCad's DRC found them.
+    """
+    c, s = math.cos(math.radians(a)), math.sin(math.radians(a))
+    return (p[0] * c + p[1] * s, -p[0] * s + p[1] * c)
 
 
 def local_bbox(node, angle):

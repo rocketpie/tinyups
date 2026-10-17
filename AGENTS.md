@@ -9,6 +9,7 @@ Die oberste Anforderungsquelle ist [`docs/requirements.md`](docs/requirements.md
 Architektur: [`docs/architecture.md`](docs/architecture.md).
 Testplan: [`docs/test-plan.md`](docs/test-plan.md).
 
+
 ## Kommandos
 
 Immer über das `Makefile` (identisch zu CI). `make help` listet alles:
@@ -30,6 +31,7 @@ make test       # pytest (Toolchain-Smoke + später Bring-up/Abnahme)
 make check      # erc + drc + netlist + bom (CI-Einstiegspunkt)
 make clean
 ```
+
 
 KiBot (ERC/DRC-HTML-Reports, CI-Berichte) läuft zusätzlich per
 `kibot -b <pcb> -e <sch> -c <kibot.yaml>`.
@@ -63,3 +65,6 @@ Versionsstand: [`docs/toolchain.md`](docs/toolchain.md).
   greifen erst beim nächsten Rebuild. Zur Laufzeit installierte Tools sofort
   nutzen, aber im `Dockerfile` nachziehen.
 - Für GUI-KiCad optional das `desktop-lite`-Feature (noVNC) aktivieren.
+- work through the `Makefile`; every schematic/layout change ends
+  with `make check`; design decisions get an ADR in `docs/decisions/`;
+  output artifacts (`build/`, `reports/`, `gerbers/`) are not versioned.

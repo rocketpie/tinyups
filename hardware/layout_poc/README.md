@@ -1,5 +1,72 @@
 # Auto-placement PoC — deriving placement from a layout engine
 
+> **Status: concluded.** The graph-derived placer beats the hand floorplan and
+> is adopted as the **baseline layout** for the next phase.
+
+## Result
+
+**Adopted: graphviz `sfdp`** → `fitpos.py` (free-orientation search) →
+`legalize.py` (rotation, de-overlap, grid snap).
+
+| | hand floorplan | **sfdp (adopted)** |
+| --- | --- | --- |
+| HPWL (pre-route) | 8304 mm | **3295 mm (−60 %)** |
+| courtyard overlaps (KiCad DRC) | — | **0** |
+| board-edge violations (KiCad DRC) | — | **0** |
+| parts off-board | — | **0** |
+| power-path ordering (`axisR`) | n/a | +0.59 |
+
+```sh
+make layout            # 7 engines -> fit -> legalise -> renders + score table
+make baseline          # materialise the adopted placement
+                       #   -> build/layout/baseline.kicad_pcb   (124 parts)
+```
+
+* The baseline board is DRC-checked by KiCad itself: **0 courtyard overlaps,
+  0 board-edge issues.** The remaining DRC items are pre-existing and unrelated
+  to placement (289 unconnected — nothing is routed; `5U1`'s own pads at
+  0.15 mm; silkscreen cosmetics).
+* **Visual verdict** (maintainer, own eyes): sfdp has the cleanest main path —
+  no crossings, no zig-zag, visible branching. neato is second; the layered
+  engines (dagre/dot/ELK) and the d3-force variants are behind.
+* The reusable half is **`legalize.py`**, not the engine: engines give
+  *structure*, and a placement only becomes legal after rotation + de-overlap +
+  grid snap. That applies to any engine, including whatever comes next.
+* `make layout` still runs all 7 engines so the comparison stays honest; sfdp
+  merely wins it.
+
+### What we did *not* solve
+
+1. **Every number here is a pre-route proxy.** HPWL and `axisR` say nothing
+   about routability. The field's standard is routed wirelength, via count and
+   DRV count (FreeRouting + KiCad DRC) — we own both tools (`route.py`,
+   `routing_report.py`) and have not run them on the baseline. **This is the
+   main open question**, and NS-Place's published −10 % routed wirelength /
+   −18 % vias vs manual is the number to beat.
+2. **Rotation is decided after placement**, in the legaliser. The state of the
+   art (Cypress) optimises position and orientation jointly; NS-Place lists
+   orientation optimisation as future work. This is a known gap, not a solved
+   problem.
+3. **Signal parts are only loosely constrained** — a decoupling cap is pulled
+   toward its net's centre, not toward its IC.
+4. **Residual overlaps on tight engine layouts** (dagre 20, dot 16, elk 11):
+   local de-overlap has nowhere to push in a compressed layout.
+5. **Touching `gen_pcb.py`**: the PoC writes only into `build/layout/`. Wiring
+   the pipeline in needs an ADR.
+
+### A bug worth recording
+
+Validating the baseline against KiCad's DRC caught a genuine bug: the
+legaliser and renderer rotated parts in the **math (Y-up) convention**, while a
+KiCad board is **Y-down**. Identical for a symmetric courtyard, *mirrored* for
+an asymmetric one — `TO-252-2`'s courtyard sits 0.84 mm off-centre, which is why
+two courtyard overlaps (`4Q1↔4Q2`, `2Q3↔2Q4`) slipped past our own metric while
+KiCad found them. Fixed in `legalize.py` + `render.py`; the baseline went from 2
+overlaps + 1 edge violation to **0 + 0**. Lesson: our internal metrics are not a
+substitute for running the real DRC.
+
+---
+
 **Question:** instead of hand-tuning the power-first placement algorithm in
 `gen_pcb.py`, can we build a *graph* (components → nodes, nets → edges) and let
 an existing, battle-tested layout engine place the parts?
@@ -9,6 +76,138 @@ engines produce usable coordinates directly; layered engines (dagre, ELK, dot)
 produce excellent *ordering* but degenerate coordinates. Either way the result
 is not a legal PCB placement until a legalisation pass runs. That pass is the
 real work, and it is engine-independent — it is the piece worth keeping.
+
+---
+
+## Field overview — prior art
+
+This is a **known, active problem, and nobody has closed it.** The best paper at
+ISPD 2025 spends a slide on what the state of the art *cannot* do; NS-Place's own
+conclusion lists two unsolved items; realistic open benchmarks only appeared
+recently. The field's one settled convention is the **yardstick**: route the
+board (FreeRouting) and report **routed wirelength, via count and DRV count** in
+KiCad — which is exactly the validation we still owe ourselves.
+
+#### NS-Place (UC San Diego, arXiv 2210.14259) — the closest work to ours
+
+Read in full. Its flow is strikingly similar to this PoC:
+
+* collapse the netlist hypergraph with the **clique model** (what we do);
+* initialise with **Laplacian eigenvectors** — their answer to the
+  initialisation instability measured in `experiments/sfdp_seeds.py`;
+* gradient descent on weighted-average wirelength + density + a **net-separation
+  (max-margin / SVM) term**;
+* **MILP legalisation** with relative-position constraints;
+* validate with **FreeRouting + KiCad DRC** — the same two tools we have.
+
+14 real PCBs, 8-1570 components, 1-4 layers. Results vs manual placement:
+~80 % fewer DRVs/unrouted nets, **-10 % routed wirelength**, **-18 % vias**.
+
+What it does *not* achieve, in its authors' own words and tables:
+
+* the **MILP legaliser fails outright** - "-", no feasible solution in 4 h - on
+  **7 of 14 designs**;
+* it **loses to manual on high-utilisation boards** (PCB2, only ~20 % whitespace);
+* **rotation is future work**: "we plan to investigate methods to optimize
+  component orientation during the net separation minimization" - orientation is
+  only *enumerated* at initialisation;
+* *"optimal solutions are not guaranteed and initialization remains an open
+  problem"*;
+* 3-6 k s runtime on a 3.4 GHz i7; and it notes that vanilla **RePlAce "fails to
+  find good solutions for multi-layer designs with diversely sized components"**.
+
+#### Cypress (Cornell + NVIDIA, ISPD 2025 **Best Paper**)
+
+`csl.cornell.edu/~zhiruz/pdfs/cypress-ispd2025.pdf` — VLSI-style and
+GPU-accelerated. Bi-level optimisation of **position and orientation** plus
+legalisation, with PCB-specific cost functions. Target scale is **>10 000
+components** (modern HPC/AI boards). Reported: 1-5.9x routability, up to
+**1-19.7x shorter routed track lengths**, up to 492x faster than SA-PCB and 4.3x
+faster than NS-Place; minutes rather than hours. They also had to **publish an
+open-source benchmark suite** because none existed.
+
+Their state-of-the-art comparison slide is the clearest statement of what is
+still unsolved: existing tools "do not model routing conflicts", "lack support
+for orientation/rotation", are "slow (1-2 hours)" and "small (<500 components)"
+- and, tellingly, *"even with stronger legalization, NS-Place+ still fails in
+most cases"*.
+
+*Source note: the PDF is not fetchable from here (content type), so the above
+comes from the ISPD 2025 slides and the ISPD programme abstract. Worth a proper
+read of the paper before leaning on the specifics.*
+
+#### SA-PCB (OpenROAD, BSD-3)
+
+`github.com/The-OpenROAD-Project/SA-PCB` — C++ simulated annealer for polygonal
+components; 90/45 rotation supported (free rotation "in progress"), HPWL cost,
+R-tree overlap queries, multi-start. Its own README is candid: *"Algorithm very
+sensitive to parameters"* and *"Broken support for weighted modules/nets"*. The
+obvious strength for PCB work is that annealing handles **rotation and irregular
+shapes natively** - i.e. the very thing we currently do as a separate
+legalisation step.
+
+#### Two papers that do what we do
+
+* **Modern Automatic PCB Placement With Complex Constraints** (IEEE 2025) - an
+  SA-based pad-alignment step, then **"a force-directed global placement guided
+  by anchor points extracted from power circuit flows"**, then window-based
+  legalisation. That is our approach *and* the "stronger pull on the power
+  terminals" idea, published.
+* **CadMust-Neo** - a **KiCad Action Plugin** doing simulated-annealing placement
+  that respects board boundaries, courtyard overlaps and keep-out zones, with a
+  wirelength cost. Worth reading (and possibly borrowing from) before writing
+  more of our own.
+
+#### The recipe the field converges on
+
+1. **Analytical global placement** - quadratic / weighted-average wirelength plus
+   a density or repulsion term (mPL, ePlace, RePlAce, DREAMPlace).
+2. **A routability term** - NS-Place separates nets by maximising the margin
+   between net convex hulls (an SVM-like regulariser). Cheap to borrow.
+3. **Legalisation is a distinct, hard step** - MILP (NS-Place) *fails on half the
+   benchmarks*; they fell back to relative-position constraints; others use
+   window-based legalisation or annealing.
+4. **Rotation as a first-class variable** - Cypress does, NS-Place does not (its
+   stated gap).
+5. **Validation by routing**, never by HPWL alone.
+
+#### Other leads
+
+* **HiePlace** (CUHK, TCAD 2026) - hierarchical PCB placement: irregular
+  components, alignment, component priority.
+* *An analytical approach and fine-tuning strategy for PCB placement*
+  (ScienceDirect 2025) - reports +20 % routing completion and -68 % placement
+  runtime vs simulated annealing.
+* **Stress majorization** - the principled form of what we do by hand
+  (Wikipedia *Force-directed graph drawing*; Brown's *Force-Directed Drawing
+  Algorithms* handbook chapter; Dwyer/Koren/Marriott, *Constrained graph layout
+  by stress majorization and gradient projection*). Also **Davidson & Harel
+  1996**, simulated annealing for graph drawing, and **Cheong et al.**,
+  *Force-directed algorithms for schematic drawings and placement: A survey*
+  (2020) - directly on point.
+* **DREAMPlace / ePlace / RePlAce / mPL** - the analytical placement lineage.
+* **Local win worth using:** `elkjs` ships **8 algorithms** (verified by probing
+  the installed build): `layered` (the one we used) plus **`force`, `stress`,
+  `mrtree`, `rectpacking`, `disco`, `box`** and `random` (`spore` throws). Each
+  is a one-line `elk.algorithm` swap.
+* Also: **OGDF** (SpringEmbedderKK, StressMinimization, orthogonal layouts),
+  **Adaptagrams / libcola** (constraint-based layout with *separation
+  constraints* - non-overlap by construction), **graph-tool** (SFDP/ARF/module
+  layouts), **igraph** (FR, Kamada-Kawai, Davidson-Harel, DrL, GEM).
+
+#### Where we sit
+
+| | rotation | legalisation | validated on | scale |
+| --- | --- | --- | --- | --- |
+| **this PoC** | after placement | greedy de-overlap -> **0 overlaps** | KiCad DRC only | 124 parts |
+| NS-Place | *future work* | MILP -> **fails 7/14** | FreeRouting + KiCad | 8-1570 |
+| Cypress | joint | legalisation step | routed | >10 000 |
+| SA-PCB | 90/45 | by construction | - | small |
+
+We are **competitive on pre-route HPWL** (-60 % vs our hand floorplan, with a
+genuinely legal placement) and **unproven on routed results**. The cheapest
+credible step up is the one the whole field agrees on: route the baseline and
+report routed wirelength, vias and DRVs.
 
 ## Ground rules (v2)
 
@@ -64,19 +263,18 @@ compared on identical input.
 
 ```
 stage  engine                    HPWL    wHPWL    wire  ovl  out   path  axisR    in   out
-legal  graphviz:sfdp+legal       3288    11435    3703    0    0    700   0.59    62    16   <<
-legal  graphviz:neato+legal      3861    12855    4006    0    0    768   0.53    73    27
+legal  graphviz:sfdp+legal       3295    11715    3742    0    0    738   0.59    62    16   <<
+legal  graphviz:neato+legal      3865    12856    4007    0    0    768   0.53    73    27
 legal  d3-force+legal            5840    16839    6100    0    0    999   0.76    44    18
 legal  d3-force-incr+legal       5672    17573    6162    1    0    885   0.66    17    16
-legal  elk+legal                 4398    15234    5520    9    0    557   0.74    23    45
-legal  dagre+legal               5115    15672    6031   20    0    750   0.59    58    78
-legal  graphviz:dot+legal        4983    12425    5699   16    0    539   0.67    58     9
-legal  graphviz:dot+legal        4596    16284    4957   12    0    732   0.45    11    67
+legal  elk+legal                 4567    15366    5588   11    0    591   0.69    12    45
+legal  dagre+legal               5131    15683    6076   20    0    766   0.36    71    78
+legal  graphviz:dot+legal        5033    12471    5710   16    0    536   0.67    58     9
 --------------------------------------------------------------------------------------------
 hand floorplan (RESUME.md): HPWL 8304 · weighted 15476
 ```
 
-* **`sfdp` still leads on wirelength** (HPWL 3288, -60 % vs the hand floorplan)
+* **`sfdp` still leads on wirelength** (HPWL 3295, -60 % vs the hand floorplan)
   and legalises to zero overlaps.
 * **`d3-force` has the most coherent flow** (`axisR 0.76`), and
   **`d3-force-incr` wins the chain *endpoints*** (17/16 mm vs sfdp's 62/16).

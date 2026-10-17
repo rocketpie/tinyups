@@ -26,7 +26,7 @@ export KICAD9_3DMODEL_DIR   ?= /usr/share/kicad/3dmodels
 RENDER_ROTATE ?= -15,0,-5
 RENDER_ZOOM   ?= 0.95
 
-.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power layout mermaid check clean
+.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power layout mermaid baseline check clean
 
 all: help
 
@@ -133,6 +133,19 @@ mermaid: | $(OUT) ## Render the placement graph as a mermaid flowchart (SVG)
 	@test -d $(LAYOUT_DIR)/node_modules || (cd $(LAYOUT_DIR) && npm install --no-audit --no-fund)
 	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(LAYOUT_DIR)/extract.py
 	cd $(LAYOUT_DIR) && ./render_mermaid.sh
+
+# --- baseline layout --------------------------------------------------------
+# The PoC's conclusion: the graph-derived placement is the new baseline.  This
+# materialises the adopted engine's legalised placement as a full KiCad board,
+# which is the starting point for the interactive-placement phase.
+#   make baseline                      # adopted default (graphviz sfdp)
+#   make baseline BASELINE_ENGINE=d3force
+BASELINE_ENGINE ?= gv-sfdp
+baseline: | $(OUT) ## Materialise the adopted (sfdp) placement as the baseline board
+	@test -f $(OUT)/layout/leg-$(BASELINE_ENGINE).json || \
+		{ echo "error: run 'make layout' first"; exit 1; }
+	$(PYTHON) $(LAYOUT_DIR)/apply.py $(OUT)/layout/leg-$(BASELINE_ENGINE).json \
+		$(OUT)/layout/baseline.kicad_pcb
 
 # --- simulation ------------------------------------------------------------
 sim: ## Run all ngspice simulations in sim/

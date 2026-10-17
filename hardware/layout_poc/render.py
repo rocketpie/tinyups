@@ -30,8 +30,9 @@ GRAPH = os.path.join(ROOT, "build", "layout", "graph.json")
 
 
 def rot(p, a):
+    """Rotate a local offset by `a` degrees — KiCad's Y-DOWN board frame."""
     c, s = math.cos(math.radians(a)), math.sin(math.radians(a))
-    return (p[0] * c - p[1] * s, p[0] * s + p[1] * c)
+    return (p[0] * c + p[1] * s, -p[0] * s + p[1] * c)
 
 
 def corners(node, x, y, angle):
