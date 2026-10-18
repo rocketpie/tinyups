@@ -87,6 +87,30 @@ def width_for(current: float, inner: bool = False) -> float:
 
 
 CS = pcbnew.CORNER_STRATEGY_ROUND_ALL_CORNERS
+GRAPH = os.path.join(os.path.dirname(HERE), "build", "layout", "graph.json")
+SERIES_A = 1.0     # a graph edge carries power if its current is >= this
+
+
+def series_parts() -> dict:
+    """net -> {parts} that carry the current on it, from the graph's edge weights.
+
+    The width requirement belongs to the **series** path.  A clamp diode or a
+    divider tap sits on a 20 A net but carries milliamps — `extract.py`'s
+    `conducted()` says so (`STUB_A = 0.1 A`), and the graph records it in the
+    edge weights: for `+12V_IN`/`N_AF` only `1F1->1J1`, `1F1->1R1`, `1Q1->1R1`
+    are thick; `1R7` and `1D1` sit on thin edges.  Sizing a pour (or asking a
+    placement for room) across a tap measures the wrong thing.
+    """
+    import json
+    try:
+        g = json.load(open(GRAPH))
+    except OSError:
+        return {}
+    out: dict[str, set] = {}
+    for e in g["edges"]:
+        if e.get("current", 0) >= SERIES_A:
+            out.setdefault(e["net"], set()).update((e["source"], e["target"]))
+    return out
 
 
 def pour_width(poly: "pcbnew.SHAPE_POLY_SET", pads: list) -> float:
@@ -150,13 +174,20 @@ def main() -> int:
 
     outer = {b.GetLayerName(pcbnew.F_Cu), b.GetLayerName(pcbnew.B_Cu)}
 
-    # pads per net (a pour's connection points), and every zone
+    # pads per net, with the owning ref (a pour's connection points), every zone
+    series = series_parts()
     pads: dict[str, list] = {}
+    pad_widths: dict[str, list] = {}
     for fp in b.GetFootprints():
         for pad in fp.Pads():
             nm = pad.GetNetname().lstrip("/")
             if nm:
-                pads.setdefault(nm, []).append(pad.GetPosition())
+                pads.setdefault(nm, []).append((fp.GetReference(),
+                                                pad.GetPosition()))
+                if fp.GetReference() in series.get(nm, ()):
+                    sz = pad.GetSize()
+                    pad_widths.setdefault(nm, []).append(
+                        min(pcbnew.ToMM(sz.x), pcbnew.ToMM(sz.y)))
     pours: dict[str, list] = {}
     for z in b.Zones():
         net = z.GetNetname().lstrip("/")
@@ -183,7 +214,18 @@ def main() -> int:
                 print(f"  {net:10} {need:>7.1f} {'pour':>5} {'-':>9} {layer:>7} "
                       f"{'-':>7}  ZONE NOT FILLED (run hardware/fill_zones.py)")
                 continue
-            w = pour_width(fp, pads.get(net, []))
+            # only the parts that carry the net's current owe it the width;
+            # a tap (clamp, sense pin, cap) just has to be reachable, which the
+            # filler/necks do.  Fall back to every pad if the graph is absent.
+            own = pads.get(net, [])
+            core = [pt for ref, pt in own if ref in series.get(net, ())] or \
+                [pt for _, pt in own]
+            # the copper is only as good as the *pad* it flows through: a
+            # TO-252 lead or a 1206 fuse pad is ~1.2 mm, i.e. ~4.5 A at 2 oz,
+            # however wide the pour around it is
+            w_pour = pour_width(fp, core)
+            w_pad = min([w for w in pad_widths.get(net, [])] or [w_pour])
+            w = min(w_pour, w_pad)
             cands.append((ampacity(w, layer not in outer),
                           "pour" if solid else "therm", w, layer))
         if not cands:

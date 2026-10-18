@@ -1,5 +1,6 @@
 # docs 
 - clean up progress.md from comments. data only
+- AGENTS: currently, the sessios are noisy and write too much history / ADRs
 
 # Placement, Routes and Power
 - placement affects routing, routing comes after placement and takes time. 

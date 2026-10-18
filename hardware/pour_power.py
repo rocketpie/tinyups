@@ -26,15 +26,25 @@ import pcbnew
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from power_report import DESIGN_CURRENT, width_for  # noqa: E402
+from power_report import DESIGN_CURRENT, series_parts, width_for  # noqa: E402
 
 DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
 MARGIN = 0.6          # mm each side beyond the half width, for the filler to carve
 
 
 def add_power_pours(board) -> None:
-    """One F.Cu pour per high-current net, swept along its pads."""
+    """One F.Cu pour per high-current net, swept along its **series** pads.
+
+    Only the parts that carry the net's current are waypoints: a clamp diode or
+    a divider tap sits on a 20 A net but carries milliamps (`extract.py`'s
+    `conducted()`), so sweeping the corridor through it — as the first version
+    did — both demands room that is not needed and makes the corridor wander
+    into a neighbour's region, where the filler severs it.  With the series pads
+    the pours become local shapes between adjacent power parts, which is how
+    high-current copper is actually drawn.
+    """
     nets = [n for n in DESIGN_CURRENT if n != "GND"]     # GND has the In1 plane
+    series = series_parts()
     anchor = None
     for fp in board.GetFootprints():
         if fp.GetReference() == "1J1":                   # input = start
@@ -42,14 +52,22 @@ def add_power_pours(board) -> None:
             anchor = (pcbnew.ToMM(p.x), pcbnew.ToMM(p.y))
 
     for net in nets:
-        pts = []
+        own, core = [], []
         for fp in board.GetFootprints():
             for pad in fp.Pads():
-                if pad.GetNetname().lstrip("/") == net:
-                    p = pad.GetPosition()
-                    pts.append((pcbnew.ToMM(p.x), pcbnew.ToMM(p.y)))
+                if pad.GetNetname().lstrip("/") != net:
+                    continue
+                p = pad.GetPosition()
+                xy = (pcbnew.ToMM(p.x), pcbnew.ToMM(p.y))
+                own.append(xy)
+                if fp.GetReference() in series.get(net, ()):
+                    core.append(xy)
+        pts = core if len(core) >= 2 else own
         if len(pts) < 2:
             continue
+        if len(core) >= 2 and len(core) != len(own):
+            print(f"  {net}: {len(core)} series pad(s) of {len(own)} "
+                  f"({'taps excluded' if len(core) < len(own) else 'all series'})")
         start = min(range(len(pts)),
                     key=lambda i: math.dist(pts[i], anchor) if anchor else 0)
         order, left = [start], set(range(len(pts))) - {start}

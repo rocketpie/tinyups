@@ -29,6 +29,18 @@ from scipy import ndimage
 GRID = 0.25          # mm per cell
 CLEAR = 0.2          # mm, the board's netclass clearance
 EDGE = 0.5           # mm copper-to-edge
+# NOTE: this measures the channel between *all* pads of a net, which is
+# conservative — it is stricter than the physics.  A clamp diode or a divider tap
+# sits on a 20 A net but carries milliamps (extract.py's `conducted()`: IC /
+# diode / bias pins are STUB_A = 0.1 A), and the graph says so in its edge
+# weights: for `+12V_IN`/`N_AF` only `1F1->1J1`, `1F1->1R1`, `1Q1->1R1` are
+# thick (20 A); `1R7` and `1D1` are on thin edges.  So the width requirement
+# belongs to the **series** path only, and a tap merely has to be reachable.
+# Refining that needs per-*edge* channels (source pads <-> target pads for every
+# graph edge with current >= SERIES_A), not a per-net pad set: selecting a pad
+# subset per net is the wrong shape for it.  Until then, over-requiring is the
+# safe direction — it can only ask for more room than the copper needs.
+SERIES_A = 1.0       # an edge carries power if its current is >= this
 
 
 def widths(board) -> dict:
@@ -44,21 +56,22 @@ def widths(board) -> dict:
     for fp in board.GetFootprints():
         for p in fp.Pads():
             r = p.GetBoundingBox()
-            pads.append((p.GetNetname().lstrip("/"), pcbnew.ToMM(r.GetX()),
-                         pcbnew.ToMM(r.GetY()),
+            pads.append((fp.GetReference(), p.GetNetname().lstrip("/"),
+                         pcbnew.ToMM(r.GetX()), pcbnew.ToMM(r.GetY()),
                          pcbnew.ToMM(r.GetX() + r.GetWidth()),
                          pcbnew.ToMM(r.GetY() + r.GetHeight())))
 
     out = {}
     for net, need in DESIGN_CURRENT.items():
-        own = [p for p in pads if p[0] == net]
+        own = [p for p in pads if p[1] == net]
         if not own:
             continue
+        core = own            # conservative: every pad owes the width (see NOTE)
         free = np.ones((ny, nx), bool)
         edge = max(1, int(EDGE / GRID))
         free[:edge, :] = free[-edge:, :] = False
         free[:, :edge] = free[:, -edge:] = False
-        for n, ax0, ay0, ax1, ay1 in pads:
+        for _, n, ax0, ay0, ax1, ay1 in pads:
             if n == net:
                 continue
             i0 = max(0, int((ax0 - CLEAR - x0) / GRID))
@@ -69,7 +82,7 @@ def widths(board) -> dict:
         dist = ndimage.distance_transform_edt(free) * GRID
         cells = [(int(((px0 + px1) / 2 - x0) / GRID),
                   int(((py0 + py1) / 2 - y0) / GRID))
-                 for _, px0, py0, px1, py1 in own]
+                 for _, _, px0, py0, px1, py1 in core]
 
         def fits(w):
             lab, _ = ndimage.label(dist >= w / 2)
