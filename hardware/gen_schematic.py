@@ -66,7 +66,7 @@ def _pin_local(sym: Symbol, number: str) -> tuple[float, float]:
 
 # footprint per part (verified to exist in the KiCad libraries)
 _FP = {
-    "Fuse": "Fuse:Fuse_1206_3216Metric",
+    "Fuse": "Fuse:Fuse_Blade_ATO_directSolder",
     "L": "Inductor_SMD:L_12x12mm_H8mm",
     "D_TVS": "Diode_SMD:D_SMB",
     "Q_NMOS_GSD": "Package_TO_SOT_SMD:TO-252-2",
@@ -88,7 +88,7 @@ _FP = {
 def default_fp(sym: Symbol, value: str | None) -> str:
     e = sym.entryName
     if e == "R":
-        return ("Resistor_SMD:R_2512_6332Metric"
+        return ("Resistor_SMD:R_Shunt_Vishay_WSR2_WSR3"
                 if value and value.endswith("m") else
                 "Resistor_SMD:R_0805_2012Metric")
     if e == "C":

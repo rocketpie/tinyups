@@ -23,10 +23,10 @@
 
 | Ref | Value / part | Spec | Notes |
 | --- | --- | --- | --- |
-| F1 | Fuse 25 A | slow-blow, ≥ 32 V | backup to the eFuse; **(verify)** value |
+| F1 | Fuse 25 A | **ATO/ATC blade, 25 A, 32 V**, soldered | backup to the eFuse. `Fuse:Fuse_Blade_ATO_directSolder` — the blade family is 1–40 A; a 1206 (1.25 mm terminals) or a Nano2 (1–5 A or 20 A) cannot do 25 A in this path. Soldered = not field-replaceable (acceptable: the LM5069 eFuse is the working protection). **(verify)** order PN (Littelfuse 257 / Bussmann ATC class) |
 | D1 | TVS SMBJ15A | standoff 15 V, clamp ~24 V | input transient clamp **(verify)** |
 | Q1 | N-FET, 40 V | RDS(on) ≤ 3 mΩ, ≥ 30 A | hot-swap pass FET (e.g. onsemi NVMFS5C410N) **(verify)** |
-| R_sns1 | **2.2 mΩ** | 1 %, low TCR, ≥ 2 W | LM5069 current limit = 55 mV / R_S ≈ **25 A** (datasheet) |
+| R_sns1 | **2.2 mΩ** | 1 %, ≥ 2 W | LM5069 current limit = 55 mV / R_S ≈ **25 A** (datasheet). **Vishay `WSR22L200FEA`** (WSR2, 2 W, 4527, ±1 %, 0.88 W here) — [datasheet](https://www.vishay.com/docs/30101/wsr.pdf); its recommended land (a = 3.94, b = 5.84 mm) is `R_Shunt_Vishay_WSR2_WSR3` |
 | C_in1 | 2 × 10 µF / 25 V | X7R ceramic | HF decoupling |
 | C_in2 | 100 µF / 25 V | low-ESR | input bulk |
 
@@ -45,7 +45,7 @@
 | Q3–Q6 | 4 × N-FET, 40 V | RDS(on) ≤ 2 mΩ, Qg moderate | e.g. onsemi NTMFS5C430N **(verify)** |
 | L1 | **1.0 µH** | Isat ≥ 22 A, DCR ≤ 3 mΩ | LM5176 Eq. 13/14 → 0.87 µH (buck) / 0.55 µH (boost) at 300 kHz |
 | C_out | 2 × 220 µF / 25 V + 10 µF | low-ESR polymer + ceramic | ripple ≤ 100 mVpp |
-| R_sns2 | 1 mΩ | 1 %, ≥ 2 W | in series with the low-side FETs (valley current sense); ~20 A limit |
+| R_sns2 | 1 mΩ | 1 %, ≥ 2 W | in series with the low-side FETs (valley current sense); ~20 A limit. Vishay `WSR21L000FEA` (2 W, 0.29 W here) |
 | R_freq | **≈ 27 kΩ** (300 kHz) | 1 % | LM5176 Eq. 5; fsw range 100–600 kHz |
 | R_fb1/R_fb2 | set Vout = 12.0 V | 1 % | feedback divider |
 
@@ -55,8 +55,8 @@
 | --- | --- | --- | --- |
 | Q7–Q10 | 4 × N-FET, 30 V | RDS(on) ≤ 4 mΩ, ≥ 15 A | buck-boost stage **(verify)** |
 | L2 | 2.2 µH | Isat ≥ 15 A | **confirmed** by datasheet (RAC 5 mΩ, RSR 5 mΩ, 2.2 µH, 800 kHz) |
-| R_sns_in (RAC) | **5 mΩ** | 1 %, ≥ 1 W | input current limit (≤ 10 A) — datasheet example |
-| R_sns_bat (RSR) | **5 mΩ** | 1 %, ≥ 1 W | charge current up to 16.2 A (used ≤ ~8 A) — datasheet example |
+| R_sns_in (RAC) | **5 mΩ** | 1 %, ≥ 1 W | input current limit (≤ 10 A) — datasheet example. Vishay `WSR25L000FEA` |
+| R_sns_bat (RSR) | **5 mΩ** | 1 %, ≥ 1 W | charge current up to 16.2 A (used ≤ ~8 A) — datasheet example. Vishay `WSR25L000FEA` |
 | NTC1 | 10 kΩ B = 3435 | | battery JEITA sensing |
 | C caps | per datasheet | | input/output/battery decoupling |
 
@@ -114,6 +114,12 @@
   - LM5176 fsw set by R_T (Eq. 5, 100–600 kHz) and inductor by Eq. 13/14.
   - BQ25720 example: **RAC = RSR = 5 mΩ, L = 2.2 µH at 800 kHz**.
   - BQ76942 passive balancing via the external cell resistance (target ~30 mA).
+- **Terminals, not silicon, limit the power path** (docs/history/0007): a
+  TO-252 source lead, a 1206 fuse and a 2512 shunt are ~4.5 A parts at 2 oz.
+  The fuse and the five milliohm shunts (`R_sns1`, `2R1`, `2R2`, `4R1`, `5R3`)
+  now use wide-terminal land patterns (`WSR2` 4527, pinned as
+  `WSR22L200FEA` / `WSR25L000FEA` / `WSR21L000FEA`); the **FET packages are
+  still open**.
 - Remaining **(verify)**: exact orderable PNs for the FETs, inductors, sense
   resistors, TVS, NTCs and connectors.
 - Component temperature limits and the fan's "within 5 °C" reference (FR-16).
