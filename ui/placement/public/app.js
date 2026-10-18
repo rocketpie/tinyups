@@ -99,6 +99,7 @@ const S = {
   graph: null, board: { w: 150, h: 140 },
   nodes: [], edges: [], byId: new Map(),
   feedback: null, showIssues: true, showClearance: true, paramsCollapsed: false,
+  padNets: true, padEdges: [], padLayer: null,
   issueFilter: { unrouted: true, clearance: true, channel: true },
   params: {}, paramOrder: [], paramSource: "defaults", model: null,
   repo: { file: "ui/placement/params.json", exists: false, values: 0 },
@@ -167,6 +168,7 @@ function restoreUI(defSeed) {
   S.onlyDraw = ui.onlyDraw !== false; $("#onlyDraw").checked = S.onlyDraw;
   S.showLabels = ui.showLabels !== false; $("#showLabels").checked = S.showLabels;
   S.showClearance = ui.showClearance !== false; $("#showClearance").checked = S.showClearance;
+  S.padNets = ui.padNets !== false; $("#padNets").checked = S.padNets;
   S.showIssues = ui.showIssues !== false; $("#showIssues").checked = S.showIssues;
   S.paramsCollapsed = ui.paramsCollapsed === true;
   applyParamsCollapse();
@@ -183,7 +185,7 @@ function saveUI() {
   storeJSON(LS.ui, {
     seed: S.seedName, onlyDraw: S.onlyDraw, showLabels: S.showLabels,
     showClearance: S.showClearance, showIssues: S.showIssues,
-    paramsCollapsed: S.paramsCollapsed, issueFilter: S.issueFilter,
+    paramsCollapsed: S.paramsCollapsed, issueFilter: S.issueFilter, padNets: S.padNets,
     scatterFixed: S.scatterFixed, saveName: $("#saveName").value,
   });
 }
@@ -218,6 +220,7 @@ async function loadSeed(name, force = false) {
   boardRect.setAttribute("width", S.board.w); boardRect.setAttribute("height", S.board.h);
   gridRect.setAttribute("width", S.board.w); gridRect.setAttribute("height", S.board.h);
   buildScene();
+  buildPadNets();
   buildIssues();
   buildSim();
   applyHighlight();
@@ -324,6 +327,49 @@ function buildScene() {
   styleNodes();
 }
 
+// Pad-level ratsnest: the router's view of a net (pad → pad), amp-coloured and
+// sized by the required 2 oz width.  The force model keeps using the part-level
+// springs; this only changes what the board draws.
+const REQ_REF = 9.36;                 // 20 A on 2 oz outer (IPC-2221)
+function buildPadNets() {
+  let layer = document.getElementById("padnets");
+  if (!layer) {
+    layer = document.createElementNS(NS, "g");
+    layer.id = "padnets";
+    viewport.insertBefore(layer, layerNodes);
+  }
+  S.padLayer = layer;
+  layer.replaceChildren();
+  S.padEdges = M.padEdges(S.nodes, S.graph);
+  for (const e of S.padEdges) {
+    const el = document.createElementNS(NS, "line");
+    el.setAttribute("class", "padnet");
+    el.setAttribute("stroke", color(e.current));
+    const sw = 0.12 + 0.95 * Math.pow(Math.min(1, e.required / REQ_REF), 0.6);
+    el.setAttribute("stroke-width", sw.toFixed(3));
+    el._op = 0.28 + 0.72 * Math.sqrt(Math.min(1, e.required / REQ_REF));
+    el.setAttribute("stroke-opacity", el._op);
+    e._el = el;
+    layer.appendChild(el);
+  }
+  applyNetDisplay();
+  drawPadNets();
+}
+function drawPadNets() {
+  if (!S.padLayer) return;
+  for (const e of S.padEdges) {
+    if (!e._el) continue;
+    const a = padXY(e.a.n, e.a.p), b = padXY(e.b.n, e.b.p);
+    e._el.setAttribute("x1", a[0].toFixed(2)); e._el.setAttribute("y1", a[1].toFixed(2));
+    e._el.setAttribute("x2", b[0].toFixed(2)); e._el.setAttribute("y2", b[1].toFixed(2));
+  }
+}
+function applyNetDisplay() {
+  if (S.padLayer) S.padLayer.style.display = S.padNets ? "" : "none";
+  layerEdges.style.display = S.padNets ? "none" : "";
+  applyHighlight();
+}
+
 function draw() {
   for (const e of S.edges) {
     const el = e._el; if (!el) continue;
@@ -337,6 +383,7 @@ function draw() {
   }
   drawPads();
   drawIssues();
+  drawPadNets();
 }
 
 function color(c) {
@@ -382,6 +429,12 @@ function applyHighlight() {
       : (h ? el._op * 0.12 : el._op));
     el.setAttribute("stroke-width",
       (0.12 + 0.95 * Math.pow(e.width / 18.71, 0.6)) * (touches ? 1.6 : 1));
+  }
+  for (const e of S.padEdges) {
+    const el = e._el; if (!el) continue;
+    const touches = h && (e.a.n.id === h || e.b.n.id === h);
+    el.setAttribute("stroke-opacity", touches ? Math.min(1, el._op + 0.5)
+      : (h ? el._op * 0.12 : el._op));
   }
   for (const n of S.nodes) {
     n._el.style.opacity = h && n.id !== h && !touchesNode(h, n.id) ? 0.45 : 1;
@@ -837,6 +890,11 @@ function bindEvents() {
   $("#showClearance").addEventListener("change", (e) => {
     S.showClearance = e.target.checked;
     for (const n of S.nodes) if (n._el) n._el.classList.toggle("tight", S.showClearance && n.clear != null);
+    saveUI();
+  });
+  $("#padNets").addEventListener("change", (e) => {
+    S.padNets = e.target.checked;
+    applyNetDisplay();
     saveUI();
   });
   $("#showIssues").addEventListener("change", (e) => {

@@ -28,6 +28,7 @@ with `make place-seed` — so the simulation begins from exactly what
 | **Right-click a part** | pin ↔ unpin |
 | **Pin selected / Unpin selected** | fix or release the selected part **in place** — a click-and-button, no drag, so the position does not change |
 | **Engine heading ▾** | collapse / expand the whole Engine body (view toggles, parameter list, notes); the state is remembered |
+| **pad-level nets** | draw the real ratsnest — an MST over the **pads** of every net, coloured by current and sized by the required 2 oz width — instead of the force model's part-centre links. Off = the abstract part links |
 | **Route legend rows** | click a row to show / hide that marker class on the board |
 | **Click a part** | inspect it (value, footprint, nets + currents, pads, and **which IC it belongs to**). The selection is an outline and a dashed line to its host; hover is what dims the rest, so a click never leaves the board faded |
 | **Click empty space / Esc** | clear the selection |
@@ -41,6 +42,14 @@ with `make place-seed` — so the simulation begins from exactly what
 | **Apply to board + DRC** | `apply.py` → `kicad-cli pcb drc` on the saved file, then `route_feedback.py` → `build/layout/route-feedback.json`, into `build/layout/` (untracked); the tracked `hardware/tinyups.kicad_pcb` is never modified. The Routing panel refreshes from that file |
 
 The two power terminals (`1J1`, `5J2`) are always pinned (`anchor` in the graph).
+The board can draw two net views. **Part links** (the default in older sessions)
+is the force model's abstract MST: a line between part centres, sized by the
+1 oz model width. **Pad-level nets** is the router's view: an MST over the
+**pads** of each net, so the line ends where copper ends, coloured by the net
+current and sized by the required **2 oz** width. It is display-only — the
+solver keeps the part-level springs — and it reproduces the DRC's unrouted
+pairs pad-for-pad.
+
 Live metrics reproduce `render.py`'s set: HPWL, weighted HPWL, drawn wirelength,
 courtyard **overlaps**, off-board count, power-path length, straightness, flow
 `axisR`, and the input/output distances. Two placement-side route proxies sit

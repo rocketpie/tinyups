@@ -113,6 +113,57 @@ export const aabb = (n) => ({
   x1: n.x + n.cx + n.hx, y1: n.y + n.cy + n.hy,
 });
 
+// --- pad-level ratsnest (display) -------------------------------------------
+// The force model connects *parts*; the router connects *pads*.  This builds an
+// MST over the pads of every kept net, so the picture can show the real
+// ratsnest (pad → pad, amp-coloured / sized) instead of a line between part
+// centres.  Topology is fixed at load; the caller re-reads padXY every tick.
+export function padEdges(nodes, graph) {
+  const byNet = new Map();
+  for (const n of nodes) {
+    (n.pads || []).forEach((p, i) => {
+      if (!p.net) return;
+      if (!byNet.has(p.net)) byNet.set(p.net, []);
+      byNet.get(p.net).push({ n, p, i });
+    });
+  }
+  const dropped = new Set(graph.dropped || []);
+  const out = [];
+  for (const [net, pads] of byNet) {
+    if (dropped.has(net) || pads.length < 2) continue;
+    const info = graph.nets[net] || {};
+    const xy = pads.map((u) => padXY(u.n, u.p));
+    const inTree = new Array(pads.length).fill(false);
+    const best = new Array(pads.length).fill(Infinity);
+    const from = new Array(pads.length).fill(-1);
+    inTree[0] = true;
+    for (let i = 1; i < pads.length; i++) {
+      best[i] = Math.hypot(xy[i][0] - xy[0][0], xy[i][1] - xy[0][1]);
+      from[i] = 0;
+    }
+    for (let k = 1; k < pads.length; k++) {
+      let j = -1, bd = Infinity;
+      for (let i = 0; i < pads.length; i++) {
+        if (!inTree[i] && best[i] < bd) { bd = best[i]; j = i; }
+      }
+      if (j < 0) break;
+      inTree[j] = true;
+      out.push({
+        a: pads[from[j]], b: pads[j], net,
+        current: info.current || 0,
+        width: info.width || 0.25,
+        required: info.required != null ? info.required : (info.width || 0.25),
+      });
+      for (let i = 0; i < pads.length; i++) {
+        if (inTree[i]) continue;
+        const d = Math.hypot(xy[i][0] - xy[j][0], xy[i][1] - xy[j][1]);
+        if (d < best[i]) { best[i] = d; from[i] = j; }
+      }
+    }
+  }
+  return out;
+}
+
 // --- link model -------------------------------------------------------------
 // d3 caches every force accessor at initialize() time; the accessors below read
 // P live and the caller re-sets them (applyParamsToSim) to make a slider effect
