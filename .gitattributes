@@ -1,0 +1,4 @@
+# Shell scripts must stay LF. A CRLF shebang ("#!/bin/bash\r") is unrunnable:
+#   /bin/bash^M: bad interpreter: No such file or directory
+*.sh text eol=lf
+.gitattributes text eol=lf
