@@ -228,16 +228,25 @@ function buildSim() {
   S.sim.on("tick", onTick).on("end", () => setStatus("settled"));
 }
 
-function applyParams(reheat = true) {
+function applyParams(settle = true) {
   if (!S.sim || !S.model) return;
   M.applyParamsToSim(S.model, S.params);
   S.collideForce = S.model.collide; S.collideType = S.model.collideType;
-  if (reheat) solve(Math.max(S.sim.alpha(), 0.6));
+  if (settle) reheat(Math.max(S.sim.alpha(), 0.6));
 }
 
+// Explicit "run it": the buttons that mean "start the solver again" (Solve,
+// Scatter, Reset, Resume) clear the pause and reheat.
 function solve(alpha = 1) {
   if (!S.sim) return;
   S.paused = false; updatePauseBtn();
+  reheat(alpha);
+}
+
+// Implicit reheat: an edit to the placement (a drag, a pin/unpin, a parameter
+// change) lets the solver settle *if it is running*.
+function reheat(alpha = 1) {
+  if (!S.sim || S.paused) return;
   S.sim.alpha(Math.max(alpha, 0.05)).restart();
   setStatus("solving…");
 }
@@ -440,7 +449,7 @@ function renderPins() {
 
 function pin(n) { if (n.anchor != null) return; n.pinned = true; n.fx = n.x; n.fy = n.y; }
 function unpin(n) { if (n.anchor != null) return; n.pinned = false; n.fx = null; n.fy = null; }
-function unpinAll() { for (const n of S.nodes) unpin(n); styleNodes(); renderPins(); solve(0.8); }
+function unpinAll() { for (const n of S.nodes) unpin(n); styleNodes(); renderPins(); reheat(0.8); }
 
 // --- inspect ----------------------------------------------------------------
 function renderInspect() {
@@ -496,14 +505,14 @@ function bindEvents() {
         drag.moved = true;
         pin(drag.n);
         styleNodes(); renderPins();
-        if (S.sim) S.sim.alphaTarget(0.3).restart();
+        if (S.sim && !S.paused) S.sim.alphaTarget(0.3).restart();
       }
       if (drag.moved) {
         drag.n.fx = clamp(mm.x, 0, S.board.w);
         drag.n.fy = clamp(mm.y, 0, S.board.h);
         drag.n.x = drag.n.fx; drag.n.y = drag.n.fy;
         drag.n._el.classList.add("dragging");
-        draw(); if (!S.sim) renderMetrics();
+        draw(); if (!S.sim || S.paused) renderMetrics();
       }
       return;
     }
@@ -518,7 +527,7 @@ function bindEvents() {
   const end = () => {
     if (drag) {
       drag.n._el.classList.remove("dragging");
-      if (S.sim) S.sim.alphaTarget(0);       // let it settle, part stays pinned
+      if (S.sim && !S.paused) S.sim.alphaTarget(0);  // let it settle, part stays pinned
       drag = null;
     }
     if (pan) {
@@ -555,7 +564,7 @@ function bindEvents() {
     ev.preventDefault();
     const n = S.byId.get(g.dataset.id);
     if (n.pinned) unpin(n); else pin(n);
-    styleNodes(); renderPins(); solve(0.8);
+    styleNodes(); renderPins(); reheat(0.8);
   });
 
   svg.addEventListener("wheel", (ev) => {
@@ -572,7 +581,7 @@ function bindEvents() {
   $("#pins").addEventListener("click", (ev) => {
     const el = ev.target.closest(".pin"); if (!el) return;
     const n = S.byId.get(el.dataset.id); unpin(n);
-    styleNodes(); renderPins(); solve(0.8);
+    styleNodes(); renderPins(); reheat(0.8);
   });
 
   $("#seed").addEventListener("change", () => loadSeed($("#seed").value, true));
@@ -582,6 +591,7 @@ function bindEvents() {
     S.paused = !S.paused;
     if (S.paused) S.sim.stop(); else S.sim.restart();
     updatePauseBtn();
+    renderMetrics();   // no ticks while stopped, so refresh the status line here
   });
   $("#reset").addEventListener("click", resetToSeed);
   $("#scatter").addEventListener("click", scatter);

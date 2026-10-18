@@ -17,11 +17,12 @@ every placement saved into [`placements/`](placements/) (tracked).
 
 | | |
 | --- | --- |
-| **Drag a part** | pins it (`fx`/`fy`) — the engine treats it as fixed and solves the rest around it |
+| **Drag a part** | pins it (`fx`/`fy`) — the engine treats it as fixed and solves the rest around it. While **Paused** the solver does not run: the dragged part moves and nothing else |
 | **Right-click a part** | pin ↔ unpin |
 | **Click a part** | inspect it (value, footprint, nets + currents, pads, and **which IC it belongs to**). The selection is an outline and a dashed line to its host; hover is what dims the rest, so a click never leaves the board faded |
 | **Click empty space / Esc** | clear the selection |
 | **Drag empty space / wheel** | pan / zoom |
+| **Pause** | freeze the solver. Nothing advances it — dragging a part, pin/unpin or a parameter change only takes effect where you touched it. **Solve**, **Scatter** and **Reset** are explicit starts and clear the pause |
 | **Solve** | reheat the engine (alpha = 1) |
 | **Scatter** | **random** start: uniform over the whole board, a *fresh* seed on every click, written back into the `SEED` field. Tick **reuse SEED** to re-run the same start (reproducibly) |
 | **Reset** | restore the seed positions, keep only the terminals pinned |
