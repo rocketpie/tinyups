@@ -44,16 +44,25 @@ def main() -> int:
 
     # ---- tracks / vias / widths ------------------------------------------ #
     widths, per_layer = [], Counter()
+    length = 0.0
+    length_layer = Counter()
     vias = 0
     for t in b.GetTracks():
         if t.GetClass() == "PCB_VIA":
             vias += 1
             continue
         widths.append(mm(t.GetWidth()))
-        per_layer[b.GetLayerName(t.GetLayer())] += 1
+        ln = mm(t.GetLength())
+        length += ln
+        ln_name = b.GetLayerName(t.GetLayer())
+        per_layer[ln_name] += 1
+        length_layer[ln_name] += ln
     total = len(widths) + vias
     print(f"  tracks: {len(widths)}   vias: {vias}   (total {total})")
     print("  tracks per layer:", dict(per_layer))
+    print(f"  routed length: {length:.2f} mm   "
+          f"(per layer: " + ", ".join(f"{k} {v:.1f}"
+                                      for k, v in length_layer.most_common()) + ")")
     if widths:
         print(f"  trace width: min {min(widths):.3f}  median "
               f"{statistics.median(widths):.3f}  max {max(widths):.3f} mm")

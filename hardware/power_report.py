@@ -30,31 +30,38 @@ DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
 
 # Allowed temperature rise for the sizing (deg C).
 DT = float(os.environ.get("POWER_DT", "10"))
-# Copper weights (oz). JLCPCB 4-layer default: 1 oz outer / 0.5 oz inner.
-OZ_OUTER = float(os.environ.get("POWER_OZ_OUTER", "1.0"))
+# Copper weights (oz). ADR-0008: 2 oz outer to make the power pours fit;
+# inner-layer weight is a fab question (JLCPCB 4-layer default is 0.5 oz).
+OZ_OUTER = float(os.environ.get("POWER_OZ_OUTER", "2.0"))
 OZ_INNER = float(os.environ.get("POWER_OZ_INNER", "0.5"))
 OZ_MIL = 1.378  # mils of copper per oz/ft^2
 
 # Design current per net (A).  Source: requirements.md / bom.md.
-#   +12V_IN  20 A  12 V/20 A adapter, load + charge (requirements.md §3)
+#   +12V_IN  20 A  12 V/20 A adapter (240 W): the load's + charge's whole budget (FR-5)
 #   N_AF     20 A  same current, downstream of the fuse
-#   VIN_SYS  20 A  system input rail (load + charge)
-#   VBAT     17 A  pack peak (bom.md: 15 A cont / 17 A peak)
-#   VSYS     10 A  charger system node (estimate)
-#   VOUT12   17 A  output peak (bom.md: 13 A cont / 17 A peak)
-#   SW*      16 A  charger switch nodes (bom.md RSR ~16 A)
-#   SW*_OUT  17 A  LM5176 switch nodes (~output peak)
+#   VIN_SYS  20 A  system input rail (load + charge, FR-5)
+#   VBAT     17 A  pack peak discharge - 200 W at 12 V (FR-3, FR-5)
+#   VOUT12   17 A  output peak - picoPSU 160 W cont / 200 W peak
+#   VSYS      8 A  charger system node, capped by FR-5 (default 5 A, max ~8 A)
+#   SW1/SW2   8 A  BQ25720 charger switch nodes (2U1, 2L1, 2Q1..2Q4) - FR-5
+#   SW*_OUT  17 A  LM5176 output-converter switch nodes (5U1, 5L1, 5Q1..5Q4)
+# The charger legs are FR-5's ~8 A, not the cell's 1C (15 A) capability: the
+# charger's input-current limit caps there, and that is what the copper sees.
 DESIGN_CURRENT = {
     "+12V_IN": 20.0,
     "N_AF": 20.0,
     "VIN_SYS": 20.0,
     "VBAT": 17.0,
-    "VSYS": 10.0,
+    "VSYS": 8.0,
     "VOUT12": 17.0,
-    "SW1": 16.0,
-    "SW2": 16.0,
+    "SW1": 8.0,
+    "SW2": 8.0,
     "SW1_OUT": 17.0,
     "SW2_OUT": 17.0,
+    # The return. It carries the input leg's current; a plane's ampacity is not
+    # quite the trace model (more copper to spread heat into), so this is the
+    # conservative reading, not a hard number.
+    "GND": 20.0,
 }
 
 
@@ -64,6 +71,58 @@ def ampacity(width_mm: float, inner: bool) -> float:
     t = (OZ_INNER if inner else OZ_OUTER) * OZ_MIL          # mils
     area = (width_mm / 0.0254) * t                          # mil^2
     return k * DT ** 0.44 * area ** 0.725                   # A
+
+
+def width_for(current: float, inner: bool = False) -> float:
+    """Minimum copper width (mm) for a current: the inverse of ampacity().
+
+    One model, one place: `gen_pcb.py` sizes its power pours with this, the
+    report sizes traces and pours with `ampacity()`, so a pour and the gate that
+    checks it can never disagree.
+    """
+    k = 0.024 if inner else 0.048
+    t = (OZ_INNER if inner else OZ_OUTER) * OZ_MIL
+    area = (current / (k * DT ** 0.44)) ** (1 / 0.725)      # mil^2
+    return area / t * 0.0254                                # mm
+
+
+CS = pcbnew.CORNER_STRATEGY_ROUND_ALL_CORNERS
+
+
+def pour_width(poly: "pcbnew.SHAPE_POLY_SET", pads: list) -> float:
+    """Bottleneck width of a pour: the widest w at which every pad of the net
+    is still connected through one region at least w wide.
+
+    Erosion by w/2 leaves exactly the points that a disk of diameter w can
+    reach; if all the pads then sit in *one* outline, the copper between them
+    is everywhere >= w.  That is the pour's current-carrying width, and it is
+    the pad connections and necks that set it, not the pour's area.
+    """
+    def ok(w):
+        p = pcbnew.SHAPE_POLY_SET(poly)
+        p.Deflate(pcbnew.FromMM(w / 2), CS, pcbnew.FromMM(0.005))
+        if p.OutlineCount() == 0:
+            return False
+        islands = set()
+        for pt in pads:
+            for i in range(p.OutlineCount()):
+                if p.Contains(pt, i):
+                    islands.add(i)
+                    break
+            else:
+                return False                       # a pad fell outside
+        return len(islands) == 1
+
+    lo, hi = 0.0, 60.0
+    if not ok(0.05):
+        return 0.0
+    while hi - lo > 0.05:
+        mid = (lo + hi) / 2
+        if ok(mid):
+            lo = mid
+        else:
+            hi = mid
+    return lo
 
 
 def main() -> int:
@@ -91,21 +150,63 @@ def main() -> int:
 
     outer = {b.GetLayerName(pcbnew.F_Cu), b.GetLayerName(pcbnew.B_Cu)}
 
+    # pads per net (a pour's connection points), and every zone
+    pads: dict[str, list] = {}
+    for fp in b.GetFootprints():
+        for pad in fp.Pads():
+            nm = pad.GetNetname().lstrip("/")
+            if nm:
+                pads.setdefault(nm, []).append(pad.GetPosition())
+    pours: dict[str, list] = {}
+    for z in b.Zones():
+        net = z.GetNetname().lstrip("/")
+        lay = z.GetLayer()
+        fp = z.GetFilledPolysList(lay)
+        filled = fp.OutlineCount() > 0
+        solid = z.GetPadConnection() != pcbnew.ZONE_CONNECTION_THERMAL
+        pours.setdefault(net, []).append((lay, fp, filled, solid))
+
     print()
-    print(f"  {'net':10} {'need(A)':>7} {'min(mm)':>7} {'layer':>7} "
+    print(f"  {'net':10} {'need(A)':>7} {'kind':>5} {'width(mm)':>9} {'layer':>7} "
           f"{'cap(A)':>7}  verdict")
     n_fail = 0
     for net, need in DESIGN_CURRENT.items():
-        if net not in worst:
-            print(f"  {net:10} {need:>7.1f} {'-':>7} {'-':>7} {'-':>7}  "
-                  f"NO TRACKS (plane/pour?)")
+        cands: list[tuple[float, str, float, str]] = []
+        if net in worst:
+            w, layer = worst[net]
+            cands.append((ampacity(w, layer not in outer), "trace", w, layer))
+        has_zone = False
+        for lay, fp, filled, solid in pours.get(net, []):
+            has_zone = True
+            layer = b.GetLayerName(lay)
+            if not filled:
+                print(f"  {net:10} {need:>7.1f} {'pour':>5} {'-':>9} {layer:>7} "
+                      f"{'-':>7}  ZONE NOT FILLED (run hardware/fill_zones.py)")
+                continue
+            w = pour_width(fp, pads.get(net, []))
+            cands.append((ampacity(w, layer not in outer),
+                          "pour" if solid else "therm", w, layer))
+        if not cands:
+            if not has_zone:
+                print(f"  {net:10} {need:>7.1f} {'-':>5} {'-':>9} {'-':>7} {'-':>7}  "
+                      f"NO COPPER (no trace, no pour)")
+            n_fail += 1
             continue
-        w, layer = worst[net]
-        cap = ampacity(w, layer not in outer)
+        # a net with a pour is meant to be carried by it; a trace is the fallback
+        pick = next((c for c in cands if c[1] == "pour"), max(cands))
+        cap, kind, w, layer = pick
         ok = cap >= need
         n_fail += not ok
-        note = "PASS" if ok else f"FAIL  (~{need / cap:.0f}x short)"
-        print(f"  {net:10} {need:>7.1f} {w:>7.3f} {layer:>7} {cap:>7.2f}  {note}")
+        note = "PASS" if ok else f"FAIL  (~{need / cap:.0f}x short)" if cap else "FAIL  (open)"
+        print(f"  {net:10} {need:>7.1f} {kind:>5} {w:>9.3f} {layer:>7} "
+              f"{cap:>7.2f}  {note}")
+        for c_cap, c_kind, c_w, c_layer in cands:
+            if c_kind == kind:
+                continue
+            why = ("thermal pad connections - the bottleneck is the spokes, "
+                   "not the plane" if c_kind == "therm" else "trace")
+            print(f"  {'':10} {'':>7} {c_kind:>5} {c_w:>9.3f} {c_layer:>7} "
+                  f"{c_cap:>7.2f}  ({why})")
 
     print()
     total = len(DESIGN_CURRENT)

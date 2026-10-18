@@ -13,6 +13,7 @@ Run:  /opt/eda/venv/bin/python hardware/gen_pcb.py
 """
 from __future__ import annotations
 
+import math
 import os
 import re
 import sys
@@ -115,6 +116,42 @@ def _find_all(node, key):
 
 
 # --------------------------------------------------------------------------- #
+def add_plane_keepout(board, x0, y0, x1, y1, layer=pcbnew.In1_Cu,
+                      inset=0.5) -> None:
+    """Rule area: no copper *tracks* on a plane layer.
+
+    NOT WIRED IN — see the call site in `main()` and docs/history/0013.  The
+    intent is sound: the inner GND plane is a surface, not routing space, and
+    traces crossing it chop it into islands that cost the return path its
+    ampacity (177 tracks on `In1.Cu` left the 20 A return with a 9.38 mm min cut
+    and 5 islands, docs/history/0012).  But KiCad exports this as
+    `(wire_keepout …)` in the Specctra DSN, and freerouting applies a keepout to
+    *every* object on that layer — including the pad of a through via.  With the
+    one via padstack KiCad emits (`Via[0-3]`, all four layers) that blocks every
+    layer change: 0 vias, 106 unconnected, against 237 vias / 15 unconnected
+    without it.
+
+    To use it, the DSN must also offer a via whose padstack skips the plane
+    (physically a through via with an antipad at `In1.Cu`), or the guard must be
+    scoped to a corridor rather than the whole layer.
+    """
+    ka = pcbnew.ZONE(board)
+    ka.SetIsRuleArea(True)
+    ka.SetDoNotAllowTracks(True)
+    ka.SetDoNotAllowVias(False)
+    ka.SetDoNotAllowCopperPour(False)
+    ka.SetDoNotAllowPads(False)
+    ka.SetDoNotAllowFootprints(False)
+    ka.SetLayer(layer)
+    ka.SetZoneName("no tracks on the GND plane")
+    o = ka.Outline()
+    o.NewOutline()
+    for px, py in ((x0 + inset, y0 + inset), (x1 - inset, y0 + inset),
+                   (x1 - inset, y1 - inset), (x0 + inset, y1 - inset)):
+        o.Append(pcbnew.FromMM(px), pcbnew.FromMM(py))
+    board.Add(ka)
+
+
 def main() -> int:
     if not os.path.exists(NETLIST):
         print("error: run `make netlist` first", file=sys.stderr)
@@ -609,6 +646,21 @@ def main() -> int:
         except Exception:
             pass
         board.Add(z)
+
+    # NOTE: the high-current pours are added by hardware/pour_power.py on a
+    # *loaded* board — in-memory, pad.GetPosition() still returns pre-placement
+    # positions, so the corridor would be swept through the wrong points.
+
+    # The GND plane layer is a plane, not routing space — but the guard is NOT
+    # switched on here.  KiCad exports a rule area as (wire_keepout ...), and
+    # freerouting blocks every via whose padstack touches that layer; with a
+    # single through via (Via[0-3]) that is every via, so the board drops from
+    # 237 vias / 15 unconnected to 0 vias / 106 unconnected (docs/history/0013).
+    # It becomes usable once the DSN offers a via padstack that *skips* the
+    # plane (F.Cu-In2.Cu-B.Cu, i.e. a through via with an antipad), or when the
+    # guard is scoped to a corridor instead of the whole plane.
+    # add_plane_keepout(board, x0, y0, x1, y1)
+
     # NOTE: zone filling is done separately (hardware/fill_zones.py); calling
     # ZONE_FILLER on the freshly-built board crashes in the pcbnew bindings.
 

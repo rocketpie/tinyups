@@ -7,7 +7,9 @@ step turns any engine's raw coordinates into a legal placement:
 
   1. rotate    — pick the 0/90/180/270 orientation whose pads point at the
                  weighted centroid of the net's other pads (wide nets dominate
-                 because they are weighted by required trace width).
+                 because they are weighted by required trace width).  A rotation
+                 that would collide two *fixed* parts is not applied: the hard
+                 pass cannot repair it, and the seed angle is the safer default.
   2. relax     — vectorised de-overlap (push apart along the axis of least
                  penetration) with a soft spring back to the engine position,
                  so the engine's structure survives.
@@ -18,7 +20,12 @@ step turns any engine's raw coordinates into a legal placement:
   4. snap      — to a 0.5 mm placement grid.
 
 The two power terminals (and any part an engine explicitly pinned, e.g. the ends
-of the incremental power chain) never move.
+of the incremental power chain) never move.  `anchor` only *fixes* a part — it
+never relocates one: the source file says where, and an engine output already
+carries the anchored coordinates (`fitpos.py` snaps them there).  That is the
+same rule the interactive UI follows ([history
+0004](../../docs/history/0004-anchored-terminals-snap-back-on-load.md)); the
+legaliser overriding it is what broke `placements/try5.json`.
 
 There is deliberately no power-corridor keep-out: that belongs to the hand
 floorplan, not to a graph-derived placement (see layout_poc/README.md).
@@ -79,17 +86,19 @@ def main() -> int:
     ids = [r for r in raw if r in nodes]
     x = {r: raw[r]["x"] for r in ids}
     y = {r: raw[r]["y"] for r in ids}
-    # fixed = the two board anchors + anything the engine explicitly pinned
+    # fixed = anything the source pinned + the graph anchors.  An anchor only
+    # *fixes* a part, it does not move it: the source says where (history 0004).
+    # Engine outputs already carry the anchored coordinates, so dropping the
+    # override changes nothing for them — but it stops the legaliser from
+    # dragging an interactive placement's terminals back to the hand floorplan.
     fixed = {r for r in ids if nodes[r].get("anchor") or raw[r].get("pin")}
-    for r in fixed:
-        if nodes[r].get("anchor"):
-            x[r], y[r] = nodes[r]["anchor"]
     tx, ty = dict(x), dict(y)
     bb = {r: local_bbox(nodes[r], 0) for r in ids}
 
     # ---- rotation: minimise weighted pad -> net-centroid distance ----------
     net_w = {n: graph["nets"][n]["width"] for n in graph["nets"]}
     angle = {r: 0 for r in ids}
+    seed_angle = {r: raw[r].get("angle", 0) for r in ids}
     for _round in range(3):
         acc: dict[str, list] = {}
         for r in ids:
@@ -117,6 +126,33 @@ def main() -> int:
                     best, best_cost = a, cost
             angle[r] = best
         bb = {r: local_bbox(nodes[r], angle[r]) for r in ids}
+
+    # A rotation that makes two *fixed* parts collide is unrecoverable: the hard
+    # pass below never moves a fixed part, so the collision would survive into
+    # the board.  The rotation is a proposal, not an order — keep the seed angle
+    # for whichever part of the pair was the one turned.
+
+    def world_bbox(r, a):
+        lo = local_bbox(nodes[r], a)
+        return (lo[0] + x[r], lo[1] + y[r], lo[2] + x[r], lo[3] + y[r])
+
+    fb = {r: world_bbox(r, angle[r]) for r in fixed}
+
+    def hits(a, b):
+        return not (fb[a][2] < fb[b][0] or fb[b][2] < fb[a][0]
+                    or fb[a][3] < fb[b][1] or fb[b][3] < fb[a][1])
+
+    for _ in range(2 * len(fixed) + 2):
+        bad = next(((a, b) for a in sorted(fixed) for b in sorted(fixed)
+                    if a < b and hits(a, b)), None)
+        if bad is None:
+            break
+        r = next((q for q in bad if angle[q] != seed_angle[q]), None)
+        if r is None:
+            print(f"    fixed parts {bad} overlap at their seed angles")
+            break
+        angle[r] = seed_angle[r]
+        fb[r] = world_bbox(r, angle[r])
 
     # ---- vectorised setup --------------------------------------------------
     n = len(ids)
@@ -205,10 +241,8 @@ def main() -> int:
 
     out = {}
     for i, r in enumerate(ids):
-        if nodes[r].get("anchor"):
-            px, py = nodes[r]["anchor"]
-        elif FIX[i]:
-            px, py = TX[i], TY[i]          # engine-pinned: keep its seed
+        if FIX[i]:
+            px, py = TX[i], TY[i]          # pinned/anchored: keep its seed
         else:
             px, py = float(X[i]), float(Y[i])
         out[r] = {"x": round(px / GRID) * GRID, "y": round(py / GRID) * GRID,

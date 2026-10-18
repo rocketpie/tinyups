@@ -18,6 +18,13 @@ directly, and the UI lists it in the *start from* drop-down, marked `saved`.
 Load one again with the seed drop-down, or from the command line:
 
 ```sh
-make place-render F=hardware/layout_poc/placements/try1.json
-make place-apply  F=hardware/layout_poc/placements/try1.json
+make place-render   F=hardware/layout_poc/placements/try5.json
+make place-legalize F=hardware/layout_poc/placements/try5.json   # -> build/layout/leg-try5.json
+make place-apply    F=build/layout/leg-try5.json
 ```
+
+`place-legalize` is the step in between: a saved placement is advisory
+(position-only), and the legaliser is what guarantees 0 courtyard overlaps — but
+it **honours the pins** in the file (`anchor` fixes, never relocates; a rotation
+that would collide two fixed parts is not applied).
+[ADR-0014](../../../docs/decisions/0014-pins-are-authoritative.md)

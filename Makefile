@@ -26,7 +26,7 @@ export KICAD9_3DMODEL_DIR   ?= /usr/share/kicad/3dmodels
 RENDER_ROTATE ?= -15,0,-5
 RENDER_ZOOM   ?= 0.95
 
-.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power layout mermaid baseline place place-render place-apply ab check clean
+.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power channels layout mermaid baseline place place-render place-legalize place-apply ab route check clean
 
 all: help
 
@@ -112,6 +112,15 @@ silk: | $(OUT) ## 2D view with red power-silkscreen markers
 		--output $(OUT)/$(NAME)-power.svg $(PCB)
 
 # --- power -----------------------------------------------------------------
+# Placement side of the power gate: a pour is ~10 mm of copper for 20 A on
+# 2 oz, so the placement has to leave a channel of that width between each
+# high-current net's pads (ADR-0008).  A corridor was a constraint and did not
+# fit; a channel width is a metric, and this is it.
+CHANNEL_BOARD ?= $(OUT)/layout/baseline.kicad_pcb
+channels: | $(OUT) ## Power-channel clearance per rail (CHANNEL_BOARD=<board>)
+	$(call require,$(CHANNEL_BOARD))
+	$(PYTHON) hardware/power_channel.py $(CHANNEL_BOARD)
+
 power: | $(REPORTS) ## Power / ampacity check (design current per net)
 	$(call require,$(PCB))
 	@set -o pipefail; $(PYTHON) hardware/power_report.py $(PCB) | tee $(REPORTS)/power.rpt
@@ -162,6 +171,9 @@ place: | $(OUT) ## Interactive placement UI (http://localhost:4097)
 place-render: | $(OUT) ## Render a saved interactive placement (F=<positions.json>)
 	$(PYTHON) $(LAYOUT_DIR)/render.py $(F) $(OUT)/layout/interactive.png --label
 
+place-legalize: | $(OUT) ## Legalise a saved placement (F=<positions.json>) -> build/layout/leg-<name>
+	$(PYTHON) $(LAYOUT_DIR)/legalize.py $(F) $(OUT)/layout/leg-$(notdir $(F))
+
 place-apply: | $(OUT) ## Apply a saved interactive placement to a board + DRC (F=<positions.json>)
 	$(PYTHON) $(LAYOUT_DIR)/apply.py $(F) $(OUT)/layout/interactive.kicad_pcb
 
@@ -180,6 +192,34 @@ ab: | $(OUT) ## A/B the placement force model on neutral (scatter) starts
 	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(LAYOUT_DIR)/extract.py
 	@test -d $(LAYOUT_DIR)/node_modules || (cd $(LAYOUT_DIR) && npm install --no-audit --no-fund)
 	node $(LAYOUT_DIR)/ab.mjs $(AB)
+
+# --- routing (FreeRouting) --------------------------------------------------
+# The field's yardstick for a placement is not HPWL but the *route*: routed
+# wirelength, via count and DRV count (layout_poc/README.md).  This routes a
+# board with freerouting and prints both the routing report and KiCad's DRC on
+# the routed board.  The routed board is written under build/ (untracked); the
+# source board itself is never modified.
+#   make route                                  # the adopted baseline board
+#   make route ROUTE_BOARD=build/layout/try5.kicad_pcb
+# Default is the baseline because it is the full 124-part design; the tracked
+# board is a power-path stage (30 parts) and says nothing about the placement.
+ROUTE_BOARD ?= $(OUT)/layout/baseline.kicad_pcb
+ROUTE_OUT   ?= $(OUT)/layout/$(notdir $(ROUTE_BOARD:.kicad_pcb=-routed.kicad_pcb))
+ROUTE_TAG   := $(notdir $(ROUTE_BOARD:.kicad_pcb=))
+route: | $(OUT) $(REPORTS) ## Route a board with FreeRouting + routing/DRC report
+	$(call require,$(ROUTE_BOARD))
+	$(PYTHON) hardware/route.py $(ROUTE_BOARD) $(ROUTE_OUT)
+	$(PYTHON) hardware/routing_report.py $(ROUTE_OUT)
+	$(KICAD_CLI) pcb drc --severity-all --output $(REPORTS)/routed-drc-$(ROUTE_TAG).rpt $(ROUTE_OUT) || true
+	@echo "--- routed board DRC ($(REPORTS)/routed-drc-$(ROUTE_TAG).rpt)"
+	@grep -E "^\[[a-z_]+\]:" $(REPORTS)/routed-drc-$(ROUTE_TAG).rpt \
+		| sed -E 's/^\[([a-z_]+)\].*/\1/' | sort | uniq -c | sort -rn
+	@$(PYTHON) -c "import re; \
+t = open('$(REPORTS)/routed-drc-$(ROUTE_TAG).rpt').read(); \
+v = [float(x) for x in re.findall(r'^\[clearance\].*actual ([0-9.]+)', t, re.M)]; \
+b = [x for x in v if x < 0.127]; \
+print(f'  clearance: {len(v)} item(s) - {len(b)} below the 0.127 fab floor (real), ' \
+      f'{len(v) - len(b)} below the 0.2 design preference only (accepted)')"
 
 # --- simulation ------------------------------------------------------------
 sim: ## Run all ngspice simulations in sim/

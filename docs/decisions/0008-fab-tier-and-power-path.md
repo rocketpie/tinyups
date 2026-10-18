@@ -43,15 +43,29 @@ solving the fine pitch, and (2) the layout had no notion of a power path.
      front half → pack/BMS output), then the RP2040 on the left; signals use
      the remaining copper (top layer around the corridor, In2, B.Cu).
 3. **Add the missing gate.** `hardware/power_report.py` sizes every power net
-   against its design current (IPC-2221) and fails CI otherwise.
+   against its design current (IPC-2221) and fails CI otherwise. It must be able
+   to size a **pour** (a zone), not just a trace: a poured net has no track at
+   all, and "NO TRACKS" is not a verdict.
+4. **2 oz outer copper (F.Cu), 0.5 oz inner assumed for now.** The power pours
+   live on `F.Cu` and 2 oz halves every required width (20 A: 18.7 → **9.4 mm**
+   at 10 °C rise, IPC-2221). The inner-layer weight that comes with the 2 oz
+   option is a fab question to confirm before the GND return is signed off — at
+   0.5 oz a 20 A return wants ~97 mm of continuous copper, at 1 oz ~49 mm.
 
 ## Consequences
 
 - The autorouter cannot be the source of truth any more: the power path and the
   floorplan are **encoded in `gen_pcb.py`** (anchored placement + pours), and
-  `route.py` must keep signals off the power corridor / plane layers (mark
-  `F.Cu` as power and `In1.Cu` as plane in the DSN so signals go on the
-  remaining copper).
+  **signals must stay off the `In1.Cu` GND plane** so it stays one surface. The
+  guard that does that is settled by measurement, not by a flag
+  ([history 0013](../history/0013-plane-layer-type-kills-vias.md)): every way of
+  telling freerouting "do not route here" — layer type `power`,
+  `plane_as_obstacle`, or KiCad's own `(wire_keepout …)` export — **also blocks
+  the only via padstack KiCad emits** (a through via spanning all four layers),
+  which drops the board from 237 vias / 15 unconnected to 0 vias / 106. So the
+  guard needs either a via padstack that skips the plane, or a corridor-scoped
+  keepout. Until then the plane is *measured* (`power_report.py` sizes the
+  return's min cut) rather than forbidden.
 - Signals get the top layer **around the power corridor**, plus `In2.Cu` and
   `B.Cu`. Whether that carries everything is the main risk; the floorplan
   (short, mostly intra-block nets) has to make it work. `routing_report.py`
@@ -68,4 +82,8 @@ solving the fine pitch, and (2) the layout had no notion of a power path.
   do they connect at different points along the power path? (Topology from
   ADR-0002: input → protection → {priority path, charger}; pack → priority
   path → converter.)
-- 2 oz outer copper (JLCPCB option) may be worth it for the power pours.
+- What inner-layer copper weight comes with the 2 oz outer option? It sets the
+  GND return width (0.5 oz → ~97 mm, 1 oz → ~49 mm at 20 A).
+- A TO-252 tab is ~6 mm wide: at 2 oz that is ~14 A by IPC-2221 at 10 °C rise,
+  so a 20 A leg needs parallel devices or a documented higher ΔT on the tab —
+  a thermal/BOM question, not a routing one.
