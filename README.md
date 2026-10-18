@@ -63,7 +63,8 @@ git interaction from host only.
 
 2. make another copy where you want your dev containers to live:  
 `~/workspaces/containers/repo-name`  
-and `rm -rf ~/workspaces/containers/repo-name/.git`
+and `rm -rf ~/workspaces/containers/repo-name/.git`  
+(`import.sh` copies `.git` back in for read-only history in the container)
 
 3. Add this to your host shell (`~/.bashrc`):
 
@@ -76,10 +77,13 @@ and `rm -rf ~/workspaces/containers/repo-name/.git`
 |---|---|
 | `devcontainer up` | build and run the dev container |
 | `devcontainer exec opencode pair` | start opencode in the container (open the url to connect via browser) |
-| `./import.sh` | sync from GIT_WORKSPACE_ROOT/repo-name to container copy | 
-| `./export.sh` | sycn from container copy to GIT_WORKSPACE_ROOT/repo-name | 
+| `./import.sh` | sync from GIT_WORKSPACE_ROOT/repo-name to container copy, incl. `.git/` | 
+| `./export.sh` | sync from container copy to GIT_WORKSPACE_ROOT/repo-name, never `.git/` | 
 
-Both mirror with `rsync --delete` and skip `.git/`.
+Both mirror with `rsync --delete` and skip `node_modules/`. `.git/` travels
+one way only: `import.sh` brings it in so the container can read the history
+(`git log`, `blame`, `diff` against HEAD), `export.sh` never copies it back, so
+commits still happen on the host only.
 
 Then, you can review the changes in `~/workspaces/your-github-slug/repo-name` with VSCode or whatever floats your goat.  
 And that's pretty cool!
