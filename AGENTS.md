@@ -97,3 +97,7 @@ Versionsstand: [`docs/toolchain.md`](docs/toolchain.md).
 - **`RESUME.md` is the one allowed exception:** it is current session state, so
   it may carry a short, up-to-date status — but it points at `docs/history/` for
   the story instead of retelling it.
+- **`docs/progress.md` is metrics-only.** It tracks how the numbers move as
+  placement / routing / power advance. Record a row **with numbers** whenever the
+  process, the board or a metric changes; the story (if any) goes in
+  `docs/history/` and is linked from the row. No commentary, no findings.
