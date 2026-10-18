@@ -46,8 +46,8 @@ courtyard **overlaps**, off-board count, power-path length, straightness, flow
 
 | State | Lives in |
 | --- | --- |
-| Parameter **values** and the parameter **row order** | **`ui/placement/params.json`** — tracked in git, written by this UI on every change ([ADR-0010](../../docs/decisions/0010-placement-params-source-of-truth.md)) |
-| A **placement you save** (positions, pins, the seed and the params it ran with) | **`ui/placement/placements/<name>.json`** — tracked in git ([ADR-0011](../../docs/decisions/0011-placements-are-tracked.md), [`placements/README.md`](placements/README.md)) |
+| Parameter **values** and the parameter **row order** | **`ui/placement/params.json`** — tracked in git, written by this UI on every change ([history 0016](../../docs/history/0016-placement-ui-decisions.md)) |
+| A **placement you save** (positions, pins, the seed and the params it ran with) | **`ui/placement/placements/<name>.json`** — tracked in git ([history 0016](../../docs/history/0016-placement-ui-decisions.md), [`placements/README.md`](placements/README.md)) |
 | View toggles, the seed you were last on, the save name | your browser (`localStorage`, key `tinyups.place.ui.v1`) |
 | Graph, boards, DRC reports | `build/layout/` — **untracked** (generated) |
 
@@ -126,7 +126,7 @@ Every slider maps to a force in `public/model.js`.
   cap to its IC — is dropped, being a plane. Measurements, the rejected
   alternatives (centre pull, range-limited cliques) and the numbers:
   [`docs/history/0005`](../../docs/history/0005-the-netlist-cannot-hold-satellites.md),
-  [ADR-0012](../../docs/decisions/0012-belongs-to-force.md).
+  [history 0016](../../docs/history/0016-placement-ui-decisions.md).
 
 **Solver**
 - `ITERS` run length (alpha decay), `MAX_V` velocity clamp, `VEL_DECAY`,
@@ -150,9 +150,9 @@ start.
   demand. Nothing else in `build/` is read back by the UI.
 - **Write (tracked, on purpose):**
   - `ui/placement/params.json` — the engine tuning
-    ([ADR-0010](../../docs/decisions/0010-placement-params-source-of-truth.md));
+    ([history 0016](../../docs/history/0016-placement-ui-decisions.md));
   - `ui/placement/placements/<name>.json` — one file per **Save**
-    ([ADR-0011](../../docs/decisions/0011-placements-are-tracked.md)).
+    ([history 0016](../../docs/history/0016-placement-ui-decisions.md)).
 - **Applying a placement** writes a copy under `build/layout/`; promoting it to
   `hardware/tinyups.kicad_pcb` is a deliberate `cp` after reviewing the DRC.
 

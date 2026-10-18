@@ -47,5 +47,6 @@ allowed and expected to age, to be superseded, and to be wrong in the future.
 - [0013 – declaring the plane layer (type power) silently disables vias](0013-plane-layer-type-kills-vias.md)
 - 0014 – a swept corridor is the wrong primitive for a power pour
 - [0015 – placement cleanup: `try5` adopted, the PoC archived](0015-placement-cleanup.md)
+- [0016 – placement UI: tracked state and the belongs-to force](0016-placement-ui-decisions.md)
 
 

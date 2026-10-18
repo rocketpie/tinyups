@@ -23,8 +23,8 @@ The only copy left was the browser tab that made it.
   (`_selftest`) and delete it afterwards; the endpoint cannot tell your test
   apart from a real save.
 - **What actually protects a placement is a commit.** Since
-  [ADR-0011](../../docs/decisions/0011-placements-are-tracked.md) saved
-  placements live in the tracked `hardware/layout_poc/placements/`, but the
+  [0016](0016-placement-ui-decisions.md) saved placements live in the tracked
+  `ui/placement/placements/`, but the
   container's copy is not a git repository — the write only reaches git after
   `export.sh` + `git add`/`git commit` on the host. Between Save and commit the
   file has no history, exactly like any other working-tree file.

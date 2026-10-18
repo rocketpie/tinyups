@@ -12,7 +12,7 @@ begins from exactly what `hardware/tinyups.kicad_pcb` is now.
 
 - **Tracked on purpose.** This is your work product, not generated output, so it
   is reviewable and `git checkout` / `git revert` undoes an experiment. See
-  [ADR-0011](../../../docs/decisions/0011-placements-are-tracked.md).
+  [history 0016](../../../docs/history/0016-placement-ui-decisions.md).
 - Nothing **generated** lives here: the graph, the engine outputs, the boards and
   the DRC reports are in `build/layout/` (untracked).
 - A file here wins over a same-named file in `build/layout/` when loading.

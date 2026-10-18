@@ -1,7 +1,8 @@
 # 0006 – The belongs-to ring on a neutral start: HPWL/wire down, flow order pays
 
-**What:** `make ab` (neutral scatter starts, 3 seeds from 20260101, base tuning)
-on the belongs-to force (ADR-0012), which in the hand placement `try3` had
+**What:** the (now archived) A/B runner on neutral scatter starts, 3 seeds from
+20260101, base tuning, on the belongs-to force
+([0016](0016-placement-ui-decisions.md)) — which in the hand placement `try3` had
 improved *every* metric:
 
 | config | HPWL mm | wire mm | ovl | off | path mm | axisR | 5U1 d/bias | 6U1 d | 4U1 d |

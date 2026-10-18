@@ -27,6 +27,6 @@ ground-truth violation that `kicad-cli pcb drc` caught immediately.
 
 ## References
 
-- [`hardware/layout_poc/legalize.py`](../../hardware/layout_poc/legalize.py) — `rot()` documents the Y-down form
-- [`hardware/layout_poc/render.py`](../../hardware/layout_poc/render.py) — `rot()` matches it
-- [`hardware/layout_poc/README.md`](../../hardware/layout_poc/README.md)
+- [`ui/placement/legalize.py`](../../ui/placement/legalize.py) — `rot()` documents the Y-down form
+- [`ui/placement/render.py`](../../ui/placement/render.py) — `rot()` matches it
+- [`docs/history/layout_poc/README.md`](layout_poc/README.md) (archived PoC)

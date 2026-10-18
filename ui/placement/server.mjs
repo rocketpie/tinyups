@@ -15,7 +15,7 @@
 //   /vendor/<pkg>/... node_modules for the vendored d3-force ES modules
 //
 // Two of those write into the repo on purpose — the tuning and your saved
-// placements (ADR-0010, ADR-0011); everything generated stays in build/.
+// placements (history 0016); everything generated stays in build/.
 //
 // The placement engine itself (d3-force) runs *in the browser*, so the sim is
 // live while you drag.  See ui/placement/README.md.
@@ -35,10 +35,10 @@ const GRAPH = path.join(LAYOUT, "graph.json");
 const NETLIST = path.join(ROOT, "build", "tinyups.net");
 // The tracked tuning file.  Unlike everything else the UI writes, this one is
 // *in* the repo on purpose: the tuning is a reviewable, revertable artifact
-// (see docs/decisions/0010-placement-params-source-of-truth.md).
+// (see docs/history/0016-placement-ui-decisions.md).
 const PARAMS = path.join(HERE, "params.json");
 // Placements you save are your work product, so they are tracked too and live
-// next to the app (docs/decisions/0011-placements-are-tracked.md).  Everything
+// next to the app (docs/history/0016-placement-ui-decisions.md).  Everything
 // *generated* (graph, boards, DRC reports) stays in build/.
 const PLACEMENTS = path.join(HERE, "placements");
 const VENDOR = path.join(HERE, "node_modules");

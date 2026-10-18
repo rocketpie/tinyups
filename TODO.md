@@ -13,3 +13,5 @@
 - works with json. a board is .kicad_pcb. 
 - data extraction and re-integration is python right now. how to integrate?
     (Added from_board.py + make place-seed, which snapshots the board to placements/main.json; server.mjs now defaults to it. Workflow: make place → tune → Save (placement JSON) → Apply to board + DRC (build/layout/board.kicad_pcb).
+ 
+- A/B testing: on model change, run all metrics, record update in progress.md
