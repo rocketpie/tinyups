@@ -725,10 +725,31 @@ function unpinSelected() {
 }
 function updatePinButtons() {
   const pinBtn = $("#pinSel"), unpinBtn = $("#unpinSel");
+  const cw = $("#rotCW"), ccw = $("#rotCCW");
   if (!pinBtn || !unpinBtn) return;
   const n = S.selected ? S.byId.get(S.selected) : null;
   pinBtn.disabled = !n || n.pinned || n.anchor != null;
   unpinBtn.disabled = !n || (!n.pinned && n.anchor == null);
+  if (cw) cw.disabled = !n;
+  if (ccw) ccw.disabled = !n;
+}
+
+// Rotate the selected part in place.  A part is rotated about its origin, the
+// pads move with it, and a pinned/anchored part stays at its x/y.  The solver
+// is only nudged: the user may want to look before the collision force reacts.
+function rotateSelected(delta) {
+  const n = S.selected ? S.byId.get(S.selected) : null;
+  if (!n) return;
+  n.angle = ((n.angle + delta) % 360 + 360) % 360;
+  setExtents(n);
+  const poly = n._el && n._el.querySelector(".courtyard");
+  if (poly) poly.setAttribute("points", n._pts.map((p) => p.join(",")).join(" "));
+  const t = n._el && n._el.querySelector("text");
+  if (t) { t.setAttribute("x", fmt(n.cx, 2)); t.setAttribute("y", fmt(n.cy, 2)); }
+  draw();
+  renderMetrics();
+  renderInspect();
+  reheat(0.3);
 }
 
 // --- inspect ----------------------------------------------------------------
@@ -752,7 +773,10 @@ function renderInspect() {
     <table id="metrics" style="margin-top:6px">
       <tr><td>position</td><td>${fmt(n.x)}, ${fmt(n.y)} mm</td></tr>
       <tr><td>courtyard</td><td>${fmt(n.w)} × ${fmt(n.h)} mm</td></tr>
-      <tr><td>rotation</td><td>${n.angle}° (seed)</td></tr>
+      <tr><td>rotation</td><td>${n.angle}°${
+        S.seedData && S.seedData.positions[n.id] &&
+        Math.abs((S.seedData.positions[n.id].angle || 0) - n.angle) > 0.01
+          ? ` (seed ${S.seedData.positions[n.id].angle || 0}°)` : ""}</td></tr>
       <tr><td>pinned</td><td>${n.pinned ? "yes" : n.anchor != null ? "terminal" : "no"}</td></tr>
       <tr class="${n.clear != null ? "bad" : ""}"><td>min pad clearance</td><td>${clear}</td></tr>
       ${rf ? `<tr class="${rf.unrouted + rf.clearance ? "bad" : ""}"><td>last route</td><td>${rf.unrouted} unrouted · ${rf.clearance} clearance${rf.min_clearance_mm != null ? ` · ${fmt(rf.min_clearance_mm, 2)} mm` : ""}</td></tr>` : ""}
@@ -887,6 +911,8 @@ function bindEvents() {
   $("#unpin").addEventListener("click", unpinAll);
   $("#pinSel").addEventListener("click", pinSelected);
   $("#unpinSel").addEventListener("click", unpinSelected);
+  $("#rotCW").addEventListener("click", () => rotateSelected(90));
+  $("#rotCCW").addEventListener("click", () => rotateSelected(-90));
   $("#onlyDraw").addEventListener("change", (e) => { S.onlyDraw = e.target.checked; applyHighlight(); saveUI(); });
   $("#showLabels").addEventListener("change", (e) => { S.showLabels = e.target.checked; styleNodes(); saveUI(); });
   $("#showClearance").addEventListener("change", (e) => {

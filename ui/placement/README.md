@@ -27,6 +27,7 @@ with `make place-seed` — so the simulation begins from exactly what
 | **Drag a part** | pins it (`fx`/`fy`) — the engine treats it as fixed and solves the rest around it. While **Paused** the solver does not run: the dragged part moves and nothing else |
 | **Right-click a part** | pin ↔ unpin |
 | **Pin selected / Unpin selected** | fix or release the selected part **in place** — a click-and-button, no drag, so the position does not change |
+| **↺ 90° / ↻ 90°** | rotate the selected part about its origin; pads and courtyard move with it, and a pinned part stays at its x/y |
 | **Engine heading ▾** | collapse / expand the whole Engine body (view toggles, parameter list, notes); the state is remembered |
 | **pad-level nets** | draw the real ratsnest — an MST over the **pads** of every net, coloured by current and sized by the required 2 oz width — instead of the force model's part-centre links. Off = the abstract part links |
 | **mark parts too close** | amber courtyard outline = a different-net pad is inside the 0.2 mm rule; red = the courtyard overlaps another part. Off = no warning outlines |
