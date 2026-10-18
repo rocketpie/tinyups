@@ -96,9 +96,12 @@ def metrics(graph, pos):
     order = [r for r in graph.get("power_order", []) if r in placed]
     path = sum(dist(placed[order[i]], placed[order[i + 1]])
                for i in range(len(order) - 1)) if len(order) > 1 else 0.0
-    arid = {n["id"]: n["anchor"] for n in graph["nodes"] if n.get("anchor")}
+    # The input/output *positions* come from the placement, not from the graph
+    # anchor: an anchored terminal may have been moved in the UI (history 0004),
+    # and using the old floorplan coordinate silently changed straight/axisR.
     io = graph.get("io", {})
-    pin, pout = arid.get(io.get("in")), arid.get(io.get("out"))
+    pin = (placed[io["in"]]["x"], placed[io["in"]]["y"]) if io.get("in") in placed else None
+    pout = (placed[io["out"]]["x"], placed[io["out"]]["y"]) if io.get("out") in placed else None
     span = math.dist(pin, pout) if pin and pout else 0.0
     straight = path / span if span else 0.0
     d_in = math.dist((placed[order[0]]["x"], placed[order[0]]["y"]), pin) \

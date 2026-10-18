@@ -50,6 +50,63 @@ export function setExtents(n) {
   n.cy = (Math.min(...ys) + Math.max(...ys)) / 2;
 }
 export const padXY = (n, pad) => { const [rx, ry] = rot([pad.dx, pad.dy], n.angle); return [n.x + rx, n.y + ry]; };
+
+// Pad copper, not the courtyard: a clearance is the gap between two pads of
+// *different* nets.  Kept as an AABB (pads are rectangles/circles at 0/90/180/
+// 270 most of the time); the gap is exact for axis-aligned pads and an
+// over-estimate only for a rotated rectangle's corner.
+export function padBox(n, pad) {
+  const [cx, cy] = padXY(n, pad);
+  const a = ((n.angle || 0) + (pad.angle || 0)) * Math.PI / 180;
+  const hw = (pad.w || 0) / 2, hh = (pad.h || 0) / 2;
+  const c = Math.cos(a), s = Math.sin(a);
+  const hx = Math.abs(hw * c) + Math.abs(hh * s);
+  const hy = Math.abs(hw * s) + Math.abs(hh * c);
+  return { x0: cx - hx, y0: cy - hy, x1: cx + hx, y1: cy + hy };
+}
+export const padGap = (a, b) => {
+  const dx = Math.max(a.x0 - b.x1, b.x0 - a.x1, 0);
+  const dy = Math.max(a.y0 - b.y1, b.y0 - a.y1, 0);
+  return Math.hypot(dx, dy);
+};
+
+// Minimum pad-to-pad clearance per part.  This is the placement-side cousin of
+// a DRC clearance violation: same-net pads may touch, different-net pads owe
+// the design clearance (0.2 mm on this board).  It is a *metric* (cheap, live),
+// not a legaliser; the authoritative numbers come from kicad-cli.
+export function clearanceStats(nodes, threshold = 0.2) {
+  const pads = [];
+  for (const n of nodes) {
+    n.clear = null; n.clearRef = null; n.clearNet = null;
+    for (const p of n.pads || []) {
+      if (p.net && p.w > 0) pads.push({ n, p, box: padBox(n, p) });
+    }
+  }
+  let min = null, pairs = 0;
+  for (let i = 0; i < pads.length; i++) {
+    const a = pads[i];
+    for (let j = i + 1; j < pads.length; j++) {
+      const b = pads[j];
+      if (a.p.net === b.p.net) continue;
+      const gap = padGap(a.box, b.box);
+      if (min === null || gap < min) min = gap;
+      if (gap >= threshold - 1e-6) continue;   // 0.2 mm exactly is legal
+      pairs++;
+      if (a.n.clear === null || gap < a.n.clear) {
+        a.n.clear = gap; a.n.clearRef = b.n.id; a.n.clearNet = b.p.net;
+      }
+      if (b.n.clear === null || gap < b.n.clear) {
+        b.n.clear = gap; b.n.clearRef = a.n.id; b.n.clearNet = a.p.net;
+      }
+    }
+  }
+  return {
+    min: min === null ? null : min,
+    pairs, threshold,
+    tight: nodes.filter((n) => n.clear !== null).length,
+  };
+}
+
 export const isFixed = (n) => n.anchor != null || n.fx != null;
 export const aabb = (n) => ({
   x0: n.x + n.cx - n.hx, y0: n.y + n.cy - n.hy,
@@ -318,6 +375,7 @@ export function metrics(nodes, edges, graph, board, byId) {
       if (!(a.x1 <= b.x0 || b.x1 <= a.x0 || a.y1 <= b.y0 || b.y1 <= a.y0)) m.overlap++;
     }
   m.outside = boxes.filter((b) => b.x0 < 0 || b.y0 < 0 || b.x1 > board.w || b.y1 > board.h).length;
+  m.clearance = clearanceStats(nodes);
 
   const order = (graph.power_order || []).filter((r) => byId.has(r));
   m.path = 0;

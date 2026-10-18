@@ -48,20 +48,47 @@
         <button id="unpin" title="Release every pinned part">⊘ Unpin all</button>
       </div>
       <p class="hint">Drag a part to move it — it is <b>pinned</b> (fx/fy) and the
-      engine solves the rest around it. Right-click a part to unpin. Drag empty
-      space to pan, scroll to zoom. Click a part to inspect it, click empty space
-      (or Esc) to clear the selection.</p>
+      engine solves the rest around it. Right-click a part to unpin. Select a
+      part and use <b>Pin selected</b> to fix it where it is (no drag). Drag
+      empty space to pan, scroll to zoom. Click a part to inspect it, click
+      empty space (or Esc) to clear the selection.</p>
     </section>
 
     <section>
-      <h2>Engine <span class="tag">d3-force</span></h2>
-      <label class="switch"><input type="checkbox" id="onlyDraw" checked>
-        draw only the trace-ordered edges (not the full clique)</label>
-      <label class="switch"><input type="checkbox" id="showLabels" checked>
-        component labels</label>
-      <div id="params"></div>
-      <p class="hint" id="paramNote"></p>
-      <p class="hint" id="engineNote"></p>
+      <h2>Pinned <span class="tag" id="pinCount">0</span></h2>
+      <div class="row">
+        <button id="pinSel" disabled title="Pin the selected part at its current position — it does not move">📌 Pin selected</button>
+        <button id="unpinSel" disabled title="Release the selected part without moving it">Unpin selected</button>
+      </div>
+      <div id="pins" class="pins"></div>
+    </section>
+
+    <section>
+      <h2>Engine <span class="tag">d3-force</span>
+        <button id="toggleParams" class="mini" title="Collapse / expand the engine parameters">▾</button>
+      </h2>
+      <div id="engineBody">
+        <label class="switch"><input type="checkbox" id="onlyDraw" checked>
+          draw only the trace-ordered edges (not the full clique)</label>
+        <label class="switch"><input type="checkbox" id="showLabels" checked>
+          component labels</label>
+        <label class="switch" title="Outline parts whose nearest different-net pad is closer than the 0.2 mm design clearance"><input type="checkbox" id="showClearance" checked>
+          mark parts with pad clearance &lt; 0.2 mm</label>
+        <div id="params"></div>
+        <p class="hint" id="paramNote"></p>
+        <p class="hint" id="engineNote"></p>
+      </div>
+    </section>
+
+    <section id="routing">
+      <h2>Routing <span class="tag" id="routeTag">last route</span></h2>
+      <div id="routeSummary" class="hint">no route feedback yet — run
+        <code>make route</code> (it writes <code>build/layout/route-feedback.json</code>).</div>
+      <label class="switch" title="Unrouted connections and DRC clearance violations from the last routed board"><input type="checkbox" id="showIssues" checked>
+        show route markers</label>
+      <div id="routeLegend" class="route-legend"></div>
+      <table id="routeNets"></table>
+      <p class="hint" id="routeNote"></p>
     </section>
 
     <section>
@@ -70,11 +97,6 @@
       <p class="hint">HPWL is a pre-route proxy — the field's yardstick is
       <i>routed</i> wirelength after FreeRouting. “overlap” counts courtyard
       (courtyard-AABB) intersections; 0 is the goal.</p>
-    </section>
-
-    <section>
-      <h2>Pinned <span class="tag" id="pinCount">0</span></h2>
-      <div id="pins" class="pins"></div>
     </section>
 
     <section>

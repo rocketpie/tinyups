@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-"""Extract a *placement graph* from the netlist for auto-layout experiments.
+"""Extract the *placement graph* from the board.
 
-Nodes  = components (footprint, courtyard size, pads, block, power flag)
+Nodes  = components (the board's real footprint, courtyard, pads, block, power
+         flag) at their current rotation.  The **board** is the source of truth:
+         if a component was swapped on the board but not in the schematic, the
+         netlist's footprint id (and therefore pad geometry) is stale.  Using the
+         board also makes a pad-clearance metric mean something.
 Anchors= only the two main connectors: 1J1 (XT60 input) and 5J2 (XT30 output).
 Edges  = net connectivity, decomposed as an MST per net (k-1 edges), with a
          required trace width derived from the net's design current (IPC-2221).
@@ -9,10 +13,8 @@ Edges  = net connectivity, decomposed as an MST per net (k-1 edges), with a
 **GND is dropped.**  It is a plane, so its traces are irrelevant to placement;
 including it (71 parts) just glues the whole design into a hairball.
 
-The same graph feeds every layout engine (d3-force, dagre, ELK, graphviz), so
-they can be compared apple-to-apple.  It also carries `power_order` — the power
-components in power-flow order (BFS from the input over the rail nets) — which
-the incremental engine places one by one.
+`power_order` — the power components in power-flow order (BFS from the input
+over the rail nets) — is carried for the incremental engine.
 
 Usage:
     /opt/eda/venv/bin/python ui/placement/extract.py [--keep-gnd] [--drop NETS]
@@ -37,79 +39,57 @@ from blocks import (BLOCK_NUM, PREFIX, PREFIXED_BLOCKS, kind,      # noqa: E402
                     label)
 from power_spec import (CAP_ESR, DESIGN_CURRENT, RIPPLE_V_RMS,   # noqa: E402
                         SW_FREQ)
+from power_report import width_for                              # noqa: E402
 from power_map import (_cap, _num, component_is_power,           # noqa: E402
                         OVERRIDES)
 
-NETLIST = os.path.join(ROOT, "build", "tinyups.net")
-FP_ROOT = "/usr/share/kicad/footprints"
+BOARD = os.path.join(ROOT, "hardware", "tinyups.kicad_pcb")
 OUT = os.path.join(ROOT, "build", "layout", "graph.json")
 
-# Board geometry and the two power terminals.  These used to live in gen_pcb.py;
-# the board is now hand-tuned in this UI, so only the graph needs them.
+# Board outline.  The two terminal positions are read from the board too: the
+# hand-tuned placement moved them off the old gen_pcb floorplan.
 BOARD_W, BOARD_H = 150.0, 140.0
-ANCHORS = {
-    "J1": (BOARD_W / 2, 11.0),               # XT60 input   - back centre
-    "J2": (BOARD_W / 2, BOARD_H - 11.0),     # XT30 output  - front centre
-}
 
 
 # --------------------------------------------------------------------------- #
-# tiny s-expression parser (KiCad netlist)
+# board geometry -> footprint-local frame
 # --------------------------------------------------------------------------- #
-def tokenize(s: str):
-    i, n = 0, len(s)
-    while i < n:
-        c = s[i]
-        if c in "()":
-            yield c
-            i += 1
-        elif c == '"':
-            j = i + 1
-            buf = []
-            while j < n and s[j] != '"':
-                if s[j] == "\\":
-                    j += 1
-                buf.append(s[j])
-                j += 1
-            yield ("str", "".join(buf))
-            i = j + 1
-        elif c.isspace():
-            i += 1
-        else:
-            j = i
-            while j < n and not s[j].isspace() and s[j] not in '()"':
-                j += 1
-            yield ("sym", s[i:j])
-            i = j
+def rot(p, a):
+    """Rotate a local offset by `a` degrees, KiCad Y-DOWN frame."""
+    c, s = math.cos(math.radians(a)), math.sin(math.radians(a))
+    return (p[0] * c + p[1] * s, -p[0] * s + p[1] * c)
 
 
-def parse(s: str):
-    toks = list(tokenize(s))
-    pos = 0
+def local_bbox(fp) -> tuple[float, float, float, float]:
+    """Courtyard AABB in the footprint's own (unrotated) frame.
 
-    def rd():
-        nonlocal pos
-        t = toks[pos]
-        pos += 1
-        if t == "(":
-            lst = []
-            while toks[pos] != ")":
-                lst.append(rd())
-            pos += 1
-            return lst
-        return t[1]
-
-    return rd()
-
-
-def _find_all(node, key):
-    out = []
-    if isinstance(node, list) and node and node[0] == key:
-        out.append(node)
-    if isinstance(node, list):
-        for c in node:
-            out.extend(_find_all(c, key))
-    return out
+    The board stores the courtyard in board coordinates; `setExtents` in the UI
+    re-applies the placement rotation, so the graph must carry the local shape.
+    """
+    o = fp.GetPosition()
+    pts = []
+    poly = fp.GetCourtyard(pcbnew.F_CrtYd)
+    if poly.OutlineCount() == 0:
+        poly = fp.GetCourtyard(pcbnew.B_CrtYd)
+    if poly.OutlineCount() > 0:
+        for i in range(poly.OutlineCount()):
+            outline = poly.Outline(i)
+            for j in range(outline.PointCount()):
+                q = outline.CPoint(j)
+                pts.append(rot((pcbnew.ToMM(q.x - o.x),
+                                pcbnew.ToMM(q.y - o.y)),
+                               -fp.GetOrientationDegrees()))
+    if not pts:                                  # no courtyard: body bbox
+        bb = fp.GetBoundingBox(False, False)
+        for dx, dy in ((bb.GetX(), bb.GetY()),
+                       (bb.GetX() + bb.GetWidth(), bb.GetY()),
+                       (bb.GetX() + bb.GetWidth(), bb.GetY() + bb.GetHeight()),
+                       (bb.GetX(), bb.GetY() + bb.GetHeight())):
+            pts.append(rot((pcbnew.ToMM(dx - o.x), pcbnew.ToMM(dy - o.y)),
+                           -fp.GetOrientationDegrees()))
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    return (round(min(xs), 2), round(min(ys), 2),
+            round(max(xs) - min(xs), 2), round(max(ys) - min(ys), 2))
 
 # leading digit of the ref -> block mnemonic, e.g. 2R11 -> CHG-2R11
 # (single source: blocks.py; 1=IP 2=CHG 3=PP 4=BMS 5=OR 6=CTL)
@@ -175,76 +155,75 @@ def main() -> int:
     if "--drop" in sys.argv:
         drop |= set(sys.argv[sys.argv.index("--drop") + 1].split(","))
 
-    tree = parse(open(NETLIST).read())
+    board = pcbnew.LoadBoard(BOARD)
+    fps = {fp.GetReference(): fp for fp in board.GetFootprints()}
 
-    comps: dict[str, dict] = {}
-    for c in _find_all(tree, "comp"):
-        ref = next(x for x in c if isinstance(x, list) and x[0] == "ref")[1]
-        val = next((x[1] for x in c if isinstance(x, list) and x[0] == "value"), "")
-        fp = next((x[1] for x in c if isinstance(x, list) and x[0] == "footprint"), "")
-        comps[ref] = {"value": val, "fp": fp}
-
-    pin_net: dict[tuple[str, str], str] = {}
     nets: dict[str, list[str]] = {}
-    for net in _find_all(tree, "net"):
-        name = next(x[1] for x in net if isinstance(x, list) and x[0] == "name")
-        name = name.lstrip("/")
-        for node in net:
-            if isinstance(node, list) and node[0] == "node":
-                ref = next(x[1] for x in node if isinstance(x, list) and x[0] == "ref")
-                pad = next(x[1] for x in node if isinstance(x, list) and x[0] == "pin")
-                pin_net[(ref, pad)] = name
-                nets.setdefault(name, []).append(ref)
+    for ref, fp in fps.items():
+        for p in fp.Pads():
+            net = p.GetNetname().lstrip("/")
+            if net:
+                nets.setdefault(net, []).append(ref)
 
     ref_block = {r: b for b, refs in PREFIXED_BLOCKS.items() for r in refs}
     # pin only the two power terminals; USB/SWD/PACK/CELLS/fan headers move free.
-    anchors = {label(k): v for k, v in ANCHORS.items() if k in PINNED}
+    anchors = {}
+    for base in PINNED:
+        fp = fps.get(label(base))
+        if fp is not None:
+            p = fp.GetPosition()
+            anchors[label(base)] = (round(pcbnew.ToMM(p.x), 2),
+                                    round(pcbnew.ToMM(p.y), 2))
 
     nodes = []
-    for ref, info in sorted(comps.items()):
-        lib, name = info["fp"].split(":", 1)
-        fp = pcbnew.FootprintLoad(os.path.join(FP_ROOT, lib + ".pretty"), name)
-        if fp is None:
-            print("missing footprint", info["fp"], file=sys.stderr)
-            return 1
-        # local bbox relative to the (unrotated) footprint origin.
-        # Prefer the F.CrtYd courtyard: that is what KiCad's DRC actually checks,
-        # so a legalizer built on the *body* bbox still leaves courtyard overlaps.
-        bb = fp.GetBoundingBox(False, False)
-        poly = fp.GetCourtyard(pcbnew.F_CrtYd)
-        if poly.OutlineCount() > 0:
-            bb = poly.BBox()
-        o = fp.GetPosition()
-        bx, by = pcbnew.ToMM(bb.GetX() - o.x), pcbnew.ToMM(bb.GetY() - o.y)
-        bw, bh = pcbnew.ToMM(bb.GetWidth()), pcbnew.ToMM(bb.GetHeight())
+    for ref, fp in sorted(fps.items()):
+        # The board's footprint, not the netlist's: a swapped part keeps its
+        # schematic footprint id in the netlist until the schematic is re-synced,
+        # and the resulting pad geometry would be a different part.
+        bx, by, bw, bh = local_bbox(fp)
+        fpid = fp.GetFPID()
+        fp_name = f"{fpid.GetLibNickname()}:{fpid.GetLibItemName()}"
+        value = fp.GetValue()
         pads = []
         for p in fp.Pads():
-            pos = p.GetPosition()
+            rel = p.GetFPRelativePosition()     # already footprint-local
+            sz = p.GetSize()
             pads.append({
                 "num": p.GetNumber(),
-                "net": pin_net.get((ref, p.GetNumber()), ""),
-                "dx": round(pcbnew.ToMM(pos.x - o.x), 3),
-                "dy": round(pcbnew.ToMM(pos.y - o.y), 3),
+                "net": p.GetNetname().lstrip("/"),
+                "dx": round(pcbnew.ToMM(rel.x), 3),
+                "dy": round(pcbnew.ToMM(rel.y), 3),
+                # Pad geometry is what a *clearance* is measured on; the
+                # courtyard is the placement collision, not the copper.
+                "w": round(pcbnew.ToMM(sz.x), 3),
+                "h": round(pcbnew.ToMM(sz.y), 3),
+                "angle": round((p.GetOrientationDegrees()
+                                - fp.GetOrientationDegrees()) % 360, 2),
             })
         nets_of = {p["net"] for p in pads if p["net"]}
         nodes.append({
             "id": ref,
             "label": mnemonic(ref),
-            "value": info["value"],
-            "fp": info["fp"],
+            "value": value,
+            "fp": fp_name,
             "kind": kind(ref),
             "block": ref_block.get(ref, "?"),
-            "power": component_is_power(ref, info["value"], nets_of),
-            "w": round(bw, 2), "h": round(bh, 2),
-            "bbox": [round(bx, 2), round(by, 2), round(bw, 2), round(bh, 2)],
+            "power": component_is_power(ref, value, nets_of),
+            "w": bw, "h": bh,
+            "bbox": [bx, by, bw, bh],
             "anchor": anchors.get(ref),
             "pads": pads,
         })
     node_by_id = {n["id"]: n for n in nodes}
 
-    # per-net current -> required width
+    # per-net current -> required width.  `width` is the force model's 1 oz
+    # reference (the springs' relative width); `required` is the board's real
+    # 2 oz IPC-2221 width, the number the UI must show and the pour channel
+    # must meet (ADR-0008: 20 A -> 9.4 mm, not 18.7 mm).
     net_current = {n: DESIGN_CURRENT.get(n, 0.0) for n in nets}
     net_width = {n: round(ipc_width_mm(c), 2) for n, c in net_current.items()}
+    net_required = {n: round(max(SIG_WIDTH_MM, width_for(c)), 2) if c > 0
+                    else SIG_WIDTH_MM for n, c in net_current.items()}
 
     # edges: for the *force model*, the clique of each net — every pair gets an
     # equal share of the net's total weight.  A net is electrically one node, so
@@ -364,6 +343,7 @@ def main() -> int:
         "edges": edges,
         "power_order": power_order,
         "nets": {n: {"current": net_current[n], "width": net_width[n],
+                     "required": net_required[n],
                      "comps": len(set(nets[n]))} for n in nets},
         "dropped": sorted(drop),
     }

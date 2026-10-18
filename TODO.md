@@ -10,8 +10,12 @@
     I want that feedback loop shorter
 
 # UI
-- works with json. a board is .kicad_pcb. 
-- data extraction and re-integration is python right now. how to integrate?
-    (Added from_board.py + make place-seed, which snapshots the board to placements/main.json; server.mjs now defaults to it. Workflow: make place → tune → Save (placement JSON) → Apply to board + DRC (build/layout/board.kicad_pcb).
- 
+- works with json. a board is .kicad_pcb.
+- data extraction and re-integration stays python (`extract.py`, `apply.py`,
+  `route_feedback.py`); the UI reads `graph.json` + `route-feedback.json` and
+  posts saved placements. Workflow: `make place` → tune → Save → Apply to board
+  + DRC (writes `build/layout/board.kicad_pcb` and `route-feedback.json`).
+- Route feedback is in the panel/overlay: unrouted connections, clearance
+  violations, measured power-channel shortfall. Next: launch `make route` as an
+  async job from the UI and refresh the same feedback when it lands.
 - A/B testing: on model change, run all metrics, record update in progress.md

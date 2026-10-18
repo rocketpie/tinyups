@@ -76,6 +76,7 @@ hardware/
   blocks.py              # functional-block / reference map
   power_*.py             # power spec, map, ampacity, pour, channel
   route.py               # FreeRouting driver
+  route_feedback.py      # routed board + DRC -> placement-UI feedback JSON
 ui/
   placement/             # interactive placement UI (browser)
 mechanical/

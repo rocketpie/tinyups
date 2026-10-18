@@ -26,6 +26,9 @@ with `make place-seed` — so the simulation begins from exactly what
 | --- | --- |
 | **Drag a part** | pins it (`fx`/`fy`) — the engine treats it as fixed and solves the rest around it. While **Paused** the solver does not run: the dragged part moves and nothing else |
 | **Right-click a part** | pin ↔ unpin |
+| **Pin selected / Unpin selected** | fix or release the selected part **in place** — a click-and-button, no drag, so the position does not change |
+| **Engine heading ▾** | collapse / expand the whole Engine body (view toggles, parameter list, notes); the state is remembered |
+| **Route legend rows** | click a row to show / hide that marker class on the board |
 | **Click a part** | inspect it (value, footprint, nets + currents, pads, and **which IC it belongs to**). The selection is an outline and a dashed line to its host; hover is what dims the rest, so a click never leaves the board faded |
 | **Click empty space / Esc** | clear the selection |
 | **Drag empty space / wheel** | pan / zoom |
@@ -35,12 +38,41 @@ with `make place-seed` — so the simulation begins from exactly what
 | **Reset** | restore the seed positions, keep only the terminals pinned |
 | **Drag a parameter row** (by its `⠿` grip) | reorder the Engine panel — your important knobs on top. `↕ Default order` restores the built-in order |
 | **Save** | write `ui/placement/placements/<name>.json` (**tracked**) |
-| **Apply to board + DRC** | `apply.py` → `kicad-cli pcb drc` on the saved file, into `build/layout/` (untracked); the tracked `hardware/tinyups.kicad_pcb` is never modified |
+| **Apply to board + DRC** | `apply.py` → `kicad-cli pcb drc` on the saved file, then `route_feedback.py` → `build/layout/route-feedback.json`, into `build/layout/` (untracked); the tracked `hardware/tinyups.kicad_pcb` is never modified. The Routing panel refreshes from that file |
 
 The two power terminals (`1J1`, `5J2`) are always pinned (`anchor` in the graph).
 Live metrics reproduce `render.py`'s set: HPWL, weighted HPWL, drawn wirelength,
 courtyard **overlaps**, off-board count, power-path length, straightness, flow
-`axisR`, and the input/output distances.
+`axisR`, and the input/output distances. Two placement-side route proxies sit
+beside them: **minimum pad-to-pad clearance** (different nets, 0.2 mm design
+rule) and the number of parts below it. The inspector shows the same per part,
+the selected part's nearest offender, and the net's **required** 2 oz width
+(9.4 mm for 20 A, `required` in the graph) next to the force model's width.
+
+## Route feedback
+
+`make route` ends with `hardware/route_feedback.py`, which reads the routed
+board plus its DRC report and writes `build/layout/route-feedback.json`. The
+server exposes it as `/api/route-feedback`; the **Routing** panel reads it and
+draws the last route's verdict on the placement:
+
+| Marker | Meaning |
+| --- | --- |
+| red dashed line | an **unrouted connection** (`unconnected_items`) between the two DRC items |
+| amber line | a **clearance violation**, with required/actual in the tooltip |
+| magenta ring | a high-current net whose measured pour **channel** is narrower than its IPC-2221 width (`power_channel.py`) |
+
+The panel summarizes tracks, vias, min trace, unrouted and clearance counts, and
+lists each power rail's measured channel against its requirement. The three
+legend rows are clickable, so on a fully unrouted board the 284 red lines can be
+hidden to see the clearance or channel markers underneath. Items that
+name a part/pad are anchored to that pad, so they move with the placement; track
+items keep their absolute coordinate. A moved placement needs a fresh
+`make route` — the panel says so instead of pretending the old route is live.
+
+The channel number is measured, not simulated: the UI does not rasterise the
+board every tick. The live clearance row is the cheap proxy for the same
+question, and the Python measurement remains the authority.
 
 ## Where the tuning and the placements live
 
@@ -94,7 +126,10 @@ Every slider maps to a force in `public/model.js`.
 **Links** — `forceLink`
 - `SIG_STR` signal trace link force — strength for a zero-width net
 - `POW_STR` power trace link force — strength reached at a full `WREF`-wide trace
-- `WREF` reference width (mm) — the IPC-2221 width of a 20 A net (18.71 mm)
+- `WREF` reference width (mm) — the force model's "full power" width, the 1 oz
+  IPC-2221 width of a 20 A net (18.71 mm). The board is 2 oz, so its real
+  requirement is 9.4 mm; the graph carries that separately as `required` and the
+  inspector shows it
 - `D0` link rest distance (mm), `DK` extra distance per unit width, `DMAX` cap
 - `LINK_ITER` link constraint iterations
 
@@ -144,7 +179,8 @@ start.
 
 ## Source of truth, and where edits go
 
-- **Read:** `build/layout/graph.json` (built from the netlist by `extract.py`)
+- **Read:** `build/layout/graph.json` (built from **the board's footprints** by
+  `extract.py` — the board, not the netlist, is the component source of truth)
   plus a seed position file in `build/layout/` or `placements/`.
 - **Write (generated, untracked):** `build/layout/board.kicad_pcb` + DRC on
   demand. Nothing else in `build/` is read back by the UI.
@@ -165,7 +201,7 @@ start.
 | `public/index.html` | page + import map |
 | `public/app.js` | the view: scene, drag/pin, params panel, metrics table, persistence |
 | `public/style.css` | panel + board styling |
-| `extract.py` | netlist → placement graph (`build/layout/graph.json`) |
+| `extract.py` | board footprints + nets → placement graph (`build/layout/graph.json`) |
 | `from_board.py` | snapshot the main board as `placements/main.json` (`make place-seed`) |
 | `legalize.py` | rotation, de-overlap, hard pass, grid snap (optional, CLI) |
 | `apply.py` | write a saved placement onto the main board + DRC |

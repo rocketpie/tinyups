@@ -134,19 +134,23 @@ power: | $(REPORTS) ## Power / ampacity check (design current per net)
 UI_DIR     ?= ui/placement
 PLACE_PORT ?= 4097
 F          ?= $(UI_DIR)/placements/main.json
-place: | $(OUT) ## Interactive placement UI (http://localhost:4097)
-	@test -f $(OUT)/$(NAME).net || $(MAKE) --no-print-directory netlist
-	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(UI_DIR)/extract.py
+GRAPH      := $(OUT)/layout/graph.json
+# The graph is derived from the board; rebuild it when the board (or the
+# extractor's shared design data) changes, so a swapped component cannot leave
+# the UI drawing the old footprint.
+$(GRAPH): $(PCB) $(UI_DIR)/extract.py hardware/blocks.py hardware/power_spec.py hardware/power_map.py hardware/power_report.py | $(OUT)
+	$(PYTHON) $(UI_DIR)/extract.py
+place: $(GRAPH) | $(OUT) ## Interactive placement UI (http://localhost:4097)
 	@test -d $(UI_DIR)/node_modules || (cd $(UI_DIR) && npm install --no-audit --no-fund)
 	PORT=$(PLACE_PORT) node $(UI_DIR)/server.mjs
 
 place-seed: | $(OUT) ## Snapshot the main board's placement as the UI start
 	$(PYTHON) $(UI_DIR)/from_board.py $(PCB) $(UI_DIR)/placements/main.json
 
-place-render: | $(OUT) ## Render a saved placement (F=<positions.json>)
+place-render: $(GRAPH) | $(OUT) ## Render a saved placement (F=<positions.json>)
 	$(PYTHON) $(UI_DIR)/render.py $(F) $(OUT)/layout/placement.png --label
 
-place-legalize: | $(OUT) ## Legalise a saved placement (F=<positions.json>) -> build/layout/leg-<name>
+place-legalize: $(GRAPH) | $(OUT) ## Legalise a saved placement (F=<positions.json>) -> build/layout/leg-<name>
 	$(PYTHON) $(UI_DIR)/legalize.py $(F) $(OUT)/layout/leg-$(notdir $(F))
 
 place-apply: | $(OUT) ## Apply a saved placement to the main board + DRC (F=<positions.json>)
@@ -175,6 +179,7 @@ v = [float(x) for x in re.findall(r'^\[clearance\].*actual ([0-9.]+)', t, re.M)]
 b = [x for x in v if x < 0.127]; \
 print(f'  clearance: {len(v)} item(s) - {len(b)} below the 0.127 fab floor (real), ' \
       f'{len(v) - len(b)} below the 0.2 design preference only (accepted)')"
+	$(PYTHON) hardware/route_feedback.py $(ROUTE_OUT) $(REPORTS)/routed-drc-$(ROUTE_TAG).rpt
 
 # --- simulation ------------------------------------------------------------
 sim: ## Run all ngspice simulations in sim/

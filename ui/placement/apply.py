@@ -60,6 +60,19 @@ def main() -> int:
     print(f"  courtyard overlaps: {counts.get('courtyards_overlap', 0)}")
     print(f"  board-edge issues : {counts.get('board_edge_clearance', 0)}"
           f" + {counts.get('copper_edge_clearance', 0)}")
+
+    # Turn the DRC into placement feedback (unrouted/clearance markers and the
+    # measured power-channel shortfalls).  Optional: an install without the
+    # power-channel dependencies still gets the board + DRC.
+    fb = os.path.join(ROOT, "build", "layout", "route-feedback.json")
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "hardware",
+                                                      "route_feedback.py"),
+                        out, rpt, "-o", fb],
+                       capture_output=True, text=True, env=dict(os.environ))
+    if r.returncode == 0:
+        print((r.stdout or "").rstrip())
+    else:
+        print("  route feedback skipped: " + (r.stderr or "").strip()[-300:])
     return 0
 
 

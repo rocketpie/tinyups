@@ -33,7 +33,7 @@ const PARAM_SPEC = [
   { key: "POW_STR", label: "Power trace link force", min: 0, max: 60, step: 0.1, d: DEFAULTS.POW_STR, group: "links",
     help: "Link strength a full-width (WREF) power trace reaches. High = the power path collapses into a tight spine." },
   { key: "WREF", label: "Reference width (mm)", min: 1, max: 25, step: 0.01, d: DEFAULTS.WREF, group: "links",
-    help: "Trace width treated as 'full power' — the IPC-2221 width of a 20 A net." },
+    help: "Trace width treated as 'full power' in the force model (1 oz IPC-2221: 18.71 mm for 20 A). The board's real 2 oz requirement is 9.4 mm and is shown per net in the inspector." },
   { key: "D0", label: "Link rest distance (mm)", min: 0, max: 40, step: 0.5, d: DEFAULTS.D0, group: "links",
     help: "Base preferred link length (a signal connection wants to be this long)." },
   { key: "DK", label: "Link distance per width (mm)", min: 0, max: 40, step: 0.5, d: DEFAULTS.DK, group: "links",
@@ -98,6 +98,8 @@ const dropLS = (key) => { try { localStorage.removeItem(key); } catch { /* ignor
 const S = {
   graph: null, board: { w: 150, h: 140 },
   nodes: [], edges: [], byId: new Map(),
+  feedback: null, showIssues: true, showClearance: true, paramsCollapsed: false,
+  issueFilter: { unrouted: true, clearance: true, channel: true },
   params: {}, paramOrder: [], paramSource: "defaults", model: null,
   repo: { file: "ui/placement/params.json", exists: false, values: 0 },
   repoState: "idle",
@@ -119,13 +121,16 @@ const { setExtents, padXY, isFixed } = M;
 
 // --- load -------------------------------------------------------------------
 async function boot() {
-  const [graph, seeds, repo] = await Promise.all([
+  const [graph, seeds, repo, feedback] = await Promise.all([
     fetch("/graph.json").then((r) => r.json()),
     fetch("/api/seeds").then((r) => r.json()),
     fetch("/api/params").then((r) => r.json()).catch(() => null),
+    fetch("/api/route-feedback").then((r) => r.ok ? r.json() : null).catch(() => null),
   ]);
   S.graph = graph;
   S.board = graph.board;
+  S.feedback = feedback;
+  renderRoute();
   if (repo && repo.params) {
     S.repo = { file: repo.file || S.repo.file, exists: !!repo.exists,
       values: Object.keys(repo.params).length };
@@ -161,6 +166,15 @@ function restoreUI(defSeed) {
   if ([...sel.options].some((o) => o.value === want)) sel.value = want;
   S.onlyDraw = ui.onlyDraw !== false; $("#onlyDraw").checked = S.onlyDraw;
   S.showLabels = ui.showLabels !== false; $("#showLabels").checked = S.showLabels;
+  S.showClearance = ui.showClearance !== false; $("#showClearance").checked = S.showClearance;
+  S.showIssues = ui.showIssues !== false; $("#showIssues").checked = S.showIssues;
+  S.paramsCollapsed = ui.paramsCollapsed === true;
+  applyParamsCollapse();
+  if (ui.issueFilter && typeof ui.issueFilter === "object") {
+    for (const k of ["unrouted", "clearance", "channel"]) {
+      if (ui.issueFilter[k] === false) S.issueFilter[k] = false;
+    }
+  }
   S.scatterFixed = ui.scatterFixed === true; $("#scatterFixed").checked = S.scatterFixed;
   if (ui.saveName) $("#saveName").value = ui.saveName;
 }
@@ -168,6 +182,8 @@ function restoreUI(defSeed) {
 function saveUI() {
   storeJSON(LS.ui, {
     seed: S.seedName, onlyDraw: S.onlyDraw, showLabels: S.showLabels,
+    showClearance: S.showClearance, showIssues: S.showIssues,
+    paramsCollapsed: S.paramsCollapsed, issueFilter: S.issueFilter,
     scatterFixed: S.scatterFixed, saveName: $("#saveName").value,
   });
 }
@@ -202,6 +218,7 @@ async function loadSeed(name, force = false) {
   boardRect.setAttribute("width", S.board.w); boardRect.setAttribute("height", S.board.h);
   gridRect.setAttribute("width", S.board.w); gridRect.setAttribute("height", S.board.h);
   buildScene();
+  buildIssues();
   buildSim();
   applyHighlight();
   renderPins();
@@ -319,6 +336,7 @@ function draw() {
     if (n._el) n._el.setAttribute("transform", `translate(${n.x.toFixed(2)},${n.y.toFixed(2)})`);
   }
   drawPads();
+  drawIssues();
 }
 
 function color(c) {
@@ -347,7 +365,7 @@ function styleNodes() {
 // leave anything behind: re-style, refresh the panel and the pads, redraw.
 function setSelected(id) {
   S.selected = id;
-  styleNodes(); renderInspect(); applyHighlight(); draw();
+  styleNodes(); renderInspect(); updatePinButtons(); applyHighlight(); draw();
 }
 
 // Dim everything that is not the hovered part's neighbourhood.  Only *hover*
@@ -399,6 +417,187 @@ function drawPads() {
   }
 }
 
+// --- route feedback (from the last routed board) ----------------------------
+// A routed board + its DRC report are turned into build/layout/route-feedback.json
+// by hardware/route_feedback.py (make route).  The markers are *historical*:
+// they are the router's verdict on the placement that was routed.  When an item
+// names a reference/pad we anchor the marker to that pad in the live placement;
+// a track item keeps its absolute coordinate.  Moving parts therefore moves the
+// endpoints that we can identify, but the real answer is a fresh `make route`.
+function issueXY(item) {
+  if (!item) return null;
+  if (item.ref) {
+    const n = S.byId.get(item.ref);
+    if (!n) return [item.x, item.y];
+    const p = item.pad ? (n.pads || []).find((q) => q.num === item.pad) : null;
+    return p ? padXY(n, p) : [n.x + n.cx, n.y + n.cy];
+  }
+  return [item.x, item.y];
+}
+
+function issueTitle(kind, a, b) {
+  const one = (it) => it ? `${it.ref ? it.ref + (it.pad ? `.${it.pad}` : "") + " " : ""}` +
+    `${it.net ? it.net + " " : ""}${it.kind || ""}` : "?";
+  return `${kind}: ${one(a)} ↔ ${one(b)}`;
+}
+
+function buildIssues() {
+  let layer = document.getElementById("issues");
+  if (!layer) {
+    layer = document.createElementNS(NS, "g");
+    layer.id = "issues";
+    viewport.appendChild(layer);
+    layer.addEventListener("click", (ev) => {
+      const el = ev.target.closest(".issue-unrouted,.issue-clearance,.issue-channel");
+      const ref = el && el.dataset.ref;
+      if (ref && S.byId.has(ref)) setSelected(ref);
+    });
+  }
+  S.issuesLayer = layer;
+  layer.replaceChildren();
+  layer.style.display = S.showIssues ? "" : "none";
+  const f = S.feedback; if (!f) return;
+
+  const add = (el, a, b, title) => {
+    el._a = a; el._b = b;
+    el.dataset.issue = el.dataset.kind;
+    if (a && a.ref && S.byId.has(a.ref)) el.dataset.ref = a.ref;
+    else if (b && b.ref && S.byId.has(b.ref)) el.dataset.ref = b.ref;
+    const t = document.createElementNS(NS, "title");
+    t.textContent = title || issueTitle(el.dataset.kind || "", a, b);
+    el.appendChild(t);
+    layer.appendChild(el);
+  };
+  // A clearance violation between two adjacent QFN pads is a ~0.4 mm segment:
+  // invisible at board zoom.  Draw a ring on each item, plus the line for the
+  // spread-out cases.
+  const addRing = (a, b, title) => {
+    const el = document.createElementNS(NS, "circle");
+    el.setAttribute("class", "issue-clearance");
+    el.dataset.kind = "clearance";
+    el._one = a || b;
+    el.dataset.issue = "clearance";
+    if (a && a.ref && S.byId.has(a.ref)) el.dataset.ref = a.ref;
+    else if (b && b.ref && S.byId.has(b.ref)) el.dataset.ref = b.ref;
+    const t = document.createElementNS(NS, "title");
+    t.textContent = title;
+    el.appendChild(t);
+    layer.appendChild(el);
+  };
+
+  for (const u of f.unrouted || []) {
+    const el = document.createElementNS(NS, "line");
+    el.setAttribute("class", "issue-unrouted");
+    el.dataset.kind = "unrouted";
+    add(el, u.a, u.b);
+  }
+  for (const c of f.clearance || []) {
+    const title = `clearance ${fmt(c.actual_mm, 2)} mm (needs ${fmt(c.required_mm, 2)}) · ` +
+      issueTitle("clearance", c.a, c.b);
+    const el = document.createElementNS(NS, "line");
+    el.setAttribute("class", "issue-clearance");
+    el.dataset.kind = "clearance";
+    add(el, c.a, c.b, title);
+    addRing(c.a, c.b, title);
+    addRing(c.b, c.a, title);
+  }
+  for (const c of f.power_channels || []) {
+    if (c.ok || !c.pinch) continue;
+    const el = document.createElementNS(NS, "circle");
+    el.setAttribute("class", "issue-channel");
+    el.dataset.kind = "channel";
+    el.dataset.issue = "channel";
+    el._p = [c.pinch.x, c.pinch.y];
+    el.dataset.ref = "";
+    const t = document.createElementNS(NS, "title");
+    t.textContent = `power channel ${c.net}: ${c.channel_mm} of ${c.required_mm} mm`;
+    el.appendChild(t);
+    layer.appendChild(el);
+  }
+  drawIssues();
+  applyIssueFilter();
+}
+
+// Legend rows toggle a marker class, so a board with 284 unrouted connections
+// can still show its 21 clearance violations.
+function applyIssueFilter() {
+  if (S.issuesLayer) {
+    for (const el of S.issuesLayer.children) {
+      const k = el.dataset.issue;
+      if (k) el.style.display = S.issueFilter[k] === false ? "none" : "";
+    }
+  }
+  for (const row of document.querySelectorAll("#routeLegend .rowline")) {
+    row.classList.toggle("off", S.issueFilter[row.dataset.issue] === false);
+  }
+}
+
+function drawIssues() {
+  if (!S.issuesLayer) return;
+  for (const el of S.issuesLayer.children) {
+    if (el._one) {                              // clearance ring on one item
+      const p = issueXY(el._one);
+      if (!p) continue;
+      el.setAttribute("cx", p[0].toFixed(2));
+      el.setAttribute("cy", p[1].toFixed(2));
+      el.setAttribute("r", "0.9");
+    } else if (el._a && el._b) {                // unrouted / clearance line
+      const a = issueXY(el._a), b = issueXY(el._b);
+      if (!a || !b) continue;
+      el.setAttribute("x1", a[0].toFixed(2)); el.setAttribute("y1", a[1].toFixed(2));
+      el.setAttribute("x2", b[0].toFixed(2)); el.setAttribute("y2", b[1].toFixed(2));
+    } else if (el._p) {                         // power-channel ring
+      el.setAttribute("cx", el._p[0].toFixed(2));
+      el.setAttribute("cy", el._p[1].toFixed(2));
+      el.setAttribute("r", "1.4");
+    }
+  }
+}
+
+function renderRoute() {
+  const f = S.feedback;
+  const summary = $("#routeSummary"), table = $("#routeNets"), note = $("#routeNote");
+  const legend = $("#routeLegend");
+  if (!summary) return;
+  if (!f) {
+    summary.innerHTML = "no route feedback yet — run <code>make route</code> " +
+      "(it writes <code>build/layout/route-feedback.json</code>).";
+    table.innerHTML = ""; note.textContent = ""; legend.innerHTML = "";
+    return;
+  }
+  const s = f.summary || {};
+  $("#routeTag").textContent = (s.tracks ? "last route · " : "applied board · ") +
+    (f.board || "?").split("/").pop();
+  summary.innerHTML =
+    `<b>${s.unrouted || 0}</b> unrouted · <b>${s.clearance || 0}</b> clearance · ` +
+    `${s.power_channels_short || 0} power channel short<br>` +
+    `${s.tracks || 0} tracks · ${s.vias || 0} vias · min trace ` +
+    `${s.min_track_mm == null ? "–" : s.min_track_mm + " mm"} · ` +
+    `routed ${s.routed_length_mm == null ? "–" : s.routed_length_mm + " mm"}`;
+  legend.innerHTML =
+    `<div class="rowline" data-issue="unrouted" title="click to show / hide">` +
+    `<span class="sw-unrouted"></span>` +
+    `<span>${s.unrouted || 0} unrouted connection${s.unrouted === 1 ? "" : "s"} ` +
+    `(red dashed)</span></div>` +
+    `<div class="rowline" data-issue="clearance" title="click to show / hide">` +
+    `<span class="sw-clearance"></span>` +
+    `<span>${s.clearance || 0} clearance violation${s.clearance === 1 ? "" : "s"} ` +
+    `(amber)</span></div>` +
+    `<div class="rowline" data-issue="channel" title="click to show / hide">` +
+    `<span class="sw-channel"></span>` +
+    `<span>${s.power_channels_short || 0} power channel short ` +
+    `(magenta ring)</span></div>`;
+  applyIssueFilter();
+  const ch = f.power_channels || [];
+  table.innerHTML = ch.length ? ch.map((c) =>
+    `<tr class="${c.ok ? "" : "bad"}"><td>${c.net}</td>` +
+    `<td>${fmt(c.channel_mm, 1)} / ${fmt(c.required_mm, 1)} mm</td></tr>`).join("") : "";
+  note.innerHTML = `channel = measured pour width / IPC-2221 2 oz requirement. ` +
+    `Markers are the ${s.tracks ? "last route" : "applied board DRC"}'s verdict; ` +
+    `they follow named parts, but only a fresh <code>make route</code> answers a ` +
+    `moved placement.`;
+}
+
 // --- metrics ----------------------------------------------------------------
 // The metric set lives in model.js (the same numbers the UI shows); render.py computes
 // the same set in python for the boards it renders.
@@ -415,6 +614,9 @@ function renderMetrics() {
     ["wire (mm)", fmt(m.wire, 0), ""],
     ["overlaps", m.overlap, m.overlap === 0 ? "good" : "bad"],
     ["off-board", m.outside, m.outside === 0 ? "good" : "bad"],
+    ["min pad clearance", m.clearance.min == null ? "–" : `${fmt(m.clearance.min, 2)} mm`,
+      m.clearance.min == null ? "" : m.clearance.min < 0.2 ? "bad" : "good"],
+    ["parts < 0.2 mm", m.clearance.tight, m.clearance.tight ? "bad" : "good"],
     ["power path (mm)", fmt(m.path, 0), ""],
     ["straightness", fmt(m.straight, 2), ""],
     ["flow axisR", fmt(m.axis_r, 2), m.axis_r > 0.4 ? "good" : ""],
@@ -429,6 +631,9 @@ function renderMetrics() {
   }
   $("#metrics").innerHTML = rows.map(([k, v, cls]) =>
     `<tr class="${cls}"><td>${k}</td><td>${v}</td></tr>`).join("");
+  for (const n of S.nodes) {
+    if (n._el) n._el.classList.toggle("tight", S.showClearance && n.clear != null);
+  }
   const a = S.sim ? S.sim.alpha() : 0;
   setStatus(`${S.paused ? "paused" : "alpha " + a.toFixed(3)} · ${S.pinnedCount()} pinned`);
 }
@@ -441,12 +646,35 @@ function renderPins() {
   $("#pins").innerHTML = pins.map((n) =>
     `<span class="pin ${n.anchor != null ? "terminal" : ""}" data-id="${n.id}"
       title="${n.anchor != null ? "terminal — always fixed" : "click to unpin"}">${n.id}</span>`).join("") ||
-    '<span class="hint">none — drag a part to pin it</span>';
+    '<span class="hint">none — drag a part to pin it, or use Pin selected</span>';
+  updatePinButtons();
 }
 
 function pin(n) { if (n.anchor != null) return; n.pinned = true; n.fx = n.x; n.fy = n.y; }
 function unpin(n) { if (n.anchor != null) return; n.pinned = false; n.fx = null; n.fy = null; }
 function unpinAll() { for (const n of S.nodes) unpin(n); styleNodes(); renderPins(); reheat(0.8); }
+
+// Pin / unpin the *selected* part in place.  A drag also pins, but this is the
+// explicit "fix this one where it is" action (and the counterpart to unpin).
+function pinSelected() {
+  const n = S.selected ? S.byId.get(S.selected) : null;
+  if (!n || n.pinned || n.anchor != null) return;
+  pin(n);
+  styleNodes(); renderPins(); renderInspect(); reheat(0.5);
+}
+function unpinSelected() {
+  const n = S.selected ? S.byId.get(S.selected) : null;
+  if (!n || n.anchor != null) return;
+  unpin(n);
+  styleNodes(); renderPins(); renderInspect(); reheat(0.8);
+}
+function updatePinButtons() {
+  const pinBtn = $("#pinSel"), unpinBtn = $("#unpinSel");
+  if (!pinBtn || !unpinBtn) return;
+  const n = S.selected ? S.byId.get(S.selected) : null;
+  pinBtn.disabled = !n || n.pinned || n.anchor != null;
+  unpinBtn.disabled = !n || (!n.pinned && n.anchor == null);
+}
 
 // --- inspect ----------------------------------------------------------------
 function renderInspect() {
@@ -455,8 +683,14 @@ function renderInspect() {
   const nets = [...new Set(n.pads.filter((p) => p.net).map((p) => p.net))]
     .map((net) => {
       const g = S.graph.nets[net] || {};
-      return `<tr><td>${net}</td><td>${fmt(g.current || 0, 1)} A · ${fmt(g.width || 0.25, 2)} mm</td></tr>`;
+      const req = g.required != null ? g.required : g.width;
+      const model = g.width != null && g.required != null && Math.abs(g.width - g.required) > 0.01
+        ? ` · model ${fmt(g.width, 2)}` : "";
+      return `<tr><td>${net}</td><td>${fmt(g.current || 0, 1)} A · req ${fmt(req || 0.25, 2)} mm${model}</td></tr>`;
     }).join("");
+  const rf = (S.feedback && S.feedback.parts && S.feedback.parts[n.id]) || null;
+  const clear = n.clear == null ? "–" : `${fmt(n.clear, 2)} mm` +
+    (n.clearRef ? ` → ${n.clearRef} (${n.clearNet})` : "");
   $("#inspBody").innerHTML = `
     <div class="row"><b>${n.label || n.id}</b> <span class="tag">${n.kind}${n.power ? " · power" : ""}</span></div>
     <div class="hint">${n.value || ""}<br>${n.fp || ""}</div>
@@ -465,6 +699,8 @@ function renderInspect() {
       <tr><td>courtyard</td><td>${fmt(n.w)} × ${fmt(n.h)} mm</td></tr>
       <tr><td>rotation</td><td>${n.angle}° (seed)</td></tr>
       <tr><td>pinned</td><td>${n.pinned ? "yes" : n.anchor != null ? "terminal" : "no"}</td></tr>
+      <tr class="${n.clear != null ? "bad" : ""}"><td>min pad clearance</td><td>${clear}</td></tr>
+      ${rf ? `<tr class="${rf.unrouted + rf.clearance ? "bad" : ""}"><td>last route</td><td>${rf.unrouted} unrouted · ${rf.clearance} clearance${rf.min_clearance_mm != null ? ` · ${fmt(rf.min_clearance_mm, 2)} mm` : ""}</td></tr>` : ""}
       ${n.host ? `<tr><td>belongs to</td><td>${n.host}${n.hostScore ? ` (net score ${fmt(n.hostScore, 2)})` : " (nearest IC)"}</td></tr>` : ""}
     </table>
     <table id="metrics" style="margin-top:6px">${nets}</table>`;
@@ -561,7 +797,7 @@ function bindEvents() {
     ev.preventDefault();
     const n = S.byId.get(g.dataset.id);
     if (n.pinned) unpin(n); else pin(n);
-    styleNodes(); renderPins(); reheat(0.8);
+    styleNodes(); renderPins(); renderInspect(); reheat(0.8);
   });
 
   svg.addEventListener("wheel", (ev) => {
@@ -578,7 +814,7 @@ function bindEvents() {
   $("#pins").addEventListener("click", (ev) => {
     const el = ev.target.closest(".pin"); if (!el) return;
     const n = S.byId.get(el.dataset.id); unpin(n);
-    styleNodes(); renderPins(); reheat(0.8);
+    styleNodes(); renderPins(); renderInspect(); reheat(0.8);
   });
 
   $("#seed").addEventListener("change", () => loadSeed($("#seed").value, true));
@@ -594,8 +830,33 @@ function bindEvents() {
   $("#scatter").addEventListener("click", scatter);
   $("#fit").addEventListener("click", fitView);
   $("#unpin").addEventListener("click", unpinAll);
+  $("#pinSel").addEventListener("click", pinSelected);
+  $("#unpinSel").addEventListener("click", unpinSelected);
   $("#onlyDraw").addEventListener("change", (e) => { S.onlyDraw = e.target.checked; applyHighlight(); saveUI(); });
   $("#showLabels").addEventListener("change", (e) => { S.showLabels = e.target.checked; styleNodes(); saveUI(); });
+  $("#showClearance").addEventListener("change", (e) => {
+    S.showClearance = e.target.checked;
+    for (const n of S.nodes) if (n._el) n._el.classList.toggle("tight", S.showClearance && n.clear != null);
+    saveUI();
+  });
+  $("#showIssues").addEventListener("change", (e) => {
+    S.showIssues = e.target.checked;
+    if (S.issuesLayer) S.issuesLayer.style.display = S.showIssues ? "" : "none";
+    saveUI();
+  });
+  $("#toggleParams").addEventListener("click", () => {
+    S.paramsCollapsed = !S.paramsCollapsed;
+    applyParamsCollapse();
+    saveUI();
+  });
+  $("#routeLegend").addEventListener("click", (ev) => {
+    const row = ev.target.closest(".rowline");
+    const k = row && row.dataset.issue;
+    if (!k) return;
+    S.issueFilter[k] = S.issueFilter[k] === false;
+    applyIssueFilter();
+    saveUI();
+  });
   $("#scatterFixed").addEventListener("change", (e) => { S.scatterFixed = e.target.checked; saveUI(); });
   $("#save").addEventListener("click", save);
   $("#apply").addEventListener("click", apply);
@@ -617,6 +878,16 @@ function showTip(ev, id) {
 }
 
 function updatePauseBtn() { $("#pause").textContent = S.paused ? "▶ Resume" : "⏸ Pause"; }
+
+// The engine parameter list is long; collapse the whole Engine body (the view
+// toggles, the parameters and the notes) with the button in its heading.
+function applyParamsCollapse() {
+  const body = $("#engineBody"), btn = $("#toggleParams");
+  if (!body || !btn) return;
+  body.hidden = S.paramsCollapsed;
+  btn.textContent = S.paramsCollapsed ? "▸" : "▾";
+  btn.title = (S.paramsCollapsed ? "Expand" : "Collapse") + " the engine parameters";
+}
 
 function resetToSeed() {
   const data = S.seedData;
@@ -948,7 +1219,20 @@ async function apply() {
     const j = await r.json();
     $("#io").textContent = (j.ok ? "DRC done → " + j.board + "\n\n" : "failed\n") +
       (j.stdout || "") + (j.stderr || "");
+    if (j.feedback) await reloadFeedback();
   } finally { $("#apply").disabled = false; }
+}
+
+// Re-read build/layout/route-feedback.json after an apply or a route run.  It
+// is optional: a missing file just means the panel says "run make route".
+async function reloadFeedback() {
+  try {
+    const r = await fetch("/api/route-feedback");
+    S.feedback = r.ok ? await r.json() : null;
+  } catch { S.feedback = null; }
+  renderRoute();
+  buildIssues();
+  draw();
 }
 
 function setStatus(msg) { statusEl.textContent = msg; }

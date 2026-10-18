@@ -22,9 +22,9 @@ begins from exactly what `hardware/tinyups.kicad_pcb` is now.
 Load one again with the seed drop-down, or from the command line:
 
 ```sh
-make place-render   F=ui/placement/placements/try5.json
-make place-legalize F=ui/placement/placements/try5.json   # -> build/layout/leg-try5.json
-make place-apply    F=build/layout/leg-try5.json
+make place-render   F=ui/placement/placements/main.json
+make place-legalize F=ui/placement/placements/main.json   # -> build/layout/leg-main.json
+make place-apply    F=build/layout/leg-main.json
 ```
 
 `place-legalize` is the step in between: a saved placement is advisory

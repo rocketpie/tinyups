@@ -36,6 +36,14 @@ body {
   border-radius: 10px; padding: 0 6px; font-size: 10px; letter-spacing: 0;
   text-transform: none;
 }
+#panel h2 .mini { margin-left: auto; flex: 0 0 auto; padding: 0 7px; font-size: 12px; line-height: 1.5; }
+.route-legend { display: flex; flex-direction: column; gap: 3px; margin: 6px 0 8px; font-size: 11px; color: var(--dim); }
+.route-legend .rowline { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.route-legend .rowline:hover { color: var(--ink); }
+.route-legend .rowline.off { opacity: .35; }
+.route-legend .sw-unrouted { width: 18px; border-top: 2px dashed #ff4d4d; }
+.route-legend .sw-clearance { width: 18px; border-top: 2px solid #ffb000; }
+.route-legend .sw-channel { width: 10px; height: 10px; border: 2px dashed #ff2fd0; border-radius: 50%; }
 .row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
 button, select, input[type=text], input[type=number] {
   background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
@@ -72,11 +80,11 @@ label.switch { display: flex; gap: 7px; align-items: center; color: var(--dim);
 .param.disabled { opacity: .45; }
 
 /* ---- metrics ---- */
-#metrics { width: 100%; border-collapse: collapse; font-size: 11.5px; }
-#metrics td { padding: 2px 0; }
-#metrics td:first-child { color: var(--dim); }
-#metrics td:last-child { text-align: right; font-family: ui-monospace, monospace; }
-#metrics tr.bad td:last-child { color: #ff7b7b; }
+#metrics, #routeNets { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+#metrics td, #routeNets td { padding: 2px 0; }
+#metrics td:first-child, #routeNets td:first-child { color: var(--dim); }
+#metrics td:last-child, #routeNets td:last-child { text-align: right; font-family: ui-monospace, monospace; }
+#metrics tr.bad td:last-child, #routeNets tr.bad td:last-child { color: #ff7b7b; }
 #metrics tr.good td:last-child { color: var(--accent); }
 
 .pins { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -118,6 +126,8 @@ label.switch { display: flex; gap: 7px; align-items: center; color: var(--dim);
   pointer-events: none; user-select: none; }
 .node.dragging .courtyard { stroke: var(--pinned); stroke-width: .7; stroke-dasharray: 2 1; }
 .node.pinned .courtyard { stroke: var(--pinned); stroke-width: .55; }
+/* pad-to-pad clearance below the 0.2 mm design rule (live proxy) */
+.node.tight .courtyard { stroke: #ff9f43; stroke-width: .55; stroke-dasharray: 1.1 .7; }
 /* selection is an outline, not a fade — the rest of the board stays readable */
 .node.selected .courtyard { stroke: var(--accent); stroke-width: .6; }
 .node.selected text { font-weight: 600; }
@@ -127,3 +137,7 @@ label.switch { display: flex; gap: 7px; align-items: center; color: var(--dim);
 .pad { stroke: #000; stroke-width: .1; }
 /* the selected part's "belongs-to" link to its host IC */
 .hostlink { stroke: var(--accent); stroke-width: .3; stroke-dasharray: 1.6 1.2; opacity: .85; }
+/* route feedback from the last routed board (build/layout/route-feedback.json) */
+.issue-unrouted { stroke: #ff4d4d; stroke-width: .42; stroke-dasharray: 1.4 .9; opacity: .9; }
+.issue-clearance { fill: none; stroke: #ffb000; stroke-width: .42; opacity: .95; }
+.issue-channel { fill: none; stroke: #ff2fd0; stroke-width: .5; stroke-dasharray: 1 .8; }
