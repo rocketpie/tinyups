@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -23,6 +24,7 @@ import pcbnew
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 BOARD = os.path.join(ROOT, "hardware", "tinyups.kicad_pcb")
+RULES = os.path.join(ROOT, "hardware", "tinyups.kicad_dru")
 
 
 def main() -> int:
@@ -45,6 +47,13 @@ def main() -> int:
         placed += 1
     pcbnew.SaveBoard(out, board)
     print(f"applied {placed} placements -> {out}")
+
+    # KiCad finds the custom rules (the JLCPCB 5 mil floor) in a sidecar named
+    # after the board, so the derived board needs its own copy — without it DRC
+    # falls back to the netclass clearance and reports phantom violations (5U1's
+    # 0.15 mm QFN pads against the 0.2 mm default).
+    if os.path.exists(RULES):
+        shutil.copyfile(RULES, os.path.splitext(out)[0] + ".kicad_dru")
 
     rpt = os.path.join(ROOT, "build", "layout", "drc.rpt")
     subprocess.run(["kicad-cli", "pcb", "drc", "--severity-all",

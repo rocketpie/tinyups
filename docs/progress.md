@@ -47,3 +47,4 @@ gates — `make erc`, `make drc`.
 | 5 | routed + manual DRC fix | | | | 0 | 0 | 0 | FAIL (78 fanout) | PASS | |
 | 6 | standard 5 mil rules | | | | 0 | 524 (446 clr + 78 w) | 0 | FAIL | PASS | |
 | 7 | try5-poured (pours open) | pours on F.Cu | 0.000 | 11/11 | 0 | 52 | 284 | FAIL | — | channel N_AF 3.3/9.4 mm — [history 0015](history/0015-placement-cleanup.md) |
+| 8 | derived board gets the DRU | pours on F.Cu | 0.000 | 11/11 | 0 | 52 (was 73) | 284 | FAIL | — | 21 false 5U1 pad-pad items gone — [history 0017](history/0017-drc-rules-do-not-follow-a-board-copy.md) |

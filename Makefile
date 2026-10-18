@@ -6,6 +6,7 @@ SHELL := /bin/bash
 PROJECT ?= hardware/tinyups
 SCH     := $(PROJECT).kicad_sch
 PCB     := $(PROJECT).kicad_pcb
+DRU     := $(PROJECT).kicad_dru
 NAME    := $(notdir $(PROJECT))
 OUT     ?= build
 REPORTS ?= reports
@@ -168,6 +169,7 @@ ROUTE_TAG   := $(notdir $(ROUTE_BOARD:.kicad_pcb=))
 route: | $(OUT) $(REPORTS) ## Route a board with FreeRouting + routing/DRC report
 	$(call require,$(ROUTE_BOARD))
 	$(PYTHON) hardware/route.py $(ROUTE_BOARD) $(ROUTE_OUT)
+	@cp $(DRU) $(ROUTE_OUT:.kicad_pcb=.kicad_dru)
 	$(PYTHON) hardware/routing_report.py $(ROUTE_OUT)
 	$(KICAD_CLI) pcb drc --severity-all --output $(REPORTS)/routed-drc-$(ROUTE_TAG).rpt $(ROUTE_OUT) || true
 	@echo "--- routed board DRC ($(REPORTS)/routed-drc-$(ROUTE_TAG).rpt)"

@@ -48,5 +48,6 @@ allowed and expected to age, to be superseded, and to be wrong in the future.
 - 0014 – a swept corridor is the wrong primitive for a power pour
 - [0015 – placement cleanup: `try5` adopted, the PoC archived](0015-placement-cleanup.md)
 - [0016 – placement UI: tracked state and the belongs-to force](0016-placement-ui-decisions.md)
+- [0017 – DRC rules do not follow a board copy](0017-drc-rules-do-not-follow-a-board-copy.md)
 
 

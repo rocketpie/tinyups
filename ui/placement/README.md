@@ -39,7 +39,7 @@ with `make place-seed` — so the simulation begins from exactly what
 | **Reset** | restore the seed positions, keep only the terminals pinned |
 | **Drag a parameter row** (by its `⠿` grip) | reorder the Engine panel — your important knobs on top. `↕ Default order` restores the built-in order |
 | **Save** | write `ui/placement/placements/<name>.json` (**tracked**) |
-| **Apply to board + DRC** | `apply.py` → `kicad-cli pcb drc` on the saved file, then `route_feedback.py` → `build/layout/route-feedback.json`, into `build/layout/` (untracked); the tracked `hardware/tinyups.kicad_pcb` is never modified. The Routing panel refreshes from that file |
+| **Apply to board + DRC** | `apply.py` → `kicad-cli pcb drc` on the saved file, then `route_feedback.py` → `build/layout/route-feedback.json`, into `build/layout/` (untracked); the tracked `hardware/tinyups.kicad_pcb` is never modified. The `hardware/tinyups.kicad_dru` rules are copied next to the saved board (`build/layout/board.kicad_dru`) — KiCad only reads custom rules from a sidecar named after the board. The Routing panel refreshes from that file |
 
 The two power terminals (`1J1`, `5J2`) are always pinned (`anchor` in the graph).
 The board can draw two net views. **Part links** (the default in older sessions)
