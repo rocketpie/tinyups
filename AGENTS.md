@@ -71,6 +71,14 @@ Versionsstand: [`docs/toolchain.md`](docs/toolchain.md).
 
 ## Documentation: history vs. timeless docs
 
+- **Do not add a history or decision entry unless it was called for.** The
+  edited files and the diff are the record; most changes need neither, and a
+  session that produces documentation instead of progress has produced nothing.
+- **Entries are brief.** A history entry is a paragraph or two — what was wrong,
+  what fixed it, the numbers that matter. The context lives in the files that
+  changed; do not restate it.
+- **An entry gets its one line in [`docs/history/README.md`](docs/history/README.md)
+  as it is written**, not on request — at most 80 characters, no extra detail.
 - **Never spread fixed bug reports, gotchas, "was broken, now fixed"
   narratives, reverts or one-off findings through the long-lived docs.** They
   are point-in-time and rot; a stale story in a timeless doc is worse than no

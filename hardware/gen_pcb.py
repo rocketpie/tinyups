@@ -642,7 +642,7 @@ def main() -> int:
             o.Append(pcbnew.FromMM(px), pcbnew.FromMM(py))
         z.SetMinThickness(pcbnew.FromMM(0.25))
         try:
-            z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
+            z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL)
         except Exception:
             pass
         board.Add(z)
