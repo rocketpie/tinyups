@@ -7,10 +7,10 @@
 //   /                 the UI (public/index.html + app.js + style.css)
 //   /graph.json       build/layout/graph.json (extract.py's placement graph)
 //   /api/seeds        what it can start from: build/layout (leg-*/pos-*/raw-*)
-//                     and your tracked saves in layout_poc/placements/
+//                     and your tracked saves in placements/
 //   /api/seed?name=X  one of them
 //   /api/params       GET the tracked tuning (params.json); POST/PUT to write it
-//   /api/save         POST -> write hardware/layout_poc/placements/<name>.json
+//   /api/save         POST -> write placements/<name>.json
 //   /api/apply        POST -> run apply.py on a saved file (+ KiCad DRC)
 //   /vendor/<pkg>/... node_modules for the vendored d3-force ES modules
 //
@@ -18,19 +18,17 @@
 // placements (ADR-0010, ADR-0011); everything generated stays in build/.
 //
 // The placement engine itself (d3-force) runs *in the browser*, so the sim is
-// live while you drag — the same force model as engines/d3force.mjs.  See
-// web/README.md.
+// live while you drag.  See ui/placement/README.md.
 //
-// Usage: node web/server.mjs            (PORT=4097 HOST=0.0.0.0 by default)
+// Usage: node ui/placement/server.mjs   (PORT=4097 HOST=0.0.0.0 by default)
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));      // web/
-const POC = path.dirname(HERE);                                 // hardware/layout_poc
-const ROOT = path.dirname(path.dirname(POC));                   // repo root
+const HERE = path.dirname(fileURLToPath(import.meta.url));      // ui/placement
+const ROOT = path.dirname(path.dirname(HERE));                  // repo root
 const PUBLIC = path.join(HERE, "public");
 const LAYOUT = path.join(ROOT, "build", "layout");
 const GRAPH = path.join(LAYOUT, "graph.json");
@@ -38,17 +36,17 @@ const NETLIST = path.join(ROOT, "build", "tinyups.net");
 // The tracked tuning file.  Unlike everything else the UI writes, this one is
 // *in* the repo on purpose: the tuning is a reviewable, revertable artifact
 // (see docs/decisions/0010-placement-params-source-of-truth.md).
-const PARAMS = path.join(POC, "params.json");
+const PARAMS = path.join(HERE, "params.json");
 // Placements you save are your work product, so they are tracked too and live
-// next to the PoC (docs/decisions/0011-placements-are-tracked.md).  Everything
-// *generated* (graph, engine outputs, boards, DRC reports) stays in build/.
-const PLACEMENTS = path.join(POC, "placements");
-const VENDOR = path.join(POC, "node_modules");
+// next to the app (docs/decisions/0011-placements-are-tracked.md).  Everything
+// *generated* (graph, boards, DRC reports) stays in build/.
+const PLACEMENTS = path.join(HERE, "placements");
+const VENDOR = path.join(HERE, "node_modules");
 const VENDOR_PKGS = new Set(["d3-force", "d3-dispatch", "d3-quadtree", "d3-timer"]);
 const PY = process.env.PYTHON || "/opt/eda/venv/bin/python";
 const PORT = Number(process.env.PORT || 4097);
 const HOST = process.env.HOST || "0.0.0.0";
-const DEFAULT_SEED = process.env.SEED || "leg-gv-sfdp";
+const DEFAULT_SEED = process.env.SEED || "main";
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -79,7 +77,7 @@ function ensureGraph() {
         NETLIST, path.join(ROOT, "hardware", "tinyups.kicad_sch")], { stdio: "inherit" });
     }
     console.log("graph.json missing -> extract.py");
-    execFileSync(PY, [path.join(POC, "extract.py")], { stdio: "inherit" });
+    execFileSync(PY, [path.join(HERE, "extract.py")], { stdio: "inherit" });
     return { ok: true };
   } catch (e) {
     return { ok: false, error: String(e.message || e) };
@@ -260,10 +258,10 @@ const server = http.createServer(async (req, res) => {
       const file = path.resolve(ROOT, body.file || "");
       const allowed = file.startsWith(LAYOUT + path.sep) || file.startsWith(PLACEMENTS + path.sep);
       if (!allowed || !fs.existsSync(file)) {
-        return sendJSON(res, 400, { error: "file must be an existing build/layout/*.json or hardware/layout_poc/placements/*.json" });
+        return sendJSON(res, 400, { error: "file must be an existing build/layout/*.json or ui/placement/placements/*.json" });
       }
-      const out = path.join(LAYOUT, "interactive.kicad_pcb");
-      const r = spawnSync(PY, [path.join(POC, "apply.py"), file, out],
+      const out = path.join(LAYOUT, "board.kicad_pcb");
+      const r = spawnSync(PY, [path.join(HERE, "apply.py"), file, out],
         { cwd: ROOT, encoding: "utf8", timeout: 600000, env: process.env });
       return sendJSON(res, r.status === 0 ? 200 : 500, {
         ok: r.status === 0,
@@ -291,5 +289,5 @@ server.listen(PORT, HOST, () => {
   console.log(`  http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}/`);
   console.log(`  root   ${ROOT}`);
   console.log(`  graph  ${g.ok ? GRAPH : "UNAVAILABLE (" + g.error + ")"}`);
-  console.log(`  seeds  ${listSeeds().length} in build/layout/ (default ${DEFAULT_SEED})`);
+  console.log(`  seeds  ${listSeeds().length} (default ${DEFAULT_SEED})`);
 });

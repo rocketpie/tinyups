@@ -68,13 +68,16 @@ ref: blocks.py
 
 ```
 hardware/
-  gen_schematic.py       # schematic generator (edit this)
-  gen_pcb.py             # board generator (netlist -> placed PCB)
   tinyups.kicad_pro      # KiCad project
-  tinyups.kicad_sch      # schematic (generated)
-  tinyups.kicad_pcb      # layout (generated)
+  tinyups.kicad_sch      # schematic (source of truth)
+  tinyups.kicad_pcb      # board (source of truth)
   tinyups.kicad_dru      # design rules (JLCPCB)
-  libs/                  # generated custom symbols
+  libs/                  # custom symbols
+  blocks.py              # functional-block / reference map
+  power_*.py             # power spec, map, ampacity, pour, channel
+  route.py               # FreeRouting driver
+ui/
+  placement/             # interactive placement UI (browser)
 mechanical/
   enclosure/             # ATX-bay enclosure (STEP/STL)
 firmware/
@@ -88,6 +91,7 @@ docs/
   architecture.md
   bom.md
   test-plan.md
+  history/layout_poc/    # archived automatic-placement PoC
   datasheets/            # vendor datasheets + source register
   decisions/
 ```

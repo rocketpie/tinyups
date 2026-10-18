@@ -27,10 +27,9 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Auto-placement PoC (hardware/layout_poc/): graphviz is the classic layout
-# toolbox (dot/neato/fdp/sfdp); node runs the JS engines (d3-force, dagre — the
-# engine behind mermaid flowcharts — and elkjs, see build/layout/).  On Ubuntu
-# the force-directed backends live in a separate plugin package.
+# Interactive placement UI (ui/placement/): node/npm vendor d3-force; the solver
+# runs in the browser and the server itself is dependency-free.
+# Legacy: graphviz is the classic layout toolbox (dot/neato/fdp/sfdp)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         graphviz libgvplugin-neato-layout8 \

@@ -2,6 +2,10 @@
 
 - Status: proposed
 
+> The A/B runner was archived with the placement PoC
+> ([history 0015](../history/0015-placement-cleanup.md)); the one-model
+> decision still holds and the UI remains its only live consumer.
+
 ## Context
 
 Two things went wrong in the same way, twice, in one session:
@@ -26,7 +30,7 @@ enough that several seeds are needed before a difference is real.
 
 ## Decision
 
-1. **The model lives in exactly one module**: `hardware/layout_poc/web/public/model.js`.
+1. **The model lives in exactly one module**: `ui/placement/public/model.js`.
    It owns the parameter defaults, the geometry, every force (link, charge,
    centre pull, keep-in, collision, velocity clamp, belongs-to ring), the host
    assignment, the scatter generator and the metric set. It takes `params`
@@ -34,12 +38,12 @@ enough that several seeds are needed before a difference is real.
    - the browser UI imports it as `./model.js` (the page's import map resolves
      `d3-force`, so no server change was needed);
    - node tools import it by path, resolving `d3-force` through
-     `hardware/layout_poc/node_modules`.
+     `ui/placement/node_modules`.
 2. **The UI is a view of that model, not a second implementation.** `app.js`
    keeps the scene, the interaction and the persistence; the UI's parameter
    `defaults` come from `model.js` (`d: DEFAULTS.KEY`), so a value cannot differ
    between the UI and a tool.
-3. **`hardware/layout_poc/ab.mjs` is the A/B runner** (`make ab`): one row per
+3. **`docs/history/layout_poc/ab.mjs` was the A/B runner** (archived): one row per
    config, N seeds, merged into the same table by the same code that produced the
    numbers. It reports HPWL, drawn wire, courtyard overlaps, off-board, power-path
    length, flow `axisR` **and the per-controller fan statistics** (mean distance
@@ -60,7 +64,7 @@ enough that several seeds are needed before a difference is real.
 ## Consequences
 
 - A model change is now visible in one diff, testable in one command, and
-  reproducible in the UI. `make ab` needs no build step, no browser and no
+  reproducible in the UI. The archived runner needed no build step, no browser and no
   network.
 - The UI gained the fan metrics (per controller, in the Metrics panel), because
   they are the *goal* of the belongs-to force and were previously invisible.

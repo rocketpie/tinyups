@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Apply a layout engine's placement to a real KiCad board and DRC it.
+"""Apply a saved placement to the main board and DRC it.
 
-Builds the full (stage-3) board into build/layout/, moves every footprint to
-the engine+legalizer coordinates/orientation, saves it, then runs `kicad-cli
-pcb drc` and reports the *placement* violations (courtyard overlaps, off-board).
-Unconnected-pad errors are expected (nothing is routed) and are ignored here.
+Loads `hardware/tinyups.kicad_pcb` (the design's board, hand-tuned in this UI),
+moves every footprint to the placement's coordinates/orientation, writes a copy
+under `build/` (the tracked board is never modified), then runs `kicad-cli pcb
+drc` and reports the *placement* violations (courtyard overlaps, off-board).
 
-Usage: apply.py <legal-positions.json> [out.kicad_pcb]
+Unconnected-pad errors are expected (the board is unrouted) and are ignored here.
+
+Usage: apply.py <positions.json> [out.kicad_pcb]
 """
 from __future__ import annotations
 
@@ -20,8 +22,7 @@ import pcbnew
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
-sys.path.insert(0, os.path.dirname(HERE))
-import gen_pcb  # noqa: E402
+BOARD = os.path.join(ROOT, "hardware", "tinyups.kicad_pcb")
 
 
 def main() -> int:
@@ -30,15 +31,7 @@ def main() -> int:
         ROOT, "build", "layout", "board.kicad_pcb")
     os.makedirs(os.path.dirname(out), exist_ok=True)
 
-    # 1. build the full board into our own path (do NOT touch the repo board)
-    os.environ["PCB_STAGE"] = "3"
-    gen_pcb.OUT = out
-    rc = gen_pcb.main()
-    if rc != 0:
-        return rc
-
-    # 2. move the footprints
-    board = pcbnew.LoadBoard(out)
+    board = pcbnew.LoadBoard(BOARD)
     pos = json.load(open(posfile))["positions"]
     placed = 0
     for fp in board.GetFootprints():
@@ -53,7 +46,6 @@ def main() -> int:
     pcbnew.SaveBoard(out, board)
     print(f"applied {placed} placements -> {out}")
 
-    # 3. DRC and count placement violations
     rpt = os.path.join(ROOT, "build", "layout", "drc.rpt")
     subprocess.run(["kicad-cli", "pcb", "drc", "--severity-all",
                     "--output", rpt, out], capture_output=True, text=True,

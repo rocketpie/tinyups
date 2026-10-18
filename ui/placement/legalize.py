@@ -28,7 +28,8 @@ same rule the interactive UI follows ([history
 legaliser overriding it is what broke `placements/try5.json`.
 
 There is deliberately no power-corridor keep-out: that belongs to the hand
-floorplan, not to a graph-derived placement (see layout_poc/README.md).
+floorplan, not to a graph-derived placement (see
+`docs/history/layout_poc/README.md`).
 
 Usage: legalize.py <positions.json> <out.json> [--iterations N]
 """

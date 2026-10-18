@@ -46,5 +46,6 @@ allowed and expected to age, to be superseded, and to be wrong in the future.
 - [0012 – the GND return does not carry 20 A](0012-gnd-return-does-not-carry-20a.md)
 - [0013 – declaring the plane layer (type power) silently disables vias](0013-plane-layer-type-kills-vias.md)
 - 0014 – a swept corridor is the wrong primitive for a power pour
+- [0015 – placement cleanup: `try5` adopted, the PoC archived](0015-placement-cleanup.md)
 
 

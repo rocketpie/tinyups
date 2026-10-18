@@ -69,9 +69,8 @@ contain.
   parts), because a ring around an edge-placed controller reaches the edge: the
   keep-in force has to be doing its job. Documented in
   [`docs/history/0005`](../history/0005-the-netlist-cannot-hold-satellites.md).
-- The UI and the headless PoC engine now differ by one force: `engines/d3force.mjs`
-  has no host force, so a UI session and a `make layout` run are not the same
-  model until the pending engine port (RESUME step 1) carries it over.
+- The UI and the (now archived) headless PoC engine differed by one force:
+  `engines/d3force.mjs` had no host force; the engine was retired with the PoC.
 - The host assignment is a *heuristic over an under-specified netlist*. It is
   deliberately simple, visible in the UI, and cheap to replace — if it turns out
   that assignment should be per-part editable, that is a follow-up decision.

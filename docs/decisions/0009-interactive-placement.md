@@ -4,7 +4,7 @@
 
 ## Context
 
-The placement PoC ([`hardware/layout_poc/README.md`](../../hardware/layout_poc/README.md))
+The placement PoC ([`docs/history/layout_poc/README.md`](../../docs/history/layout_poc/README.md))
 concluded with a graph-derived baseline (`build/layout/baseline.kicad_pcb`,
 150 × 140 mm, 124 parts, 0 courtyard/edge DRC violations) and named the next
 step: **a web-based, user-interactive placement** that starts from the baseline,
@@ -22,7 +22,7 @@ The finding, its numbers and the surrounding gotchas are recorded in
 ## Decision
 
 1. **Build a browser UI served by a dependency-free Node server** on port
-   **4097** (`make place`, `hardware/layout_poc/web/`). It draws the placement
+   **4097** (`make place`, `ui/placement/`). It draws the placement
    graph (courtyards + current-coloured net edges) over the board outline.
 2. **The engine is d3-force**, vendored (already in `node_modules/`) and run in
    the browser so it simulates *while* you drag. It is the right engine for

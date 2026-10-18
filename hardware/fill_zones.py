@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fill the copper zones (planes) on the PCB.
 
-Kept separate from gen_pcb.py because ZONE_FILLER crashes when called on the
+Kept separate from the board build because ZONE_FILLER crashes when called on the
 freshly-built in-memory board in the pcbnew bindings; on a loaded board it is
 fine.
 

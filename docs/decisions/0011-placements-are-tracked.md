@@ -30,7 +30,7 @@ The distinction that matters is **generated vs. authored**:
 
 ## Decision
 
-1. **`hardware/layout_poc/placements/<name>.json`** is where **Save** writes,
+1. **`ui/placement/placements/<name>.json`** is where **Save** writes,
    tracked in git, one file per placement (`<name>` is the string in the save
    box). The shape is unchanged (engine-output: `engine`, `seed`, `params`,
    `pinned`, `positions`) so `render.py`, `apply.py`, `place-render` and
@@ -53,7 +53,7 @@ The distinction that matters is **generated vs. authored**:
 ## Consequences
 
 - A placement you save is reviewable, diffable, shareable and revertable
-  (`git checkout hardware/layout_poc/placements/<name>.json`), and it survives a
+  (`git checkout ui/placement/placements/<name>.json`), and it survives a
   wiped `build/`.
 - The repository can accumulate experiment files. That is the intended trade:
   delete them (or `git rm` them) when an experiment is done — nothing in the

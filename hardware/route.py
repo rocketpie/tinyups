@@ -133,7 +133,7 @@ def main() -> int:
 
     # Fallback for a board with no rule area on the plane: inject a *wire*
     # keepout.  Normally this is not needed — KiCad already exports the rule area
-    # from gen_pcb.py as `(wire_keepout "" (polygon In1.Cu …))`, which the router
+    # from the board as `(wire_keepout "" (polygon In1.Cu …))`, which the router
     # understands.  Freerouting also has `via_keepout` and `place_keepout` scopes,
     # which is why a wire keepout should leave vias alone where the layer type and
     # plane_as_obstacle both do not (docs/history/0013).

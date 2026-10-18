@@ -1,0 +1,9 @@
+{
+  "name": "tinyups-placement-ui",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "d3-force": "^3.0.0",
+    "d3-quadtree": "^3.0.1"
+  }
+}

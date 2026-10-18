@@ -1,13 +1,10 @@
 // TinyUPS placement model — the one place the force model and the metrics live.
 //
 // Imported by:
-//   * web/public/app.js   the browser UI (solves live while you drag)
-//   * ../../ab.mjs        the headless A/B runner
-//   * (and by the headless engine, when it is ported — RESUME step 1)
+//   * public/app.js   the browser UI (solves live while you drag)
 //
-// The browser resolves "d3-force" through the page's import map, node through
-// hardware/layout_poc/node_modules: same code, same numbers, no second copy to
-// drift.  Everything here takes `params` (P) explicitly and reads it *live*, so
+// The browser resolves "d3-force" through the page's import map, served from
+// ui/placement/node_modules: same code, same numbers.  Everything here takes `params` (P) explicitly and reads it *live*, so
 // the UI can move a slider while the solver runs.  Geometry is the KiCad
 // Y-DOWN board frame, matching render.py.
 //
@@ -19,7 +16,7 @@ import * as d3 from "d3-force";
 
 // Parameter defaults.  The UI's PARAM_SPEC supplies label/min/max/help and takes
 // the value from here, so a UI session and a tool run share one truth; the
-// tracked tuning lives in hardware/layout_poc/params.json (ADR-0010).
+// tracked tuning lives in ui/placement/params.json (ADR-0010).
 export const DEFAULTS = {
   SIG_STR: 0.1, POW_STR: 10, WREF: 18.71,
   D0: 2, DK: 2, DMAX: 26, LINK_ITER: 2,

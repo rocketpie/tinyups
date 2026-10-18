@@ -76,7 +76,7 @@ def ampacity(width_mm: float, inner: bool) -> float:
 def width_for(current: float, inner: bool = False) -> float:
     """Minimum copper width (mm) for a current: the inverse of ampacity().
 
-    One model, one place: `gen_pcb.py` sizes its power pours with this, the
+    One model, one place: `pour_power.py` sizes its power pours with this, the
     report sizes traces and pours with `ampacity()`, so a pour and the gate that
     checks it can never disagree.
     """

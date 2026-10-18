@@ -3,7 +3,7 @@
 
 Draws a rectangle on F.Silkscreen around every footprint that has a pad on a
 high-current net, so the power path is visible at a glance in the 2D and 3D
-views (and in the render).  Run it after gen_pcb.py.
+views (and in the render).  Run it after placement.
 
 Run:  /opt/eda/venv/bin/python hardware/power_silk.py [board.kicad_pcb]
 """

@@ -1,5 +1,5 @@
 {
- "_comment": "The placement engine's tuning, as a tracked artifact \u2014 edited from the Engine panel of `make place` (hardware/layout_poc/web/), which writes this file on every change. Keys are the engine's parameter names (engines/d3force.mjs reads the same names from the environment), so one tuning serves both. Values below are the PoC's current config. Delete a key to fall back to the built-in default; `order` is the panel's row order and is absent while it is the default.",
+ "_comment": "The placement engine's tuning, as a tracked artifact \u2014 edited from the Engine panel of `make place` (ui/placement/), which writes this file on every change. Keys are the engine's parameter names in public/model.js. Values below are the current config. Delete a key to fall back to the built-in default; `order` is the panel's row order and is absent while it is the default.",
  "params": {
   "SIG_STR": 0.1,
   "POW_STR": 35.9,

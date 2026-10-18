@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Routing-quality report for the PCB.
 
-Complements place_metrics.py (which measures placement) by measuring the
+Measures the
 *route* and whether it meets a fab rule set:
 
 * trace counts / vias / per-layer usage
@@ -26,7 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
 FAB_MIN_MM = float(os.environ.get("FAB_MIN_MM", "0.127"))
 
-# mirrors the block map in gen_pcb.py (schematic split A-F)
+# mirrors the block map in blocks.py (schematic split A-F)
 from blocks import PREFIXED_BLOCKS as BLOCKS
 REF_BLOCK = {r: b for b, refs in BLOCKS.items() for r in refs}
 

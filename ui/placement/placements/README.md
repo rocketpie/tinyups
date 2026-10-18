@@ -6,6 +6,10 @@ started from, and the tuning (`params`) it ran with. The shape is the engine
 output's, so `render.py`, `apply.py`, `place-render` and `place-apply` accept it
 directly, and the UI lists it in the *start from* drop-down, marked `saved`.
 
+`main.json` is not a hand save: it is a snapshot of the tracked board
+(`make place-seed`, `from_board.py`) and the UI's default start, so a session
+begins from exactly what `hardware/tinyups.kicad_pcb` is now.
+
 - **Tracked on purpose.** This is your work product, not generated output, so it
   is reviewable and `git checkout` / `git revert` undoes an experiment. See
   [ADR-0011](../../../docs/decisions/0011-placements-are-tracked.md).
@@ -18,8 +22,8 @@ directly, and the UI lists it in the *start from* drop-down, marked `saved`.
 Load one again with the seed drop-down, or from the command line:
 
 ```sh
-make place-render   F=hardware/layout_poc/placements/try5.json
-make place-legalize F=hardware/layout_poc/placements/try5.json   # -> build/layout/leg-try5.json
+make place-render   F=ui/placement/placements/try5.json
+make place-legalize F=ui/placement/placements/try5.json   # -> build/layout/leg-try5.json
 make place-apply    F=build/layout/leg-try5.json
 ```
 

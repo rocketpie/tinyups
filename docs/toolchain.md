@@ -40,9 +40,7 @@ Verified in the running dev container.
 - `kicad-cli` prints harmless `Directory ... couldn't be created (error 17)`
   warnings (HOME/XDG init); the result is unaffected.
 - `kicad-cli pcb render` works **headless** (no display needed).
-- **Routing needs freerouting** (KiCad has no autorouter). `kicad-cli` cannot
-  create/import a PCB from a netlist either — build the board with the
-  `pcbnew` Python module (`hardware/gen_pcb.py`) and route via Specctra
+- **Routing needs freerouting** (KiCad has no autorouter). Route via Specctra
   (`pcbnew.ExportSpecctraDSN` / `ImportSpecctraSES` + freerouting,
   `hardware/route.py`).
 - freerouting runs **headless** with the jar if the GUI is disabled: put

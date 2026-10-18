@@ -15,8 +15,8 @@ Counters restart per block and per component type; connectors keep their
 familiar ``J`` numbers (``1J1`` XT60, ``5J2`` XT30, ``6J3`` USB, ``4J6`` PACK).
 
 This module is the single source of truth for the block membership, used by
-`gen_schematic.py` (to name the symbols), `gen_pcb.py` / `routing_report.py`
-(to group parts) and `power_map.py` (overrides).
+`routing_report.py` (to group parts), `power_map.py` (overrides) and the
+placement graph (`ui/placement/extract.py`).
 """
 from __future__ import annotations
 
@@ -37,13 +37,12 @@ PREFIX = {
 BLOCK_NUM = {"A": 1, "C": 2, "B": 3, "E": 4, "D": 5, "F": 6}
 
 # reserved width (mm) of the central power-path corridor. IPC-2221, 10 C rise,
-# 1 oz outer copper: 20 A needs ~19 mm (2 oz: ~10 mm).  Set to 0 until the
-# corridor is actually reserved on the board (see progress.md); place_metrics
-# then measures distance to the corridor *edge* = |dx| - CORRIDOR_MM/2.
+# 1 oz outer copper: 20 A needs ~19 mm (2 oz: ~10 mm).  Kept at 0: the channel
+# is measured by `power_channel.py` against the actual placement.
 CORRIDOR_MM = 0.0
 CORRIDOR_TARGET_MM = 20.0   # 1 oz outer copper, 20 A, 10 C rise
 
-# block -> base reference designators (as used in gen_schematic.py)
+# block -> base reference designators (the schematic uses block-prefixed labels)
 BLOCKS = {
     "A": {"J1", "F1", "D1", "R1", "R2", "R3", "R4", "R5", "C1", "R6", "R7",
           "Q1", "U1"},

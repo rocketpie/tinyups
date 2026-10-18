@@ -26,7 +26,7 @@ export KICAD9_3DMODEL_DIR   ?= /usr/share/kicad/3dmodels
 RENDER_ROTATE ?= -15,0,-5
 RENDER_ZOOM   ?= 0.95
 
-.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power channels layout mermaid baseline place place-render place-legalize place-apply ab route check clean
+.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power channels place place-seed place-render place-legalize place-apply route check clean
 
 all: help
 
@@ -114,9 +114,8 @@ silk: | $(OUT) ## 2D view with red power-silkscreen markers
 # --- power -----------------------------------------------------------------
 # Placement side of the power gate: a pour is ~10 mm of copper for 20 A on
 # 2 oz, so the placement has to leave a channel of that width between each
-# high-current net's pads (ADR-0008).  A corridor was a constraint and did not
-# fit; a channel width is a metric, and this is it.
-CHANNEL_BOARD ?= $(OUT)/layout/baseline.kicad_pcb
+# high-current net's pads.  A channel width is a metric, and this is it.
+CHANNEL_BOARD ?= $(PCB)
 channels: | $(OUT) ## Power-channel clearance per rail (CHANNEL_BOARD=<board>)
 	$(call require,$(CHANNEL_BOARD))
 	$(PYTHON) hardware/power_channel.py $(CHANNEL_BOARD)
@@ -125,85 +124,41 @@ power: | $(REPORTS) ## Power / ampacity check (design current per net)
 	$(call require,$(PCB))
 	@set -o pipefail; $(PYTHON) hardware/power_report.py $(PCB) | tee $(REPORTS)/power.rpt
 
-# --- auto-placement PoC (hardware/layout_poc) -------------------------------
-# Netlist -> placement graph -> d3-force / dagre / ELK / graphviz -> legalise ->
-# SVG+PNG renders + score table.  See hardware/layout_poc/README.md.
-LAYOUT_DIR ?= hardware/layout_poc
-layout: | $(OUT) ## Auto-placement PoC: run all layout engines + render
-	@test -f $(OUT)/$(NAME).net || $(MAKE) --no-print-directory netlist
-	cd $(LAYOUT_DIR) && { [ -d node_modules ] || npm install --no-audit --no-fund; }
-	$(PYTHON) $(LAYOUT_DIR)/extract.py
-	cd $(LAYOUT_DIR) && ./run_all.sh
-	$(PYTHON) $(LAYOUT_DIR)/compare.py
-	$(PYTHON) $(LAYOUT_DIR)/contact_sheet.py
-
-mermaid: | $(OUT) ## Render the placement graph as a mermaid flowchart (SVG)	@test -f $(OUT)/$(NAME).net || $(MAKE) --no-print-directory netlist
-	@test -d $(LAYOUT_DIR)/node_modules || (cd $(LAYOUT_DIR) && npm install --no-audit --no-fund)
-	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(LAYOUT_DIR)/extract.py
-	cd $(LAYOUT_DIR) && ./render_mermaid.sh
-
-# --- baseline layout --------------------------------------------------------
-# The PoC's conclusion: the graph-derived placement is the new baseline.  This
-# materialises the adopted engine's legalised placement as a full KiCad board,
-# which is the starting point for the interactive-placement phase.
-#   make baseline                      # adopted default (graphviz sfdp)
-#   make baseline BASELINE_ENGINE=d3force
-BASELINE_ENGINE ?= gv-sfdp
-baseline: | $(OUT) ## Materialise the adopted (sfdp) placement as the baseline board
-	@test -f $(OUT)/layout/leg-$(BASELINE_ENGINE).json || \
-		{ echo "error: run 'make layout' first"; exit 1; }
-	$(PYTHON) $(LAYOUT_DIR)/apply.py $(OUT)/layout/leg-$(BASELINE_ENGINE).json \
-		$(OUT)/layout/baseline.kicad_pcb
-
-# --- interactive placement (hardware/layout_poc/web) ------------------------
-# Browser UI: drag parts around (a dragged part is pinned / fixed for the
+# --- interactive placement (ui/placement) -----------------------------------
+# The browser UI: drag parts around (a dragged part is pinned / fixed for the
 # solver), with a live d3-force engine whose parameters are all editable.  The
 # server only serves files + a save/apply API; the solver runs in the browser.
-# See hardware/layout_poc/web/README.md.
+# Start from the main board's placement and save when the result is good; the
+# tools after this are drc / render / route / sim.
+# See ui/placement/README.md.
+UI_DIR     ?= ui/placement
 PLACE_PORT ?= 4097
-F ?= $(OUT)/layout/interactive-baseline.json
+F          ?= $(UI_DIR)/placements/main.json
 place: | $(OUT) ## Interactive placement UI (http://localhost:4097)
 	@test -f $(OUT)/$(NAME).net || $(MAKE) --no-print-directory netlist
-	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(LAYOUT_DIR)/extract.py
-	@test -d $(LAYOUT_DIR)/node_modules || (cd $(LAYOUT_DIR) && npm install --no-audit --no-fund)
-	PORT=$(PLACE_PORT) node $(LAYOUT_DIR)/web/server.mjs
+	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(UI_DIR)/extract.py
+	@test -d $(UI_DIR)/node_modules || (cd $(UI_DIR) && npm install --no-audit --no-fund)
+	PORT=$(PLACE_PORT) node $(UI_DIR)/server.mjs
 
-place-render: | $(OUT) ## Render a saved interactive placement (F=<positions.json>)
-	$(PYTHON) $(LAYOUT_DIR)/render.py $(F) $(OUT)/layout/interactive.png --label
+place-seed: | $(OUT) ## Snapshot the main board's placement as the UI start
+	$(PYTHON) $(UI_DIR)/from_board.py $(PCB) $(UI_DIR)/placements/main.json
+
+place-render: | $(OUT) ## Render a saved placement (F=<positions.json>)
+	$(PYTHON) $(UI_DIR)/render.py $(F) $(OUT)/layout/placement.png --label
 
 place-legalize: | $(OUT) ## Legalise a saved placement (F=<positions.json>) -> build/layout/leg-<name>
-	$(PYTHON) $(LAYOUT_DIR)/legalize.py $(F) $(OUT)/layout/leg-$(notdir $(F))
+	$(PYTHON) $(UI_DIR)/legalize.py $(F) $(OUT)/layout/leg-$(notdir $(F))
 
-place-apply: | $(OUT) ## Apply a saved interactive placement to a board + DRC (F=<positions.json>)
-	$(PYTHON) $(LAYOUT_DIR)/apply.py $(F) $(OUT)/layout/interactive.kicad_pcb
-
-# --- A/B the placement model (hardware/layout_poc/ab.mjs) --------------------
-# One row per config, N runs on a *neutral* start (scatter by default — never a
-# hand placement: that one is half-solved by a human and its pins encode that
-# intent).  The model and the metrics come from web/public/model.js, the same
-# module the browser UI runs, so a row here is reproducible in the UI.
-#   make ab
-#   make ab AB='--runs 5 --start build/layout/pos-gv-sfdp.json'
-#   make ab AB='--config "a:HOST_STR=0" --config "b:HOST_STR=1.5,HOST_D=5"'
-AB ?= --runs 3 --json $(OUT)/layout/ab.json \
-	--config "host off:HOST_STR=0" \
-	--config "host 1.5/5:HOST_STR=1.5,HOST_D=5"
-ab: | $(OUT) ## A/B the placement force model on neutral (scatter) starts
-	@test -f $(OUT)/layout/graph.json || $(PYTHON) $(LAYOUT_DIR)/extract.py
-	@test -d $(LAYOUT_DIR)/node_modules || (cd $(LAYOUT_DIR) && npm install --no-audit --no-fund)
-	node $(LAYOUT_DIR)/ab.mjs $(AB)
+place-apply: | $(OUT) ## Apply a saved placement to the main board + DRC (F=<positions.json>)
+	$(PYTHON) $(UI_DIR)/apply.py $(F) $(OUT)/layout/board.kicad_pcb
 
 # --- routing (FreeRouting) --------------------------------------------------
-# The field's yardstick for a placement is not HPWL but the *route*: routed
-# wirelength, via count and DRV count (layout_poc/README.md).  This routes a
-# board with freerouting and prints both the routing report and KiCad's DRC on
-# the routed board.  The routed board is written under build/ (untracked); the
-# source board itself is never modified.
-#   make route                                  # the adopted baseline board
-#   make route ROUTE_BOARD=build/layout/try5.kicad_pcb
-# Default is the baseline because it is the full 124-part design; the tracked
-# board is a power-path stage (30 parts) and says nothing about the placement.
-ROUTE_BOARD ?= $(OUT)/layout/baseline.kicad_pcb
+# Route the design board with freerouting and print both the routing report and
+# KiCad's DRC on the routed board.  The routed board is written under build/
+# (untracked); the source board itself is never modified.
+#   make route
+#   make route ROUTE_BOARD=build/layout/board.kicad_pcb
+ROUTE_BOARD ?= $(PCB)
 ROUTE_OUT   ?= $(OUT)/layout/$(notdir $(ROUTE_BOARD:.kicad_pcb=-routed.kicad_pcb))
 ROUTE_TAG   := $(notdir $(ROUTE_BOARD:.kicad_pcb=))
 route: | $(OUT) $(REPORTS) ## Route a board with FreeRouting + routing/DRC report

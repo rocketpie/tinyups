@@ -35,7 +35,7 @@ Constraints that shaped the answer:
 
 ## Decision
 
-1. **`hardware/layout_poc/params.json` is the placement tuning**, tracked in
+1. **`ui/placement/params.json` is the placement tuning**, tracked in
    git, with the engine's own parameter names as keys:
 
    ```json
@@ -75,7 +75,7 @@ Constraints that shaped the answer:
 
 ## Consequences
 
-- The tuning has a history: `git log -p hardware/layout_poc/params.json` is the
+- The tuning has a history: `git log -p ui/placement/params.json` is the
   record of which parameters turned out to matter, and a clobbering experiment is
   undone with `git checkout`.
 - A running UI can now write a **tracked file** as a side effect of dragging a
@@ -84,8 +84,7 @@ Constraints that shaped the answer:
   reports) still goes to `build/`.
 - The repo path is hard-coded in the server (there is no user-supplied path), so
   the write endpoint cannot be pointed elsewhere; it only ever touches
-  `hardware/layout_poc/params.json`.
+  `ui/placement/params.json`.
 - Two stores remain, by design: the tuning (repo file, shared) and view state
   (localStorage, per browser: toggles, the seed you were on, the save name).
-- Until point 5 lands, a UI tuning and a `make layout` run can disagree. The file
-  is the human's intent; the engine's env defaults are still what CI uses.
+- The file is the human's intent, and the UI is now its only consumer.

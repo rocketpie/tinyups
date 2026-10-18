@@ -2,16 +2,15 @@
 //
 // The board is drawn as a graph: components are courtyard rectangles, nets are
 // edges coloured/weighted by required trace width (IPC-2221, see extract.py).
-// The placement engine is d3-force — the *same* model as
-// hardware/layout_poc/engines/d3force.mjs — running live in the browser.  Every
-// parameter that engine reads is exposed on the left and can be tuned while it
-// runs.
+// The placement engine is d3-force (the model lives in public/model.js),
+// running live in the browser.  Every parameter that engine reads is exposed
+// on the left and can be tuned while it runs.
 //
 // Dragging a part pins it (fx/fy) so the engine treats it as fixed and solves
 // the rest around it; right-click releases it again.
 import * as M from "./model.js";
 
-const DEFAULTS = M.DEFAULTS;   // one truth for values, shared with ab.mjs
+const DEFAULTS = M.DEFAULTS;   // one truth for values
 
 const NS = "http://www.w3.org/2000/svg";
 const svg = document.getElementById("board");
@@ -26,8 +25,7 @@ const $ = (s) => document.querySelector(s);
 
 // ---------------------------------------------------------------------------
 // Engine parameters.  Labels/units/help are what the UI shows; the keys are the
-// exact names engines/d3force.mjs reads from the environment, so a run of the
-// PoC and a session here are tunable to the same config.
+// exact names the force model (public/model.js) reads.
 // ---------------------------------------------------------------------------
 const PARAM_SPEC = [
   { key: "SIG_STR", label: "Signal trace link force", min: 0, max: 5, step: 0.01, d: DEFAULTS.SIG_STR, group: "links",
@@ -65,7 +63,7 @@ const PARAM_SPEC = [
   { key: "HOST_D", label: "Belongs-to ring (mm)", min: 1, max: 30, step: 0.5, d: DEFAULTS.HOST_D, group: "host",
     help: "Preferred distance from the host: farther and the small part is pulled in, closer and it is pushed out. Only the small part moves — the controller stays put and its parts fan out around it." },
   { key: "HOST_POWER", label: "Belongs-to also for power-flagged parts", type: "check", d: DEFAULTS.HOST_POWER, group: "host",
-    help: "Off = only the small parts that are *not* on the power path get a host ring. On = every small passive does, including the passives the power chain runs through (sense resistors, snubbers) — which can kink the input→output flow (the `axisR` metric in `make ab`)." },
+    help: "Off = only the small parts that are *not* on the power path get a host ring. On = every small passive does, including the passives the power chain runs through (sense resistors, snubbers) — which can kink the input→output flow (the `axisR` metric)." },
   { key: "MAX_V", label: "Max move per tick (mm)", min: 0.5, max: 30, step: 0.5, d: DEFAULTS.MAX_V, group: "solver",
     help: "Velocity clamp. With the link distance/strength actually wired in (see README), d3-force diverges on a dense start — a 2-part net gets weight 1 and up to POW_STR. Clamping tames it." },
   { key: "VEL_DECAY", label: "Velocity decay", min: 0, max: 0.95, step: 0.05, d: DEFAULTS.VEL_DECAY, group: "solver",
@@ -79,7 +77,7 @@ const PARAM_SPEC = [
 // --- persistence ------------------------------------------------------------
 // Two stores, on purpose:
 //   * the *tuning* (parameter values + row order) lives in the tracked repo
-//     file hardware/layout_poc/params.json, written by this UI on every change
+//     file ui/placement/params.json, written by this UI on every change
 //     — it is reviewable and revertable with git;
 //   * purely local view state (toggles, the seed you were on, save name) stays
 //     in this browser.
@@ -101,7 +99,7 @@ const S = {
   graph: null, board: { w: 150, h: 140 },
   nodes: [], edges: [], byId: new Map(),
   params: {}, paramOrder: [], paramSource: "defaults", model: null,
-  repo: { file: "hardware/layout_poc/params.json", exists: false, values: 0 },
+  repo: { file: "ui/placement/params.json", exists: false, values: 0 },
   repoState: "idle",
   sim: null, linkForce: null, chargeForce: null,
   xForce: null, yForce: null, collideForce: null, collideType: null,
@@ -216,8 +214,7 @@ async function loadSeed(name, force = false) {
 
 // --- simulation -------------------------------------------------------------
 // The model itself (links, repulsion, centre pull, keep-in, collision, clamp,
-// belongs-to ring) lives in model.js so the browser UI, the A/B runner and (later)
-// the headless engine all run the *same* code.
+// belongs-to ring) lives in model.js, shared with render.py's metric set.
 function buildSim() {
   if (S.sim) S.sim.stop();
   const m = M.buildSim(S.nodes, S.edges, S.board, S.params);
@@ -403,7 +400,7 @@ function drawPads() {
 }
 
 // --- metrics ----------------------------------------------------------------
-// The metric set lives in model.js (same numbers as ab.mjs); render.py computes
+// The metric set lives in model.js (the same numbers the UI shows); render.py computes
 // the same set in python for the boards it renders.
 function metrics() {
   return M.metrics(S.nodes, S.edges, S.graph, S.board, S.byId);
@@ -425,7 +422,7 @@ function renderMetrics() {
   ];
   // The "fan" per controller — the thing the belongs-to force is for: how far
   // its small parts sit (d), whether they are all on the centre side (bias) and
-  // how much room they have (spacing).  Same numbers ab.mjs reports.
+  // how much room they have (spacing).  These are the same numbers the headless renderer reports.
   for (const [ref, f] of Object.entries(m.fan || {})) {
     rows.push([`${ref} fan · d/bias/sp`, `${fmt(f.d, 1)} / ${fmt(f.bias, 2)} / ${fmt(f.spacing, 1)}`,
       f.bias < 0.25 && f.d < 25 ? "good" : ""]);
@@ -640,7 +637,7 @@ function resetToSeed() {
 const randomSeed = () => 1 + Math.floor(Math.random() * 999999);
 
 // Scatter = uniform-random start over the whole board, from the model's shared
-// generator (`ab.mjs` uses the very same one for a neutral headless start).  It
+// generator   It
 // rolls a fresh seed every click and writes it back into SEED, so a start you
 // like is reproducible: tick "reuse SEED" and click again.
 function scatter() {
@@ -668,7 +665,7 @@ function applyView() {
 }
 
 // --- params UI --------------------------------------------------------------
-// The base config is the tracked repo file (hardware/layout_poc/params.json).
+// The base config is the tracked repo file (ui/placement/params.json).
 // Every edit is written back to it, debounced — so git holds the tuning history
 // and `git checkout` undoes a bad experiment.  The row order is part of that
 // file too: it is how "which knobs matter" is recorded.
@@ -708,9 +705,9 @@ function buildParams() {
     "engine = <b>d3-force 3.0.0</b> (vendored, runs in this tab). " +
     "Link distance = D0 + DK·(width/WREF); link strength = weight·(SIG_STR + " +
     "(POW_STR−SIG_STR)·(width/WREF)<sup>1.2</sup>) — both wired via " +
-    "forceLink.distance()/strength(). <i>engines/d3force.mjs never calls those, " +
-    "so in the PoC's headless run D0/DK/DMAX and SIG_STR/POW_STR were inert " +
-    "(d3 defaults: 30 mm, 1/degree).</i>";
+    "forceLink.distance()/strength(). <i>(The old headless engine never called " +
+    "those, so in that run D0/DK/DMAX and SIG_STR/POW_STR were inert — d3 " +
+    "defaults: 30 mm, 1/degree.)</i>";
 }
 
 const coerceParam = (p, v) => p.type === "check" ? !!v : clamp(+v, p.min, p.max);

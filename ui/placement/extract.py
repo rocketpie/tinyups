@@ -15,7 +15,7 @@ components in power-flow order (BFS from the input over the rail nets) — which
 the incremental engine places one by one.
 
 Usage:
-    /opt/eda/venv/bin/python hardware/layout_poc/extract.py [--keep-gnd] [--drop NETS]
+    /opt/eda/venv/bin/python ui/placement/extract.py [--keep-gnd] [--drop NETS]
 Writes:  build/layout/graph.json
 """
 from __future__ import annotations
@@ -30,12 +30,11 @@ import pcbnew
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
-sys.path.insert(0, os.path.dirname(HERE))          # hardware/
+sys.path.insert(0, os.path.join(ROOT, "hardware"))   # blocks.py, power_*.py
 sys.path.insert(0, HERE)
 
 from blocks import (BLOCK_NUM, PREFIX, PREFIXED_BLOCKS, kind,      # noqa: E402
                     label)
-from gen_pcb import ANCHORS, BOARD_H, BOARD_W, parse, _find_all  # noqa: E402
 from power_spec import (CAP_ESR, DESIGN_CURRENT, RIPPLE_V_RMS,   # noqa: E402
                         SW_FREQ)
 from power_map import (_cap, _num, component_is_power,           # noqa: E402
@@ -44,6 +43,73 @@ from power_map import (_cap, _num, component_is_power,           # noqa: E402
 NETLIST = os.path.join(ROOT, "build", "tinyups.net")
 FP_ROOT = "/usr/share/kicad/footprints"
 OUT = os.path.join(ROOT, "build", "layout", "graph.json")
+
+# Board geometry and the two power terminals.  These used to live in gen_pcb.py;
+# the board is now hand-tuned in this UI, so only the graph needs them.
+BOARD_W, BOARD_H = 150.0, 140.0
+ANCHORS = {
+    "J1": (BOARD_W / 2, 11.0),               # XT60 input   - back centre
+    "J2": (BOARD_W / 2, BOARD_H - 11.0),     # XT30 output  - front centre
+}
+
+
+# --------------------------------------------------------------------------- #
+# tiny s-expression parser (KiCad netlist)
+# --------------------------------------------------------------------------- #
+def tokenize(s: str):
+    i, n = 0, len(s)
+    while i < n:
+        c = s[i]
+        if c in "()":
+            yield c
+            i += 1
+        elif c == '"':
+            j = i + 1
+            buf = []
+            while j < n and s[j] != '"':
+                if s[j] == "\\":
+                    j += 1
+                buf.append(s[j])
+                j += 1
+            yield ("str", "".join(buf))
+            i = j + 1
+        elif c.isspace():
+            i += 1
+        else:
+            j = i
+            while j < n and not s[j].isspace() and s[j] not in '()"':
+                j += 1
+            yield ("sym", s[i:j])
+            i = j
+
+
+def parse(s: str):
+    toks = list(tokenize(s))
+    pos = 0
+
+    def rd():
+        nonlocal pos
+        t = toks[pos]
+        pos += 1
+        if t == "(":
+            lst = []
+            while toks[pos] != ")":
+                lst.append(rd())
+            pos += 1
+            return lst
+        return t[1]
+
+    return rd()
+
+
+def _find_all(node, key):
+    out = []
+    if isinstance(node, list) and node and node[0] == key:
+        out.append(node)
+    if isinstance(node, list):
+        for c in node:
+            out.extend(_find_all(c, key))
+    return out
 
 # leading digit of the ref -> block mnemonic, e.g. 2R11 -> CHG-2R11
 # (single source: blocks.py; 1=IP 2=CHG 3=PP 4=BMS 5=OR 6=CTL)
