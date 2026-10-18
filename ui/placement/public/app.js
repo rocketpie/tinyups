@@ -685,7 +685,9 @@ function renderMetrics() {
   $("#metrics").innerHTML = rows.map(([k, v, cls]) =>
     `<tr class="${cls}"><td>${k}</td><td>${v}</td></tr>`).join("");
   for (const n of S.nodes) {
-    if (n._el) n._el.classList.toggle("tight", S.showClearance && n.clear != null);
+    if (!n._el) continue;
+    n._el.classList.toggle("tight", S.showClearance && n.clear != null);
+    n._el.classList.toggle("overlap", S.showClearance && !!n.overlap);
   }
   const a = S.sim ? S.sim.alpha() : 0;
   setStatus(`${S.paused ? "paused" : "alpha " + a.toFixed(3)} · ${S.pinnedCount()} pinned`);
@@ -889,7 +891,11 @@ function bindEvents() {
   $("#showLabels").addEventListener("change", (e) => { S.showLabels = e.target.checked; styleNodes(); saveUI(); });
   $("#showClearance").addEventListener("change", (e) => {
     S.showClearance = e.target.checked;
-    for (const n of S.nodes) if (n._el) n._el.classList.toggle("tight", S.showClearance && n.clear != null);
+    for (const n of S.nodes) {
+      if (!n._el) continue;
+      n._el.classList.toggle("tight", S.showClearance && n.clear != null);
+      n._el.classList.toggle("overlap", S.showClearance && !!n.overlap);
+    }
     saveUI();
   });
   $("#padNets").addEventListener("change", (e) => {

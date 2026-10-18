@@ -29,6 +29,7 @@ with `make place-seed` — so the simulation begins from exactly what
 | **Pin selected / Unpin selected** | fix or release the selected part **in place** — a click-and-button, no drag, so the position does not change |
 | **Engine heading ▾** | collapse / expand the whole Engine body (view toggles, parameter list, notes); the state is remembered |
 | **pad-level nets** | draw the real ratsnest — an MST over the **pads** of every net, coloured by current and sized by the required 2 oz width — instead of the force model's part-centre links. Off = the abstract part links |
+| **mark parts too close** | amber courtyard outline = a different-net pad is inside the 0.2 mm rule; red = the courtyard overlaps another part. Off = no warning outlines |
 | **Route legend rows** | click a row to show / hide that marker class on the board |
 | **Click a part** | inspect it (value, footprint, nets + currents, pads, and **which IC it belongs to**). The selection is an outline and a dashed line to its host; hover is what dims the rest, so a click never leaves the board faded |
 | **Click empty space / Esc** | clear the selection |

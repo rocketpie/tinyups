@@ -420,11 +420,17 @@ export function metrics(nodes, edges, graph, board, byId) {
   }
   const boxes = nodes.map(aabb);
   m.overlap = 0;
+  const overlapIdx = new Set();
   for (let i = 0; i < boxes.length; i++)
     for (let j = i + 1; j < boxes.length; j++) {
       const a = boxes[i], b = boxes[j];
-      if (!(a.x1 <= b.x0 || b.x1 <= a.x0 || a.y1 <= b.y0 || b.y1 <= a.y0)) m.overlap++;
+      if (!(a.x1 <= b.x0 || b.x1 <= a.x0 || a.y1 <= b.y0 || b.y1 <= a.y0)) {
+        m.overlap++;
+        overlapIdx.add(i); overlapIdx.add(j);
+      }
     }
+  for (let i = 0; i < nodes.length; i++) nodes[i].overlap = overlapIdx.has(i);
+  m.overlapNodes = overlapIdx.size;
   m.outside = boxes.filter((b) => b.x0 < 0 || b.y0 < 0 || b.x1 > board.w || b.y1 > board.h).length;
   m.clearance = clearanceStats(nodes);
 

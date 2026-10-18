@@ -126,11 +126,14 @@ label.switch { display: flex; gap: 7px; align-items: center; color: var(--dim);
   pointer-events: none; user-select: none; }
 .node.dragging .courtyard { stroke: var(--pinned); stroke-width: .7; stroke-dasharray: 2 1; }
 .node.pinned .courtyard { stroke: var(--pinned); stroke-width: .55; }
-/* pad-to-pad clearance below the 0.2 mm design rule (live proxy) */
-.node.tight .courtyard { stroke: #ff9f43; stroke-width: .55; stroke-dasharray: 1.1 .7; }
 /* selection is an outline, not a fade — the rest of the board stays readable */
 .node.selected .courtyard { stroke: var(--accent); stroke-width: .6; }
 .node.selected text { font-weight: 600; }
+/* "too close" markers (the showClearance checkbox): a different-net pad inside
+   the 0.2 mm rule (amber) or a courtyard overlap (red).  These come last so a
+   selected / pinned / dragged part still shows the warning. */
+.node.tight .courtyard { stroke: #ff9f43; stroke-width: .6; stroke-dasharray: 1.1 .7; }
+.node.overlap .courtyard { stroke: #ff4d4d; stroke-width: .7; stroke-dasharray: 1.1 .7; }
 .node.dim { opacity: .28; }
 .edge { stroke-linecap: round; }
 .edge.dim { opacity: .05; }
