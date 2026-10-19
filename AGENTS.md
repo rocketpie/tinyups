@@ -27,6 +27,8 @@ make step       # 3D STEP
 make render     # 3D-PNG-Render (headless)
 make svg        # Schematic-/PCB-SVG fürs Review
 make sim        # ngspice-Simulationen aus sim/*.cir
+make power      # Power / ampacity check (design current per net)
+make sense      # Current-sense (Kelvin) check (SENSE_BOARD=<board>)
 make test       # pytest (Toolchain-Smoke + später Bring-up/Abnahme)
 make check      # erc + drc + netlist + bom (CI-Einstiegspunkt)
 make clean

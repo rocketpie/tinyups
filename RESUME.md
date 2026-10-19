@@ -15,11 +15,13 @@
 Commands: `make place` (UI) · `make drc` · `make render` · `make route` ·
 `make sim` · `make power`.
 
-`fixed2` is applied with the new power parts (ATO fuse, WSR2 shunts, Power56
-FETs): ERC 0, schematic parity 0, DRC-clean placement (0 courtyard /
-clearance / short), and the FET terminals are rated. The only channel short
-is `N_PACKMID` 1.5 / 7.5 mm — move `4Q1`/`4Q2` apart. Touch up `fixed2` in
-the UI, save/apply, then route.
+`fixed3` + the `VBUS`→`VIN_SYS` charger-input fix is applied: `2R1`/`2U1`
+are on `VIN_SYS`, the `VBUS` pour is gone, placement is DRC-clean (0
+courtyard/clearance/short). Next: re-place `2R1`/`2U1` and the power path,
+then route. `route.py` now stops after 10 min without a >5 % score gain.
+The UI has the `show power pours` overlay from the last apply. `make sense`
+now gates the Kelvin taps: fixed3's five loops are 19–73 mm from their
+controllers (35–200 % shared-copper upper bound) — re-place them.
 
 ## Next steps
 

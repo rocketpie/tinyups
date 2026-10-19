@@ -27,9 +27,10 @@ import pcbnew
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from power_report import DESIGN_CURRENT, series_parts, width_for  # noqa: E402
+from power_spec import POUR_MARGIN  # noqa: E402
 
 DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
-MARGIN = 0.6          # mm each side beyond the half width, for the filler to carve
+MARGIN = POUR_MARGIN  # mm each side beyond the half width, for the filler to carve
 
 
 def add_power_pours(board, nets=None) -> None:
@@ -66,12 +67,21 @@ def add_power_pours(board, nets=None) -> None:
                     continue
                 p = pad.GetPosition()
                 xy = (pcbnew.ToMM(p.x), pcbnew.ToMM(p.y))
-                own.append(xy)
+                r = pad.GetBoundingBox()
+                box = (pcbnew.ToMM(r.GetWidth()), pcbnew.ToMM(r.GetHeight()))
+                own.append((xy, box))
                 if fp.GetReference() in series.get(net, ()):
-                    core.append(xy)
-        pts = core if len(core) >= 2 else own
-        if len(pts) < 2:
+                    core.append((xy, box))
+        pad_box: dict[tuple[float, float], tuple[float, float]] = {}
+        for xy, box in own:
+            pad_box[xy] = (max(box[0], pad_box.get(xy, (0, 0))[0]),
+                           max(box[1], pad_box.get(xy, (0, 0))[1]))
+        # A net with no >= 1 A series edge is a sense/tap net: pouring its pads
+        # would connect an IC pin to a shunt and call it power. Leave it to the router.
+        if len(core) < 2:
+            print(f"  {net}: no >=1 A series path; left to the router")
             continue
+        pts = [xy for xy, _ in core]
         if len(core) >= 2 and len(core) != len(own):
             print(f"  {net}: {len(core)} series pad(s) of {len(own)} "
                   f"({'taps excluded' if len(core) < len(own) else 'all series'})")
@@ -82,27 +92,53 @@ def add_power_pours(board, nets=None) -> None:
             k = min(left, key=lambda i: math.dist(pts[i], pts[order[-1]]))
             order.append(k)
             left.discard(k)
-        chain = [pts[i] for i in order]
+        chain = [(pts[i], pad_box[pts[i]]) for i in order]
 
         half = width_for(DESIGN_CURRENT[net]) / 2.0 + MARGIN
         ps = pcbnew.SHAPE_POLY_SET()
-        for (ax, ay), (bx, by) in zip(chain, chain[1:]):
+
+        def end_half(box, nx, ny):
+            """Half-width where the corridor meets a pad: the pad's own
+            projection onto the segment normal, so the wide corridor tapers
+            into the terminal instead of overhanging the neighbouring net."""
+            hp = 0.5 * (abs(nx) * box[0] + abs(ny) * box[1])
+            return max(0.3, min(half, hp - 0.05))
+
+        for (a, ba), (b, bb) in zip(chain, chain[1:]):
+            ax, ay = a
+            bx, by = b
             dx, dy = bx - ax, by - ay
             ln = math.hypot(dx, dy) or 1e-9
-            nx, ny = -dy / ln * half, dx / ln * half
+            nx, ny = -dy / ln, dx / ln
+            hA, hB = end_half(ba, nx, ny), end_half(bb, nx, ny)
+            t = min(0.25, 1.2 / ln) if ln > 0 else 0.25
+            ax1, ay1 = ax + dx * t, ay + dy * t
+            bx1, by1 = ax + dx * (1 - t), ay + dy * (1 - t)
             part = pcbnew.SHAPE_POLY_SET()
             i = part.NewOutline()
-            for px, py in ((ax + nx, ay + ny), (bx + nx, by + ny),
-                           (bx - nx, by - ny), (ax - nx, ay - ny)):
+            for px, py in (
+                    (ax + nx * hA, ay + ny * hA),
+                    (ax1 + nx * half, ay1 + ny * half),
+                    (bx1 + nx * half, by1 + ny * half),
+                    (bx + nx * hB, by + ny * hB),
+                    (bx - nx * hB, by - ny * hB),
+                    (bx1 - nx * half, by1 - ny * half),
+                    (ax1 - nx * half, ay1 - ny * half),
+                    (ax - nx * hA, ay - ny * hA)):
                 part.Append(pcbnew.FromMM(px), pcbnew.FromMM(py), i)
             ps.BooleanAdd(part)
-        for px, py in chain:                              # round caps
+
+        # Round the pad end with the pad's inscribed radius, not the corridor
+        # half-width: the centre must be *inside* the copper, and a full-width
+        # cap would overhang the neighbouring net at a shared part.
+        for (px, py), (bw, bh) in chain:
+            r = max(0.3, min(half, 0.5 * min(bw, bh) + 0.1))
             part = pcbnew.SHAPE_POLY_SET()
             i = part.NewOutline()
             for k in range(16):
                 a = 2 * math.pi * k / 16
-                part.Append(pcbnew.FromMM(px + half * math.cos(a)),
-                            pcbnew.FromMM(py + half * math.sin(a)), i)
+                part.Append(pcbnew.FromMM(px + r * math.cos(a)),
+                            pcbnew.FromMM(py + r * math.sin(a)), i)
             ps.BooleanAdd(part)
 
         found = board.FindNet(net) or board.FindNet("/" + net)
@@ -119,6 +155,31 @@ def add_power_pours(board, nets=None) -> None:
         # poly set in place instead (verified with a two-rectangle union).
         z.Outline().BooleanAdd(ps)
         board.Add(z)
+
+        # Power first, then signals: keep F.Cu *tracks* out of the corridor.
+        # Vias stay allowed so a signal pad inside it can escape to In2/B.Cu;
+        # copper pours are allowed (the corridor itself).  The DSN exporter
+        # turns this into a wire_keepout, which is exactly what freerouting
+        # honours without disabling its via padstack (history 0013).
+        ra = pcbnew.ZONE(board)
+        ra.SetIsRuleArea(True)
+        ra.SetLayer(pcbnew.F_Cu)
+        ra.SetZoneName(f"power keepout {net}")
+        ra.SetDoNotAllowTracks(True)
+        ra.SetDoNotAllowVias(False)
+        ra.SetDoNotAllowPads(False)
+        ra.SetDoNotAllowFootprints(False)
+        ra.SetDoNotAllowCopperPour(False)
+        # Keep the keepout at the *required* width, not the full corridor:
+        # the margin stays free for signal tracks, so the router keeps its F.Cu
+        # escape routes while the pour cannot be cut below its ampacity.
+        keep = pcbnew.SHAPE_POLY_SET(ps)
+        keep.Deflate(pcbnew.FromMM(max(0.05, MARGIN - 0.05)),
+                     pcbnew.CORNER_STRATEGY_ROUND_ALL_CORNERS,
+                     pcbnew.FromMM(0.005))
+        ra.Outline().BooleanAdd(keep if keep.OutlineCount() else ps)
+        board.Add(ra)
+
         print(f"  pour {net:9} {DESIGN_CURRENT[net]:4.0f} A -> "
               f"{width_for(DESIGN_CURRENT[net]):5.1f} mm corridor "
               f"({len(chain)} pads)")

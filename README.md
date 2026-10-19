@@ -43,6 +43,7 @@ make bom        # bill of materials
 make sim        # SPICE simulations
 make place      # interactive placement UI (http://localhost:4097)
 make route      # route a board with FreeRouting + routing/DRC report
+make sense      # current-sense Kelvin check (SENSE_BOARD=<board>)
 make check      # everything above (used by CI)
 ```
 

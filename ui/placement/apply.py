@@ -54,7 +54,7 @@ def main() -> int:
     sys.path.insert(0, hw)
     from pour_power import add_power_pours
     for z in list(board.Zones()):
-        if z.GetZoneName().startswith("power pour"):
+        if z.GetZoneName().startswith(("power pour", "power keepout")):
             # Delete(), not Remove(): Remove() hands ownership to Python and the
             # zone proxies are freed while pcbnew still holds the board lists,
             # which corrupts the next GetFootprints() walk (segfault).
@@ -65,6 +65,9 @@ def main() -> int:
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
 
     pcbnew.SaveBoard(out, board)
+    # The UI overlay: the filled pours of *this* board, not the main board.
+    from pours import write_pours
+    write_pours(out, os.path.join(ROOT, "build", "layout", "pours.json"))
     print(f"applied {placed} placements -> {out}")
 
     # KiCad finds the custom rules (the JLCPCB 5 mil floor) in a sidecar named

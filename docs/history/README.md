@@ -53,5 +53,7 @@ allowed and expected to age, to be superseded, and to be wrong in the future.
 - [0019 – board fixup: stale parts, power nets](0019-board-fixup.md)
 - [0020 – FET drain and source are reversed on the board](0020-fet-pin-mapping.md)
 - [0021 – UI: zoom, pin outline, pour overlay](0021-ui-zoom-and-pin-outline.md)
+- [0022 – board fixup: power pours, charger input, CELL0](0022-board-fixup.md)
+- [0025 – current-sense loops were not gated](0025-sense-gate.md)
 
 

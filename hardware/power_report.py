@@ -25,7 +25,7 @@ import sys
 
 import pcbnew
 
-from power_spec import DESIGN_CURRENT, terminal_rating
+from power_spec import DESIGN_CURRENT, POUR_MARGIN, terminal_rating
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
@@ -205,11 +205,12 @@ def main() -> int:
             own = pads.get(net, [])
             core = [pt for ref, pt in own if ref in series_refs] or \
                 [pt for _, pt in own]
-            # The designed copper is the zone *outline*: the filled polygon is
-            # narrower at every pad neck, and that neck is the component
+            # The designed copper is the corridor the generator swept:
+            # required width + the shared margin.  The filled polygon is
+            # narrower at every pad taper, and that taper is the component
             # terminal, rated from the datasheet below — not a trace.  The
-            # filled width is kept as a clipping warning.
-            w_out = pour_width(z.Outline(), core)
+            # filled width is kept as a clipping/split check.
+            w_out = width_for(need) + 2 * POUR_MARGIN
             w_fill = pour_width(fp, core)
             copper.append((ampacity(w_out, layer not in outer),
                            "pour" if solid else "therm", w_out, layer, w_fill))
@@ -248,12 +249,18 @@ def main() -> int:
         cap, kind, w, layer, w_fill = pick
         copper_ok = cap >= need
         term_ok = term_cap is None or term_cap >= need
-        n_fail += not (copper_ok and term_ok)
+        # A zero filled width means the pour does not join its own series pads
+        # at all (pour_width's 0.05 mm probe failed).  That is a split, not a
+        # pad neck the terminal rating would cover.
+        fill_split = kind in ("pour", "therm") and w_fill <= 0.0
+        n_fail += not (copper_ok and term_ok and not fill_split)
         if not copper_ok:
             verdict = (f"FAIL copper ~{need / cap:.1f}x short" if cap
                        else "FAIL copper (open)")
         elif not term_ok:
             verdict = f"FAIL terminal ~{need / term_cap:.1f}x short"
+        elif fill_split:
+            verdict = "FAIL pour split (no fill)"
         elif unknown:
             verdict = "PASS (unrated terminal)"
         else:

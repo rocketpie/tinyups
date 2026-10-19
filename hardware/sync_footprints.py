@@ -168,9 +168,26 @@ def main() -> int:
                 print(f"  {ref:5} attributes -> {fixed}")
                 aligned += 1
 
+    # Also re-apply every pad net from the netlist, not only on a replaced
+    # footprint: a schematic connectivity fix (VBUS -> VIN_SYS) changes nets
+    # without changing any footprint.
+    net_updates = 0
+    for fp in board.GetFootprints():
+        pin_net = pin_nets.get(fp.GetReference(), {})
+        for p in fp.Pads():
+            name = pin_net.get(p.GetNumber())
+            if not name:
+                continue
+            net = board.FindNet(name)
+            if net and p.GetNetCode() != net.GetNetCode():
+                p.SetNet(net)
+                net_updates += 1
+
+    # A connectivity fix can leave the old net (VBUS) with no pads; KiCad
+    # keeps the unused net, which is harmless (the next save drops it).
     pcbnew.SaveBoard(board_path, board)
-    print(f"replaced {replaced} footprint(s), aligned {aligned} attribute(s)"
-          f" -> {board_path}")
+    print(f"replaced {replaced} footprint(s), aligned {aligned} attribute(s), "
+          f"updated {net_updates} pad net(s) -> {board_path}")
     return 0
 
 

@@ -27,7 +27,7 @@ export KICAD9_3DMODEL_DIR   ?= /usr/share/kicad/3dmodels
 RENDER_ROTATE ?= -15,0,-5
 RENDER_ZOOM   ?= 0.95
 
-.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power channels place place-seed place-render place-legalize place-apply route check clean
+.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power channels sense place place-seed place-render place-legalize place-apply route check clean
 
 all: help
 
@@ -124,6 +124,14 @@ channels: | $(OUT) ## Power-channel clearance per rail (CHANNEL_BOARD=<board>)
 power: | $(REPORTS) ## Power / ampacity check (design current per net)
 	$(call require,$(PCB))
 	@set -o pipefail; $(PYTHON) hardware/power_report.py $(PCB) | tee $(REPORTS)/power.rpt
+
+# Current-sense Kelvin check: a shunt/controller tap that shares the power
+# copper adds IR drop to the sense voltage.  Run it on a routed board, e.g.
+#   make sense SENSE_BOARD=build/layout/board-routed.kicad_pcb
+SENSE_BOARD ?= $(PCB)
+sense: ## Current-sense (Kelvin) check (SENSE_BOARD=<board>)
+	$(call require,$(SENSE_BOARD))
+	$(PYTHON) hardware/sense_report.py $(SENSE_BOARD)
 
 # --- interactive placement (ui/placement) -----------------------------------
 # The browser UI: drag parts around (a dragged part is pinned / fixed for the

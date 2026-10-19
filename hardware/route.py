@@ -28,6 +28,11 @@ Requires Java + the freerouting jar (``FREEROUTING_JAR``, defaulting to
                            (default off: it blocks every via)
     ROUTE_PLANE_LAYER_TYPE  declare the plane layer (type power) instead —
                            kills vias, see docs/history/0013
+    ROUTE_STALL_S          after the first pass, stop when the best score has
+                           not improved by ROUTE_STALL_GAIN for this many
+                           seconds (default 600)
+    ROUTE_STALL_GAIN       required relative score improvement (default 0.05)
+    ROUTE_MAX_S            hard wall-clock cap (default 1800)
     FREEROUTING_EXTRA_ARGS  extra freerouting --flags
 
     route.py [board.kicad_pcb] [out.kicad_pcb]
@@ -36,11 +41,14 @@ Requires Java + the freerouting jar (``FREEROUTING_JAR``, defaulting to
 from __future__ import annotations
 
 import os
+import queue
 import re
 import shlex
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 
 import pcbnew
 
@@ -56,6 +64,77 @@ PLANE_FRACTION = float(os.environ.get("ROUTE_PLANE_FRACTION", "0.3"))
 PLANE_AS_OBSTACLE = os.environ.get("ROUTE_PLANE_AS_OBSTACLE", "0") != "0"
 PLANE_LAYER_TYPE = os.environ.get("ROUTE_PLANE_LAYER_TYPE", "0") != "0"
 PLANE_KEEPOUT = os.environ.get("ROUTE_PLANE_KEEPOUT", "0") != "0"
+STALL_S = float(os.environ.get("ROUTE_STALL_S", "600"))
+STALL_GAIN = float(os.environ.get("ROUTE_STALL_GAIN", "0.05"))
+MAX_S = float(os.environ.get("ROUTE_MAX_S", "1800"))
+
+
+def run_router(args: list[str], cwd: str) -> int:
+    """Run freerouting, stop it when it stops improving, and keep the pipe live.
+
+    A route that oscillates for 20+ minutes is not doing useful work.  From the
+    first completed auto-routing pass, a pass must beat the best score by more
+    than STALL_GAIN within STALL_S, otherwise the job is terminated.  The output
+    board is written only on success, so the previous routed board is kept.
+    """
+    proc = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, text=True, bufsize=1)
+    q: queue.Queue[str | None] = queue.Queue()
+
+    def reader() -> None:
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            q.put(line)
+        q.put(None)
+
+    threading.Thread(target=reader, daemon=True).start()
+    started = time.monotonic()
+    first_pass: float | None = None
+    last_gain: float | None = None
+    best, best_unrouted = -1.0, None
+    pass_re = re.compile(
+        r"Auto-routing pass #(\d+).*?score ([0-9.]+) "
+        r"\(([0-9]+) unrouted")
+    while True:
+        try:
+            line = q.get(timeout=1.0)
+        except queue.Empty:
+            line = ""
+        if line is None:
+            break
+        if line:
+            print(line, end="", flush=True)
+            m = pass_re.search(line)
+            if m:
+                score, unrouted = float(m.group(2)), int(m.group(3))
+                now = time.monotonic()
+                if first_pass is None:
+                    first_pass, last_gain = now, now
+                    best, best_unrouted = score, unrouted
+                elif score > best * (1.0 + STALL_GAIN):
+                    best, best_unrouted = score, unrouted
+                    last_gain = now
+                print(f"[route] pass {m.group(1)}: score {score:.1f}, "
+                      f"{unrouted} unrouted; best {best:.1f} / "
+                      f"{best_unrouted} (gain needed >{STALL_GAIN:.0%})",
+                      flush=True)
+        now = time.monotonic()
+        stalled = (first_pass is not None and last_gain is not None and
+                   now - last_gain > STALL_S)
+        if stalled or now - started > MAX_S:
+            why = (f"no >{STALL_GAIN:.0%} score gain in {STALL_S:.0f} s"
+                   if stalled else f"hard timeout {MAX_S:.0f} s")
+            print(f"[route] stopping: {why} (best {best:.1f}, "
+                  f"{best_unrouted} unrouted); previous routed board kept",
+                  flush=True)
+            proc.terminate()
+            try:
+                proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+            return 2
+    return proc.wait()
 
 
 def plane_layers(board) -> list:
@@ -166,7 +245,9 @@ def main() -> int:
     if PLANE_AS_OBSTACLE:
         args.append("--router.plane_as_obstacle=true")
     args += shlex.split(os.environ.get("FREEROUTING_EXTRA_ARGS", ""))
-    subprocess.run(args, check=True, cwd=d)
+    rc = run_router(args, d)
+    if rc:
+        return rc
 
     board = pcbnew.LoadBoard(board_in)
     pcbnew.ImportSpecctraSES(board, ses)

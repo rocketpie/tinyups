@@ -26,6 +26,7 @@ gates — `make erc`, `make drc`.
 | 12 | fixed1 hand-tuned (UI) | 3672 | 16501 | | | | | | 0.76 | wire 4295, ovl 0, out 0, axisR 0.76, path 574 — [history 0019](history/0019-board-fixup.md) |
 | 13 | fixed2 hand-tuned (UI, new power parts) | 3736 | 17577 | | | | | | 0.78 | wire 4362, ovl 0, out 0, axisR 0.78 — [history 0019](history/0019-board-fixup.md) |
 | 14 | fixed2 + Power56 FETs | 3804 | 16855 | | | | | | 0.79 | wire 4365, ovl 0, out 0, axisR 0.79 — [history 0020](history/0020-fet-pin-mapping.md) |
+| 15 | fixed3 hand-tuned (UI) | 3771 | 17456 | | | | | | 0.78 | wire 4373, ovl 0, out 0, axisR 0.78 — [history 0020](history/0020-fet-pin-mapping.md) |
 
 ## Routing
 
@@ -39,6 +40,7 @@ gates — `make erc`, `make drc`.
 | 6 | +radial QFN fanout | (as row 5) | 0.127 mm | — | 0.127 | 0 | — | — | rejected — 42 clearance + 14 shorts |
 | 7 | try5-poured, not routed | F.Cu / In1 GND / In2 / B.Cu | — | — | — | — | 284 | 0 | [history 0015](history/0015-placement-cleanup.md) |
 | 8 | fixed1 routed (re-poured) | F.Cu / In1 GND / In2 / B.Cu | 0.127 mm | 2 | 0.127 | 0 | 24 | 191 | 869 tracks, 2819 mm, 0 clearance; 20 of 24 unconn are pour islands — [history 0019](history/0019-board-fixup.md) |
+| 9 | fixed3 routed | F.Cu / In1 GND / In2 / B.Cu | 0.127 mm | 8 | 0.127 | 0 | 20 | 221 | 1107 tracks, 3044 mm, 0 clearance; 13 pour islands + 7 GND/track — [history 0022](history/0022-board-fixup.md) |
 
 ## Power / gates
 
@@ -54,3 +56,11 @@ gates — `make erc`, `make drc`.
 | 8 | derived board gets the DRU | pours on F.Cu | 0.000 | 11/11 | 0 | 52 (was 73) | 284 | FAIL | — | 21 false 5U1 pad-pad items gone — [history 0017](history/0017-drc-rules-do-not-follow-a-board-copy.md) |
 | 9 | fixed1 routed | pours on F.Cu | 0.000 | 22/24 | 0 | 53 | 24 | FAIL | — | pad-limited [0019](history/0019-board-fixup.md) |
 | 10 | fixed2 + Power56 FETs, terminal-aware gate | all high-current nets poured | — | 6/23 | 0 | 42 (silk) | 280 | PASS | — | high-current rails pass copper + terminal; [ADR-0015](decisions/0015-terminal-rating-in-power-gate.md) |
+| 11 | fixed3 routed | pours on F.Cu | 0.127 | 5/23 | 0 | 59 | 20 | PASS | — | pour split: VIN_SYS, VBUS, SW2_OUT, N_CS; +3V3 0.13 mm ~0.9 A; N_PACKMID channel 1.5/7.5 — [ADR-0015](decisions/0015-terminal-rating-in-power-gate.md), [0022](history/0022-board-fixup.md) |
+| 12 | charger input VBUS -> VIN_SYS | pours on F.Cu | — | 7/22 | 0 | 46 (silk) | 259 | — | — | 2R1/2U1 on VIN_SYS, VBUS net/pour gone; placement touch-up pending — [0022](history/0022-board-fixup.md) |
+
+## Sense (Kelvin)
+
+| # | change | shunts | worst distance | worst shared error | note |
+| - | ------ | -----: | -------------: | -----------------: | ---- |
+| 1 | `make sense` / `sense_report.py` | 5 | 73.2 mm (`2R2`) | 200 % (`4R1`) | fixed3, unrouted; sense-trace total — (unrouted), shunt-IC span 212.4 mm; 1 % budget, upper bound if the tap is not at the pad — [0025](history/0025-sense-gate.md) |

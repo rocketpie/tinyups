@@ -11,6 +11,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+# Extra copper each side of a power corridor's required width (mm).  Shared by
+# the pour generator and the report so the two cannot disagree.
+POUR_MARGIN = 0.6
+
 # net -> design current (A)
 DESIGN_CURRENT = {
     "+12V_IN": 20.0,   # 12 V/20 A adapter, load + charge
@@ -19,7 +23,6 @@ DESIGN_CURRENT = {
     "VIN_SYS": 20.0,   # system input rail
     "VBAT": 17.0,      # pack + (15 A cont / 17 A peak)
     "VSYS": 10.0,      # charger system node
-    "VBUS": 10.0,      # charger input (RAC sense)
     "N_ACN": 10.0,     # charger input sense
     "SW1": 10.0,       # charger switch node
     "SW2": 10.0,
@@ -41,7 +44,7 @@ DESIGN_CURRENT = {
 # net -> nominal voltage (V)
 RAIL_V = {
     "+12V_IN": 12.0, "N_AF": 12.0, "VIN_LM": 12.0, "VIN_SYS": 12.0,
-    "VBAT": 13.8, "VSYS": 12.0, "VBUS": 12.0, "N_ACN": 12.0,
+    "VBAT": 13.8, "VSYS": 12.0, "N_ACN": 12.0,
     "SW1": 12.0, "SW2": 12.0, "SW1_OUT": 12.0, "SW2_OUT": 12.0,
     "N_CS": 0.0, "N_PACKMID": 13.8, "CELL0": 0.0, "CELL4": 13.8, "PACK+": 13.8,
     "VOUT12": 12.0, "N_VCAP": 12.0, "+3V3": 3.3, "VCC": 5.0,

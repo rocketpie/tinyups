@@ -9,7 +9,14 @@
     eg. Power traces need more space. can we simulate them live in the placement UI?
     I want that feedback loop shorter
 
-- continue with board fixed1
+- 2R1 2U1 pour: "Connect VBUS to the intended feed (VIN_SYS or the ORing element) in the schematic before the next route."
+ - N_PACKMID: connected, but not wide enough
+  N_PACKMID carries 17 A → 7.5 mm of 2 oz copper.
+  The two facing source pads are 1.45 mm apart → ~5–6 A of copper.
+  A 0.127 mm trace connects them electrically, but not at 17 A.
+  Moving them ~6 mm apart opens room for a 7.5 mm pour. A wide copper bar/via on another layer could also do it, but the F.Cu channel is what the placement gate measures.
+
+- apply fixed4 new Charger components placement
 
 # UI
 - works with json. a board is .kicad_pcb.

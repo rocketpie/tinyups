@@ -125,6 +125,12 @@
   source are reversed — the BMS pair is common-drain, not common-source.
   Fix the symbols and the pad nets before syncing the Power56 footprints
   ([history 0020](history/0020-fet-pin-mapping.md)).
+- **Charger input:** the BQ25720 `VBUS`/`ACP` pins are on `VIN_SYS`; the
+  5 mΩ `2R1` RAC shunt sits between `VIN_SYS` and `N_ACN`
+  ([history 0022](history/0022-board-fixup.md)). The 10 A flows
+  through the shunt and the external FETs, not through the QFN pins: `VBUS` is
+  the controller supply and `ACP`/`ACN` are sense inputs, so a normal trace to
+  `2U1` is enough.
 - **Terminal-aware power gate:** `make power` sizes copper with IPC-2221 and
   component terminals from the datasheet (`PART_TERMINAL_A`); a missing rating
   is printed as `unrated`

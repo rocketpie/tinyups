@@ -1503,7 +1503,7 @@
 			(at -4.575 0)
 			(size 3.94 5.84)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net 29 "/VBUS")
+			(net 6 "/VIN_SYS")
 			(uuid "e80fb477-edf6-4e84-9a1a-2275243ad734")
 		)
 		(pad "2" smd rect
@@ -20444,7 +20444,7 @@
 			(at -1.95 -1.4 90)
 			(size 0.129289 0.129289)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net 29 "/VBUS")
+			(net 6 "/VIN_SYS")
 			(options
 				(clearance outline)
 				(anchor circle)
@@ -20473,7 +20473,7 @@
 			(size 0.8 0.2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
-			(net 29 "/VBUS")
+			(net 6 "/VIN_SYS")
 			(uuid "6bcea941-7784-48f5-9113-900ce1178fc6")
 		)
 		(pad "4" smd roundrect
