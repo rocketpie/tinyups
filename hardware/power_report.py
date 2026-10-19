@@ -25,7 +25,7 @@ import sys
 
 import pcbnew
 
-from power_spec import DESIGN_CURRENT
+from power_spec import DESIGN_CURRENT, terminal_rating
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
@@ -153,18 +153,23 @@ def main() -> int:
 
     # pads per net, with the owning ref (a pour's connection points), every zone
     series = series_parts()
+    footprints = list(b.GetFootprints())
     pads: dict[str, list] = {}
-    pad_widths: dict[str, list] = {}
-    for fp in b.GetFootprints():
+    # net -> ref -> effective terminal width.  Pads of the same net inside one
+    # footprint are in parallel (a Power56 source is three pins, not one), so
+    # the widths add.  This is the fallback for an unrated part; a part with a
+    # datasheet entry uses that instead.
+    part_widths: dict[str, dict[str, float]] = {}
+    for fp in footprints:
+        ref = fp.GetReference()
         for pad in fp.Pads():
             nm = pad.GetNetname().lstrip("/")
             if nm:
-                pads.setdefault(nm, []).append((fp.GetReference(),
-                                                pad.GetPosition()))
-                if fp.GetReference() in series.get(nm, ()):
-                    sz = pad.GetSize()
-                    pad_widths.setdefault(nm, []).append(
-                        min(pcbnew.ToMM(sz.x), pcbnew.ToMM(sz.y)))
+                pads.setdefault(nm, []).append((ref, pad.GetPosition()))
+                sz = pad.GetSize()
+                part_widths.setdefault(nm, {}).setdefault(ref, 0.0)
+                part_widths[nm][ref] += min(pcbnew.ToMM(sz.x),
+                                            pcbnew.ToMM(sz.y))
     pours: dict[str, list] = {}
     for z in b.Zones():
         net = z.GetNetname().lstrip("/")
@@ -175,62 +180,94 @@ def main() -> int:
         pours.setdefault(net, []).append((lay, fp, filled, solid))
 
     print()
-    print(f"  {'net':10} {'need(A)':>7} {'kind':>5} {'width(mm)':>9} {'layer':>7} "
-          f"{'cap(A)':>7}  verdict")
+    print(f"  {'net':10} {'need(A)':>7}  {'copper':>14}  {'terminal':>18}  verdict")
     n_fail = 0
+    n_unrated = 0
     for net, need in DESIGN_CURRENT.items():
-        cands: list[tuple[float, str, float, str]] = []
+        # The graph's >= 1 A edges name the series parts.  A net with no such
+        # edge (the graph under-weights a shunt tap, e.g. VBUS) falls back to
+        # every part that has a pad on it, rather than silently skipping the
+        # terminal check.
+        series_refs = set(series.get(net, ())) or set(part_widths.get(net, {}))
+        copper: list[tuple[float, str, float, str, float]] = []
         if net in worst:
             w, layer = worst[net]
-            cands.append((ampacity(w, layer not in outer), "trace", w, layer))
-        has_zone = False
+            copper.append((ampacity(w, layer not in outer), "trace", w, layer, w))
         for lay, fp, filled, solid in pours.get(net, []):
-            has_zone = True
             layer = b.GetLayerName(lay)
             if not filled:
-                print(f"  {net:10} {need:>7.1f} {'pour':>5} {'-':>9} {layer:>7} "
-                      f"{'-':>7}  ZONE NOT FILLED (run hardware/fill_zones.py)")
+                print(f"  {net:10} {need:>7.1f}  {'-':>14}  {'-':>18}  "
+                      f"ZONE NOT FILLED (run hardware/fill_zones.py)")
                 continue
             # only the parts that carry the net's current owe it the width;
             # a tap (clamp, sense pin, cap) just has to be reachable, which the
             # filler/necks do.  Fall back to every pad if the graph is absent.
             own = pads.get(net, [])
-            core = [pt for ref, pt in own if ref in series.get(net, ())] or \
+            core = [pt for ref, pt in own if ref in series_refs] or \
                 [pt for _, pt in own]
-            # the copper is only as good as the *pad* it flows through: a
-            # TO-252 lead or a 1206 fuse pad is ~1.2 mm, i.e. ~4.5 A at 2 oz,
-            # however wide the pour around it is
-            w_pour = pour_width(fp, core)
-            w_pad = min([w for w in pad_widths.get(net, [])] or [w_pour])
-            w = min(w_pour, w_pad)
-            cands.append((ampacity(w, layer not in outer),
-                          "pour" if solid else "therm", w, layer))
-        if not cands:
-            if not has_zone:
-                print(f"  {net:10} {need:>7.1f} {'-':>5} {'-':>9} {'-':>7} {'-':>7}  "
-                      f"NO COPPER (no trace, no pour)")
+            # The designed copper is the zone *outline*: the filled polygon is
+            # narrower at every pad neck, and that neck is the component
+            # terminal, rated from the datasheet below — not a trace.  The
+            # filled width is kept as a clipping warning.
+            w_out = pour_width(z.Outline(), core)
+            w_fill = pour_width(fp, core)
+            copper.append((ampacity(w_out, layer not in outer),
+                           "pour" if solid else "therm", w_out, layer, w_fill))
+        pick = (next((c for c in copper if c[1] == "pour"),
+                     max(copper, key=lambda c: c[0])) if copper else None)
+
+        known, unknown = [], []
+        for fp in footprints:
+            ref = fp.GetReference()
+            if ref not in series_refs:
+                continue
+            if not any(p.GetNetname().lstrip("/") == net for p in fp.Pads()):
+                continue
+            t = terminal_rating(fp.GetFPIDAsString(), fp.GetValue())
+            (known if t else unknown).append((ref, t))
+
+        term_cap = None
+        term_label = "-"
+        if known:
+            _, t = min(known, key=lambda x: x[1].amps)
+            term_cap = t.amps
+            term_label = f"{t.amps:.0f} A {t.name}"
+        if unknown:
+            n_unrated += 1
+            uw = min(part_widths.get(net, {}).get(ref, 0.0)
+                     for ref, _ in unknown)
+            ulabel = f"unrated {uw:.2f} mm ~{ampacity(uw, False):.1f} A"
+            term_label = ulabel if not known else \
+                f"{term_label} +{len(unknown)} unrated"
+
+        if pick is None:
+            print(f"  {net:10} {need:>7.1f}  {'no copper':>14}  "
+                  f"{term_label:>18}  FAIL")
             n_fail += 1
             continue
-        # a net with a pour is meant to be carried by it; a trace is the fallback
-        pick = next((c for c in cands if c[1] == "pour"), max(cands))
-        cap, kind, w, layer = pick
-        ok = cap >= need
-        n_fail += not ok
-        note = "PASS" if ok else f"FAIL  (~{need / cap:.0f}x short)" if cap else "FAIL  (open)"
-        print(f"  {net:10} {need:>7.1f} {kind:>5} {w:>9.3f} {layer:>7} "
-              f"{cap:>7.2f}  {note}")
-        for c_cap, c_kind, c_w, c_layer in cands:
-            if c_kind == kind:
-                continue
-            why = ("thermal pad connections - the bottleneck is the spokes, "
-                   "not the plane" if c_kind == "therm" else "trace")
-            print(f"  {'':10} {'':>7} {c_kind:>5} {c_w:>9.3f} {c_layer:>7} "
-                  f"{c_cap:>7.2f}  ({why})")
+        cap, kind, w, layer, w_fill = pick
+        copper_ok = cap >= need
+        term_ok = term_cap is None or term_cap >= need
+        n_fail += not (copper_ok and term_ok)
+        if not copper_ok:
+            verdict = (f"FAIL copper ~{need / cap:.1f}x short" if cap
+                       else "FAIL copper (open)")
+        elif not term_ok:
+            verdict = f"FAIL terminal ~{need / term_cap:.1f}x short"
+        elif unknown:
+            verdict = "PASS (unrated terminal)"
+        else:
+            verdict = "PASS"
+        if w_fill < width_for(need) and w_fill < w - 0.1:
+            verdict += f"; fill {w_fill:.2f} mm"
+        print(f"  {net:10} {need:>7.1f}  {w:7.2f} mm {cap:6.1f} A  "
+              f"{term_label:>18}  {verdict}")
 
     print()
     total = len(DESIGN_CURRENT)
-    print(f"  power nets: {n_fail}/{total} FAIL "
-          f"(a FAIL means the narrowest segment cannot carry the design current)")
+    print(f"  power nets: {n_fail}/{total} FAIL, {n_unrated} unrated terminal(s)")
+    print("  (copper = trace/pour outline; terminal = datasheet rating; "
+          "unrated = warning)")
     return 1 if n_fail else 0
 
 

@@ -15,18 +15,18 @@
 Commands: `make place` (UI) · `make drc` · `make render` · `make route` ·
 `make sim` · `make power`.
 
-`fixed2` (a UI save) is applied with the new power parts (ATO fuse, WSR2
-shunts): DRC-clean placement (0 courtyard/clearance/short); the corrected
-channel gate passes except `N_CS` 7.0/7.5 mm. The power pad gate is still
-the FET-package item ([0007](docs/history/0007-power-pads-limit.md)).
+`fixed2` is applied with the new power parts (ATO fuse, WSR2 shunts, Power56
+FETs): ERC 0, schematic parity 0, DRC-clean placement (0 courtyard /
+clearance / short), and the FET terminals are rated. The only channel short
+is `N_PACKMID` 1.5 / 7.5 mm — move `4Q1`/`4Q2` apart. Touch up `fixed2` in
+the UI, save/apply, then route.
 
 ## Next steps
 
-1. **apply fixed2 as the new board master** 
-2. **Verify the power path** — `make power` (ampacity) and `make channels`
+1. **Verify the power path** — `make power` (ampacity) and `make channels`
    (pour clearance); this is the blocker.
-3. **Route** — `make route` from the main board, then `make drc`.
-4. **Keep signals off `In1.Cu`** — it is a thin GND return that needs to carry
+2. **Route** — `make route` from the main board, then `make drc`.
+3. **Keep signals off `In1.Cu`** — it is a thin GND return that needs to carry
    the 20 A as well.
 
 ## Where things came from

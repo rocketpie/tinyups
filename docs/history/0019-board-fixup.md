@@ -15,10 +15,10 @@ not `Remove()` — the latter frees the proxies under the board and the next
 
 **Power nets:** `power_channel.py` read x/y swapped, so the channel numbers were
 measured on a transposed grid; no-net TO-252 thermal pads were counted as
-obstacles (`N_PACKMID` 11.0 → 2.0 mm); `CELL0`/`CELL4` were 17 A although they
-are Kelvin taps. The grid is `(row, col)` now, no-net pads are ignored, nets
-below 0.5 mm are skipped, and the cell taps are 0.01 A. On `fixed2` the corrected
-gate has one marginal rail: `N_CS` 7.0 / 7.5 mm (1.1×).
+obstacles (`N_PACKMID` 11.0 → 2.0 mm); `CELL4` was 17 A although it is a Kelvin
+tap; `CELL0` is the pack return through `4R1`, not a tap. The grid is `(row, col)` now, no-net
+pads are ignored, nets below 0.5 mm are skipped, and `CELL4` is 0.01 A. On
+`fixed2` the corrected gate has one marginal rail: `N_CS` 7.0 / 7.5 mm (1.1×).
 
 **Status:** fixed. The part swap invalidated the earlier `fixed1` route/power
 numbers; the pad gate that stays red is the FET-package item in

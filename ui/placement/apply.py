@@ -53,17 +53,16 @@ def main() -> int:
     hw = os.path.join(ROOT, "hardware")
     sys.path.insert(0, hw)
     from pour_power import add_power_pours
-    pour_nets = [z.GetNetname().lstrip("/") for z in board.Zones()
-                 if z.GetZoneName().startswith("power pour")]
     for z in list(board.Zones()):
         if z.GetZoneName().startswith("power pour"):
             # Delete(), not Remove(): Remove() hands ownership to Python and the
             # zone proxies are freed while pcbnew still holds the board lists,
             # which corrupts the next GetFootprints() walk (segfault).
             board.Delete(z)
-    if pour_nets:
-        add_power_pours(board, nets=pour_nets)
-        pcbnew.ZONE_FILLER(board).Fill(board.Zones())
+    # Every net whose copper does not fit a trace, not only the set the source
+    # board happened to carry (the old board predates several 17-20 A nets).
+    add_power_pours(board)
+    pcbnew.ZONE_FILLER(board).Fill(board.Zones())
 
     pcbnew.SaveBoard(out, board)
     print(f"applied {placed} placements -> {out}")

@@ -24,6 +24,8 @@ gates — `make erc`, `make drc`.
 | 10 | power-first bands | | | | 14.7 / — | 26 | 12.3 | 35.0 | 4.14 | HPWL 5942→8227 |
 | 11 | try5 hand-tuned (UI) | 3527 | 13452 | | | | | | | wire 3960, ovl 8, axisR 0.68 — [history 0015](history/0015-placement-cleanup.md) |
 | 12 | fixed1 hand-tuned (UI) | 3672 | 16501 | | | | | | 0.76 | wire 4295, ovl 0, out 0, axisR 0.76, path 574 — [history 0019](history/0019-board-fixup.md) |
+| 13 | fixed2 hand-tuned (UI, new power parts) | 3736 | 17577 | | | | | | 0.78 | wire 4362, ovl 0, out 0, axisR 0.78 — [history 0019](history/0019-board-fixup.md) |
+| 14 | fixed2 + Power56 FETs | 3804 | 16855 | | | | | | 0.79 | wire 4365, ovl 0, out 0, axisR 0.79 — [history 0020](history/0020-fet-pin-mapping.md) |
 
 ## Routing
 
@@ -51,3 +53,4 @@ gates — `make erc`, `make drc`.
 | 7 | try5-poured (pours open) | pours on F.Cu | 0.000 | 11/11 | 0 | 52 | 284 | FAIL | — | channel N_AF 3.3/9.4 mm — [history 0015](history/0015-placement-cleanup.md) |
 | 8 | derived board gets the DRU | pours on F.Cu | 0.000 | 11/11 | 0 | 52 (was 73) | 284 | FAIL | — | 21 false 5U1 pad-pad items gone — [history 0017](history/0017-drc-rules-do-not-follow-a-board-copy.md) |
 | 9 | fixed1 routed | pours on F.Cu | 0.000 | 22/24 | 0 | 53 | 24 | FAIL | — | pad-limited [0019](history/0019-board-fixup.md) |
+| 10 | fixed2 + Power56 FETs, terminal-aware gate | all high-current nets poured | — | 6/23 | 0 | 42 (silk) | 280 | PASS | — | high-current rails pass copper + terminal; [ADR-0015](decisions/0015-terminal-rating-in-power-gate.md) |

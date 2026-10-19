@@ -271,149 +271,293 @@
       )
     )
 
-    (symbol "Transistor_FET:Q_NMOS_GSD" (pin_names (offset 0)) (in_bom yes) (on_board yes)
-      (property "Reference" "Q" (at 5.08 1.905 0)
-        (effects (font (size 1.27 1.27)) (justify left))
-      )
-      (property "Value" "Q_NMOS_GSD" (at 5.08 0 0)
-        (effects (font (size 1.27 1.27)) (justify left))
-      )
-      (property "Footprint" "" (at 5.08 2.54 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Description" "N-MOSFET transistor, gate/source/drain" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "ki_keywords" "transistor NMOS N-MOS N-MOSFET" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (symbol "Q_NMOS_GSD_0_1"
-        (polyline
-          (pts
-            (xy 0.254 1.905)
-            (xy 0.254 -1.905)
-          )
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 0.254 0)
-            (xy -2.54 0)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 0.762 2.286)
-            (xy 0.762 1.27)
-          )
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 0.762 0.508)
-            (xy 0.762 -0.508)
-          )
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 0.762 -1.27)
-            (xy 0.762 -2.286)
-          )
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 0.762 -1.778)
-            (xy 3.302 -1.778)
-            (xy 3.302 1.778)
-            (xy 0.762 1.778)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 1.016 0)
-            (xy 2.032 0.381)
-            (xy 2.032 -0.381)
-            (xy 1.016 0)
-          )
-          (stroke (width 0) (type default))
-          (fill (type outline))
-        )
-        (circle (center 1.651 0) (radius 2.794)
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 2.54 2.54)
-            (xy 2.54 1.778)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (circle (center 2.54 1.778) (radius 0.254)
-          (stroke (width 0) (type default))
-          (fill (type outline))
-        )
-        (circle (center 2.54 -1.778) (radius 0.254)
-          (stroke (width 0) (type default))
-          (fill (type outline))
-        )
-        (polyline
-          (pts
-            (xy 2.54 -2.54)
-            (xy 2.54 0)
-            (xy 0.762 0)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 2.921 0.381)
-            (xy 3.683 0.381)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts
-            (xy 3.302 0.381)
-            (xy 2.921 -0.254)
-            (xy 3.683 -0.254)
-            (xy 3.302 0.381)
-          )
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-      )
-      (symbol "Q_NMOS_GSD_1_1"
-        (pin input line (at -5.08 0 0) (length 2.54)
-          (name "G" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 2.54 5.08 270) (length 2.54)
-          (name "D" (effects (font (size 1.27 1.27))))
-          (number "3" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 2.54 -5.08 90) (length 2.54)
-          (name "S" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
+    (symbol "Transistor_FET:Q_NMOS_SGD"
+		(pin_names
+			(offset 0)
+			(hide yes)
+		)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(property "Reference" "Q"
+			(at 5.08 1.905 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Q_NMOS_SGD"
+			(at 5.08 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 5.08 2.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "N-MOSFET transistor, source/gate/drain"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ki_keywords" "transistor NMOS N-MOS N-MOSFET"
+			(at 0 0 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(symbol "Q_NMOS_SGD_0_1"
+			(polyline
+				(pts
+					(xy 0.254 1.905) (xy 0.254 -1.905)
+				)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0.254 0) (xy -2.54 0)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0.762 2.286) (xy 0.762 1.27)
+				)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0.762 0.508) (xy 0.762 -0.508)
+				)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0.762 -1.27) (xy 0.762 -2.286)
+				)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0.762 -1.778) (xy 3.302 -1.778) (xy 3.302 1.778) (xy 0.762 1.778)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 1.016 0) (xy 2.032 0.381) (xy 2.032 -0.381) (xy 1.016 0)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type outline)
+				)
+			)
+			(circle
+				(center 1.651 0)
+				(radius 2.794)
+				(stroke
+					(width 0.254)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 2.54 2.54) (xy 2.54 1.778)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(circle
+				(center 2.54 1.778)
+				(radius 0.254)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type outline)
+				)
+			)
+			(circle
+				(center 2.54 -1.778)
+				(radius 0.254)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type outline)
+				)
+			)
+			(polyline
+				(pts
+					(xy 2.54 -2.54) (xy 2.54 0) (xy 0.762 0)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 2.921 0.381) (xy 3.683 0.381)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 3.302 0.381) (xy 2.921 -0.254) (xy 3.683 -0.254) (xy 3.302 0.381)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+		)
+		(symbol "Q_NMOS_SGD_1_1"
+			(pin input line
+				(at -5.08 0 0)
+				(length 5.08)
+				(name "G"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "2"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 2.54 5.08 270)
+				(length 2.54)
+				(name "D"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "3"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+			(pin passive line
+				(at 2.54 -5.08 90)
+				(length 2.54)
+				(name "S"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+				(number "1"
+					(effects
+						(font
+							(size 1.27 1.27)
+						)
+					)
+				)
+			)
+		)
+		(embedded_fonts no)
+	)
 
     (symbol "Device:C" (pin_names (offset 0.254)) (in_bom yes) (on_board yes)
       (property "Reference" "C" (at 0.635 2.54 0)
@@ -3206,24 +3350,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 139.7 71.12 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 139.7 71.12 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid d9094b3e-1408-4627-b6a3-4877a4064281)
     (property "Reference" "1Q1" (at 142.23999999999998 68.58 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 40V" (at 142.23999999999998 73.66000000000001 0)
+    (property "Value" "NTMFS5C410N" (at 142.23999999999998 73.66000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 139.7 71.12 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 139.7 71.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 139.7 71.12 0)
+    (property "Datasheet" "https://www.onsemi.com/download/data-sheet/pdf/ntmfs5c410n-d.pdf" (at 139.7 71.12 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 67c924b15c79494cb7b9a0c76aa1afcf))
+    (pin "2" (uuid 67c924b15c79494cb7b9a0c76aa1afcf))
     (pin "3" (uuid 2083a9038d684864a20a45eddd49315d))
-    (pin "2" (uuid 80b4c47cf45f4ec99908f660c29584b8))
+    (pin "1" (uuid 80b4c47cf45f4ec99908f660c29584b8))
     (instances
       (project "tinyups"
         (path "/"
@@ -3445,24 +3589,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 63.5 121.92 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 63.5 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 6867284d-184a-40e5-856b-23c47e26e08f)
     (property "Reference" "3Q1" (at 66.04 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 40V" (at 66.04 124.46000000000001 0)
+    (property "Value" "NTMFS5C410N" (at 66.04 124.46000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 63.5 121.92 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 63.5 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 63.5 121.92 0)
+    (property "Datasheet" "https://www.onsemi.com/download/data-sheet/pdf/ntmfs5c410n-d.pdf" (at 63.5 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 25e4b0222ab04ccc83e4450520e805c1))
+    (pin "2" (uuid 25e4b0222ab04ccc83e4450520e805c1))
     (pin "3" (uuid c8153608462d465b9cf323e392aafdb9))
-    (pin "2" (uuid 80e26328e10a483fbfeb697400544ed8))
+    (pin "1" (uuid 80e26328e10a483fbfeb697400544ed8))
     (instances
       (project "tinyups"
         (path "/"
@@ -3632,24 +3776,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 190.5 96.52 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 190.5 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 725e068d-1aa4-4b44-ae92-a818617dfe41)
     (property "Reference" "2Q1" (at 193.04 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 30V" (at 193.04 99.06 0)
+    (property "Value" "NTMFS4C01N" (at 193.04 99.06 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 190.5 96.52 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 190.5 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 190.5 96.52 0)
+    (property "Datasheet" "https://www.onsemi.com/pdf/datasheet/ntmfs4c01n-d.pdf" (at 190.5 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 28ea34060c9e47319cfb7fbba50fb565))
+    (pin "2" (uuid 28ea34060c9e47319cfb7fbba50fb565))
     (pin "3" (uuid 26f26108c58248f39ac86d560785bba9))
-    (pin "2" (uuid e940e1564a9b47969f2df417db558d44))
+    (pin "1" (uuid e940e1564a9b47969f2df417db558d44))
     (instances
       (project "tinyups"
         (path "/"
@@ -3659,24 +3803,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 215.9 96.52 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 215.9 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid a60e770d-1546-4f4a-997b-5aeb0dd77c77)
     (property "Reference" "2Q2" (at 218.44 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 30V" (at 218.44 99.06 0)
+    (property "Value" "NTMFS4C01N" (at 218.44 99.06 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 215.9 96.52 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 215.9 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 215.9 96.52 0)
+    (property "Datasheet" "https://www.onsemi.com/pdf/datasheet/ntmfs4c01n-d.pdf" (at 215.9 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 75d19fffb080419a8c429a9e9015a07f))
+    (pin "2" (uuid 75d19fffb080419a8c429a9e9015a07f))
     (pin "3" (uuid d6095a54a25149d7a4858a143d310c21))
-    (pin "2" (uuid 3d425b0c3ede45f194ed12889c6c9728))
+    (pin "1" (uuid 3d425b0c3ede45f194ed12889c6c9728))
     (instances
       (project "tinyups"
         (path "/"
@@ -3686,24 +3830,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 241.3 96.52 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 241.3 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 5bf1a9ad-cb5f-4e60-a90b-fba14fef7485)
     (property "Reference" "2Q3" (at 243.84 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 30V" (at 243.84 99.06 0)
+    (property "Value" "NTMFS4C01N" (at 243.84 99.06 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 241.3 96.52 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 241.3 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 241.3 96.52 0)
+    (property "Datasheet" "https://www.onsemi.com/pdf/datasheet/ntmfs4c01n-d.pdf" (at 241.3 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 89d9fcc6c98f4a21a14f27cb895b81ab))
+    (pin "2" (uuid 89d9fcc6c98f4a21a14f27cb895b81ab))
     (pin "3" (uuid 25485d1be5f54b0cbcf6a9cffd0f591e))
-    (pin "2" (uuid 7dd11e69b646432a8924b4bd9795e750))
+    (pin "1" (uuid 7dd11e69b646432a8924b4bd9795e750))
     (instances
       (project "tinyups"
         (path "/"
@@ -3713,24 +3857,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 266.7 96.52 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 266.7 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 6b1759e1-4ea6-41f2-a28a-9b0801382ec3)
     (property "Reference" "2Q4" (at 269.24 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 30V" (at 269.24 99.06 0)
+    (property "Value" "NTMFS4C01N" (at 269.24 99.06 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 266.7 96.52 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 266.7 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 266.7 96.52 0)
+    (property "Datasheet" "https://www.onsemi.com/pdf/datasheet/ntmfs4c01n-d.pdf" (at 266.7 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 994c4bedced443d29985b06c8b6d26b8))
+    (pin "2" (uuid 994c4bedced443d29985b06c8b6d26b8))
     (pin "3" (uuid 7376d52826984633929e8533812132c2))
-    (pin "2" (uuid b5fb88995a1a45f78c256a42a640f496))
+    (pin "1" (uuid b5fb88995a1a45f78c256a42a640f496))
     (instances
       (project "tinyups"
         (path "/"
@@ -4364,24 +4508,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 330.2 96.52 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 330.2 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid bf49aa52-7448-4e3a-ae9e-0f84044b18a0)
     (property "Reference" "5Q1" (at 332.74 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 40V" (at 332.74 99.06 0)
+    (property "Value" "NTMFS5C430N" (at 332.74 99.06 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 330.2 96.52 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 330.2 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 330.2 96.52 0)
+    (property "Datasheet" "https://www.onsemi.com/pdf/datasheet/ntmfs5c430-d.pdf" (at 330.2 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 29d4288ff27c4615b9e4582e8d6ca89b))
+    (pin "2" (uuid 29d4288ff27c4615b9e4582e8d6ca89b))
     (pin "3" (uuid 2f5f5b0e7e6048c4920b6a8f58680d6a))
-    (pin "2" (uuid a540fab528074defbd82a0f9b12fbe0c))
+    (pin "1" (uuid a540fab528074defbd82a0f9b12fbe0c))
     (instances
       (project "tinyups"
         (path "/"
@@ -4391,24 +4535,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 355.6 96.52 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 355.6 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 5d33ce4c-9218-4884-ab2c-1079e37da517)
     (property "Reference" "5Q2" (at 358.14000000000004 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 40V" (at 358.14000000000004 99.06 0)
+    (property "Value" "NTMFS5C430N" (at 358.14000000000004 99.06 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 355.6 96.52 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 355.6 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 355.6 96.52 0)
+    (property "Datasheet" "https://www.onsemi.com/pdf/datasheet/ntmfs5c430-d.pdf" (at 355.6 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 937f470519dd49a28e0f6c31aa7809c8))
+    (pin "2" (uuid 937f470519dd49a28e0f6c31aa7809c8))
     (pin "3" (uuid df9a61eb941543aab3f6834617423165))
-    (pin "2" (uuid 87eca9ea8fdf4c26806cbe20a778f734))
+    (pin "1" (uuid 87eca9ea8fdf4c26806cbe20a778f734))
     (instances
       (project "tinyups"
         (path "/"
@@ -4418,24 +4562,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 381.0 96.52 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 381.0 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 5e641b72-9e7e-46e9-ae1b-b3a460ffda25)
     (property "Reference" "5Q3" (at 383.54 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 40V" (at 383.54 99.06 0)
+    (property "Value" "NTMFS5C430N" (at 383.54 99.06 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 381.0 96.52 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 381.0 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 381.0 96.52 0)
+    (property "Datasheet" "https://www.onsemi.com/pdf/datasheet/ntmfs5c430-d.pdf" (at 381.0 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid e91db1b5154c45d88245cd9989195424))
+    (pin "2" (uuid e91db1b5154c45d88245cd9989195424))
     (pin "3" (uuid b0a5a5f5c7884f1bbe767e8c29635997))
-    (pin "2" (uuid 39033edc039345fc94e10491d862adcc))
+    (pin "1" (uuid 39033edc039345fc94e10491d862adcc))
     (instances
       (project "tinyups"
         (path "/"
@@ -4445,24 +4589,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 406.4 96.52 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 406.4 96.52 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 5decb81b-364f-4e5d-ad65-89e3540e9ee0)
     (property "Reference" "5Q4" (at 408.94 93.97999999999999 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 40V" (at 408.94 99.06 0)
+    (property "Value" "NTMFS5C430N" (at 408.94 99.06 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 406.4 96.52 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 406.4 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 406.4 96.52 0)
+    (property "Datasheet" "https://www.onsemi.com/pdf/datasheet/ntmfs5c430-d.pdf" (at 406.4 96.52 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 8cc100d73de94292b7a978092397d3be))
+    (pin "2" (uuid 8cc100d73de94292b7a978092397d3be))
     (pin "3" (uuid cf05a8b283854e8a8671121bb8d1a1dd))
-    (pin "2" (uuid f4c154a52ef4409d9e0839ef271a5950))
+    (pin "1" (uuid f4c154a52ef4409d9e0839ef271a5950))
     (instances
       (project "tinyups"
         (path "/"
@@ -5090,24 +5234,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 431.8 121.92 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 431.8 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid b8b2d502-e61c-4135-ba69-03d833bc6a2f)
     (property "Reference" "4Q1" (at 434.34000000000003 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 40V" (at 434.34000000000003 124.46000000000001 0)
+    (property "Value" "NTMFS5C410N" (at 434.34000000000003 124.46000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 431.8 121.92 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 431.8 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 431.8 121.92 0)
+    (property "Datasheet" "https://www.onsemi.com/download/data-sheet/pdf/ntmfs5c410n-d.pdf" (at 431.8 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid 457cc7a7cd124c82bbb0a8a2164de1c1))
+    (pin "2" (uuid 457cc7a7cd124c82bbb0a8a2164de1c1))
     (pin "3" (uuid ecdb0cc63bde43f7baf8d2398ad7229b))
-    (pin "2" (uuid a8a37a448e7d48c39d26a7043106cb64))
+    (pin "1" (uuid a8a37a448e7d48c39d26a7043106cb64))
     (instances
       (project "tinyups"
         (path "/"
@@ -5117,24 +5261,24 @@
     )
   )
 
-  (symbol (lib_id "Transistor_FET:Q_NMOS_GSD") (at 457.2 121.92 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:Q_NMOS_SGD") (at 457.2 121.92 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid e6a0b19d-500e-4cb2-a093-45ed10009711)
     (property "Reference" "4Q2" (at 459.74 119.38 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "N-FET 40V" (at 459.74 124.46000000000001 0)
+    (property "Value" "NTMFS5C410N" (at 459.74 124.46000000000001 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Package_TO_SOT_SMD:TO-252-2" (at 457.2 121.92 0)
+    (property "Footprint" "Package_SON:VSONP-8-1EP_5x6_P1.27mm" (at 457.2 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (property "Datasheet" "~" (at 457.2 121.92 0)
+    (property "Datasheet" "https://www.onsemi.com/download/data-sheet/pdf/ntmfs5c410n-d.pdf" (at 457.2 121.92 0)
       (effects (font (size 1.0 1.0)) hide)
     )
-    (pin "1" (uuid caa9acebd4424c20ba8a954aee56bee4))
+    (pin "2" (uuid caa9acebd4424c20ba8a954aee56bee4))
     (pin "3" (uuid 341334046ee64be6b78525d2c834fb08))
-    (pin "2" (uuid f2409bca33694a349984628045bfb779))
+    (pin "1" (uuid f2409bca33694a349984628045bfb779))
     (instances
       (project "tinyups"
         (path "/"

@@ -44,9 +44,13 @@ def add_power_pours(board, nets=None) -> None:
     high-current copper is actually drawn.
 
     `nets` limits the pour to a set of net names (e.g. the set a board already
-    carried); the default is every net in `DESIGN_CURRENT` except GND.
+    carried); the default is every net in `DESIGN_CURRENT` except GND.  Nets
+    whose required width is below 0.5 mm are left to the router: a 0.1 A rail
+    does not need a pour, and its fragment would only confuse the filler and
+    freerouting.
     """
-    nets = [n for n in (nets or DESIGN_CURRENT) if n != "GND"]  # GND = In1 plane
+    nets = [n for n in (nets or DESIGN_CURRENT)
+            if n != "GND" and width_for(DESIGN_CURRENT[n]) >= 0.5]
     series = series_parts()
     anchor = None
     for fp in board.GetFootprints():
