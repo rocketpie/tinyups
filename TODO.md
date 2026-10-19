@@ -9,6 +9,8 @@
     eg. Power traces need more space. can we simulate them live in the placement UI?
     I want that feedback loop shorter
 
+- continue with board fixed1
+
 # UI
 - works with json. a board is .kicad_pcb.
 - data extraction and re-integration stays python (`extract.py`, `apply.py`,
@@ -19,3 +21,4 @@
   violations, measured power-channel shortfall. Next: launch `make route` as an
   async job from the UI and refresh the same feedback when it lands.
 - A/B testing: on model change, run all metrics, record update in progress.md
+

@@ -28,6 +28,7 @@ DESIGN_CURRENT = {
     "N_PACKMID": 17.0, # pack protection FET mid-node
     "CELL0": 17.0,     # pack - (bottom cell)
     "CELL4": 17.0,     # pack + (top cell)
+    "PACK+": 17.0,     # pack terminal, through the protection FETs
     "VOUT12": 17.0,    # regulated output
     "N_VCAP": 0.05,    # LM74700 charge-pump cap (tiny)
     "+3V3": 1.0,       # logic rail (estimate)
@@ -41,7 +42,7 @@ RAIL_V = {
     "+12V_IN": 12.0, "N_AF": 12.0, "VIN_LM": 12.0, "VIN_SYS": 12.0,
     "N_CATH": 12.0, "VBAT": 13.8, "VSYS": 12.0, "VBUS": 12.0, "N_ACN": 12.0,
     "SW1": 12.0, "SW2": 12.0, "SW1_OUT": 12.0, "SW2_OUT": 12.0,
-    "N_CS": 0.0, "N_PACKMID": 13.8, "CELL0": 0.0, "CELL4": 13.8,
+    "N_CS": 0.0, "N_PACKMID": 13.8, "CELL0": 0.0, "CELL4": 13.8, "PACK+": 13.8,
     "VOUT12": 12.0, "N_VCAP": 12.0, "+3V3": 3.3, "VCC": 5.0,
     "REGN": 6.0, "VDDA": 6.0, "GND": 0.0,
 }

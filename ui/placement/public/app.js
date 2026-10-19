@@ -59,7 +59,7 @@ const PARAM_SPEC = [
   { key: "BOUND", label: "Board keep-in force", min: 0, max: 400, step: 5, d: DEFAULTS.BOUND, group: "spread",
     help: "How hard the board edge pushes parts back inside." },
   { key: "HOST_STR", label: "Belongs-to force (small part → its IC)", min: 0, max: 20, step: 0.5, d: DEFAULTS.HOST_STR, group: "host",
-    help: "Every small part (R/C/D/L) is pulled onto a ring around the IC it belongs to. Which IC: the one it shares the most *specific* net with (a 2-pad boot cap counts 1.0, a 12-pad rail 0.09); a tie (a bulk cap on a rail) goes to the nearest IC. 0 = off. Without it a controller's parts are held only by the nets, and a net's pull is toward its own centroid — which is why they drift to the middle." },
+    help: "Every small part (R/C/D/L) is pulled onto a ring around the IC it belongs to. Which IC: the one it shares the most *specific* net with (a 2-pad boot cap counts 1.0, a 12-pad rail 0.09); a tie goes to the nearest IC. If it shares no IC net at all, it uses the nearest IC in its own block — never an IC from another block. 0 = off." },
   { key: "HOST_D", label: "Belongs-to ring (mm)", min: 1, max: 30, step: 0.5, d: DEFAULTS.HOST_D, group: "host",
     help: "Preferred distance from the host: farther and the small part is pulled in, closer and it is pushed out. Only the small part moves — the controller stays put and its parts fan out around it." },
   { key: "HOST_POWER", label: "Belongs-to also for power-flagged parts", type: "check", d: DEFAULTS.HOST_POWER, group: "host",
@@ -780,7 +780,7 @@ function renderInspect() {
       <tr><td>pinned</td><td>${n.pinned ? "yes" : n.anchor != null ? "terminal" : "no"}</td></tr>
       <tr class="${n.clear != null ? "bad" : ""}"><td>min pad clearance</td><td>${clear}</td></tr>
       ${rf ? `<tr class="${rf.unrouted + rf.clearance ? "bad" : ""}"><td>last route</td><td>${rf.unrouted} unrouted · ${rf.clearance} clearance${rf.min_clearance_mm != null ? ` · ${fmt(rf.min_clearance_mm, 2)} mm` : ""}</td></tr>` : ""}
-      ${n.host ? `<tr><td>belongs to</td><td>${n.host}${n.hostScore ? ` (net score ${fmt(n.hostScore, 2)})` : " (nearest IC)"}</td></tr>` : ""}
+      ${n.host ? `<tr><td>belongs to</td><td>${n.host}${n.hostScore ? ` (net score ${fmt(n.hostScore, 2)})` : " (nearest IC in block)"}</td></tr>` : ""}
     </table>
     <table id="metrics" style="margin-top:6px">${nets}</table>`;
 }
@@ -911,8 +911,10 @@ function bindEvents() {
   $("#unpin").addEventListener("click", unpinAll);
   $("#pinSel").addEventListener("click", pinSelected);
   $("#unpinSel").addEventListener("click", unpinSelected);
-  $("#rotCW").addEventListener("click", () => rotateSelected(90));
-  $("#rotCCW").addEventListener("click", () => rotateSelected(-90));
+  // In the KiCad Y-down frame a positive angle is visually counter-clockwise,
+  // so the clockwise button is the negative delta.
+  $("#rotCW").addEventListener("click", () => rotateSelected(-90));
+  $("#rotCCW").addEventListener("click", () => rotateSelected(90));
   $("#onlyDraw").addEventListener("change", (e) => { S.onlyDraw = e.target.checked; applyHighlight(); saveUI(); });
   $("#showLabels").addEventListener("change", (e) => { S.showLabels = e.target.checked; styleNodes(); saveUI(); });
   $("#showClearance").addEventListener("change", (e) => {

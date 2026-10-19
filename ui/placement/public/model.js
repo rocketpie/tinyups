@@ -118,6 +118,17 @@ export const aabb = (n) => ({
 // MST over the pads of every kept net, so the picture can show the real
 // ratsnest (pad → pad, amp-coloured / sized) instead of a line between part
 // centres.  Topology is fixed at load; the caller re-reads padXY every tick.
+//
+// The current is the *pad's* conducted current (extract.py), not the net's
+// design current: a 100k pull-up on +12V_IN must stay a thin grey line, not a
+// 20 A red one.
+const OZ_OUTER = 2.0, OZ_MIL = 1.378, K_EXT = 0.048, DT_C = 10.0;
+export function ipcWidthMm(current, oz = OZ_OUTER) {
+  if (!(current > 0)) return 0.25;
+  const area = Math.pow(current / (K_EXT * Math.pow(DT_C, 0.44)), 1 / 0.725);
+  return Math.max(0.25, area / (oz * OZ_MIL) * 0.0254);
+}
+
 export function padEdges(nodes, graph) {
   const byNet = new Map();
   for (const n of nodes) {
@@ -131,34 +142,30 @@ export function padEdges(nodes, graph) {
   const out = [];
   for (const [net, pads] of byNet) {
     if (dropped.has(net) || pads.length < 2) continue;
-    const info = graph.nets[net] || {};
     const xy = pads.map((u) => padXY(u.n, u.p));
-    const inTree = new Array(pads.length).fill(false);
-    const best = new Array(pads.length).fill(Infinity);
-    const from = new Array(pads.length).fill(-1);
-    inTree[0] = true;
-    for (let i = 1; i < pads.length; i++) {
-      best[i] = Math.hypot(xy[i][0] - xy[0][0], xy[i][1] - xy[0][1]);
-      from[i] = 0;
-    }
-    for (let k = 1; k < pads.length; k++) {
-      let j = -1, bd = Infinity;
-      for (let i = 0; i < pads.length; i++) {
-        if (!inTree[i] && best[i] < bd) { bd = best[i]; j = i; }
-      }
-      if (j < 0) break;
-      inTree[j] = true;
-      out.push({
-        a: pads[from[j]], b: pads[j], net,
-        current: info.current || 0,
-        width: info.width || 0.25,
-        required: info.required != null ? info.required : (info.width || 0.25),
-      });
-      for (let i = 0; i < pads.length; i++) {
-        if (inTree[i]) continue;
+    const pairs = [];
+    for (let i = 0; i < pads.length; i++) {
+      for (let j = i + 1; j < pads.length; j++) {
+        const current = Math.min(pads[i].p.current || 0, pads[j].p.current || 0);
         const d = Math.hypot(xy[i][0] - xy[j][0], xy[i][1] - xy[j][1]);
-        if (d < best[i]) { best[i] = d; from[i] = j; }
+        pairs.push({ current, d, i, j });
       }
+    }
+    // The same ordering the component graph uses: the thickest connection
+    // first, then the shortest.  A pure Euclidean MST links a 20 A pad to
+    // whichever pad is nearest — often a millamp tap — and then the real power
+    // partner looks unconnected.
+    pairs.sort((a, b) => (b.current - a.current) || (a.d - b.d));
+    const parent = pads.map((_, i) => i);
+    const find = (x) => {
+      while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; }
+      return x;
+    };
+    for (const { current, i, j } of pairs) {
+      const ri = find(i), rj = find(j);
+      if (ri === rj) continue;
+      parent[ri] = rj;
+      out.push({ a: pads[i], b: pads[j], net, current, required: ipcWidthMm(current) });
     }
   }
   return out;
@@ -286,9 +293,11 @@ export function assignHosts(nodes, graph, byId, opts = {}) {
         best = r; bestScore = sc; bestD = d;
       }
     }
-    if (!best) {                                         // nothing specific → nearest IC
+    if (!best) {
+      // Nothing specific → the nearest IC *in the same functional block*.
       for (const h of nodes) {
         if (h.kind !== "U" || h.id === n.id) continue;
+        if (h.block !== n.block) continue;
         const d = Math.hypot(n.x - h.x, n.y - h.y);
         if (d < bestD) { best = h.id; bestD = d; }
       }

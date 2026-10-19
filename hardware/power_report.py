@@ -25,6 +25,8 @@ import sys
 
 import pcbnew
 
+from power_spec import DESIGN_CURRENT
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
 
@@ -36,33 +38,8 @@ OZ_OUTER = float(os.environ.get("POWER_OZ_OUTER", "2.0"))
 OZ_INNER = float(os.environ.get("POWER_OZ_INNER", "0.5"))
 OZ_MIL = 1.378  # mils of copper per oz/ft^2
 
-# Design current per net (A).  Source: requirements.md / bom.md.
-#   +12V_IN  20 A  12 V/20 A adapter (240 W): the load's + charge's whole budget (FR-5)
-#   N_AF     20 A  same current, downstream of the fuse
-#   VIN_SYS  20 A  system input rail (load + charge, FR-5)
-#   VBAT     17 A  pack peak discharge - 200 W at 12 V (FR-3, FR-5)
-#   VOUT12   17 A  output peak - picoPSU 160 W cont / 200 W peak
-#   VSYS      8 A  charger system node, capped by FR-5 (default 5 A, max ~8 A)
-#   SW1/SW2   8 A  BQ25720 charger switch nodes (2U1, 2L1, 2Q1..2Q4) - FR-5
-#   SW*_OUT  17 A  LM5176 output-converter switch nodes (5U1, 5L1, 5Q1..5Q4)
-# The charger legs are FR-5's ~8 A, not the cell's 1C (15 A) capability: the
-# charger's input-current limit caps there, and that is what the copper sees.
-DESIGN_CURRENT = {
-    "+12V_IN": 20.0,
-    "N_AF": 20.0,
-    "VIN_SYS": 20.0,
-    "VBAT": 17.0,
-    "VSYS": 8.0,
-    "VOUT12": 17.0,
-    "SW1": 8.0,
-    "SW2": 8.0,
-    "SW1_OUT": 17.0,
-    "SW2_OUT": 17.0,
-    # The return. It carries the input leg's current; a plane's ampacity is not
-    # quite the trace model (more copper to spread heat into), so this is the
-    # conservative reading, not a hard number.
-    "GND": 20.0,
-}
+# DESIGN_CURRENT is the single source of truth in power_spec.py (the old copy
+# here had drifted: VSYS/SW1/SW2 at 8 A and PACK+ missing entirely).
 
 
 def ampacity(width_mm: float, inner: bool) -> float:

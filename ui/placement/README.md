@@ -47,8 +47,12 @@ The two power terminals (`1J1`, `5J2`) are always pinned (`anchor` in the graph)
 The board can draw two net views. **Part links** (the default in older sessions)
 is the force model's abstract MST: a line between part centres, sized by the
 1 oz model width. **Pad-level nets** is the router's view: an MST over the
-**pads** of each net, so the line ends where copper ends, coloured by the net
-current and sized by the required **2 oz** width. It is display-only — the
+**pads** of each net, so the line ends where copper ends, coloured by the
+**pad's conducted current** (a 100k pull-up on `+12V_IN` is 0.1 A, not 20 A) and
+sized by the required **2 oz** width for that current. The MST is ordered
+**thickest first** (like the component graph), so a 20 A pad links to its 20 A
+partner and a nearby millamp tap attaches to the tree — not the other way
+round. It is display-only — the
 solver keeps the part-level springs — and it reproduces the DRC's unrouted
 pairs pad-for-pad.
 
@@ -83,7 +87,9 @@ items keep their absolute coordinate. A moved placement needs a fresh
 
 The channel number is measured, not simulated: the UI does not rasterise the
 board every tick. The live clearance row is the cheap proxy for the same
-question, and the Python measurement remains the authority.
+question, and the Python measurement remains the authority. The stale-netlist,
+current-colouring and geometry traps behind these views are recorded in
+[history 0018](../../docs/history/0018-ui-feedback-loop.md).
 
 ## Where the tuning and the placements live
 
@@ -154,7 +160,8 @@ Every slider maps to a force in `public/model.js`.
   a ring around the IC it belongs to. The host is derived from the netlist at
   load: the IC with the most *specific* shared net (`1/(k−1)` per net — a 2-pad
   boot cap scores 1.0, a 12-pad rail 0.09), ties broken by proximity; a part with
-  no IC on any kept net takes the nearest IC. The inspector shows the choice
+  no IC on any kept net takes the nearest IC **in its own functional block** (and
+  none if the block has no IC — proximity to another block is not evidence). The inspector shows the choice
   (`belongs to 5U1 (net score 1.25)`) and a selected part draws a dashed line to
   its host; `place.assignHosts()` re-derives it after a big rearrangement.
 - `HOST_D` ring radius in mm (default 5) — closer and the part is pushed out,

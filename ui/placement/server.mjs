@@ -68,10 +68,26 @@ const sendJSON = (res, code, obj) => send(res, code, JSON.stringify(obj), MIME["
 const safeName = (s) => /^[A-Za-z0-9._-]+$/.test(s) ? s : null;
 
 // --- graph / seed discovery ------------------------------------------------
+// The graph is derived from the board + the shared power data, so a stale
+// graph.json is worse than a missing one: the UI would draw old components or
+// old currents.  Rebuild when any source is newer than the graph.
+const GRAPH_DEPS = [
+  path.join(ROOT, "hardware", "tinyups.kicad_pcb"),
+  path.join(ROOT, "hardware", "blocks.py"),
+  path.join(ROOT, "hardware", "power_spec.py"),
+  path.join(ROOT, "hardware", "power_map.py"),
+  path.join(ROOT, "hardware", "power_report.py"),
+  path.join(HERE, "extract.py"),
+];
 function ensureGraph() {
-  if (fs.existsSync(GRAPH)) return { ok: true };
+  let stale = !fs.existsSync(GRAPH);
+  if (!stale) {
+    const g = fs.statSync(GRAPH).mtimeMs;
+    stale = GRAPH_DEPS.some((f) => fs.existsSync(f) && fs.statSync(f).mtimeMs > g);
+  }
+  if (!stale) return { ok: true };
   try {
-    console.log("graph.json missing -> extract.py (from the board)");
+    console.log(`graph.json ${fs.existsSync(GRAPH) ? "stale" : "missing"} -> extract.py (from the board)`);
     execFileSync(PY, [path.join(HERE, "extract.py")], { stdio: "inherit" });
     return { ok: true };
   } catch (e) {

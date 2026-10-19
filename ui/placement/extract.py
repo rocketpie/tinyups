@@ -184,13 +184,15 @@ def main() -> int:
         fpid = fp.GetFPID()
         fp_name = f"{fpid.GetLibNickname()}:{fpid.GetLibItemName()}"
         value = fp.GetValue()
+        k = kind(ref)
         pads = []
         for p in fp.Pads():
             rel = p.GetFPRelativePosition()     # already footprint-local
             sz = p.GetSize()
+            net = p.GetNetname().lstrip("/")
             pads.append({
                 "num": p.GetNumber(),
-                "net": p.GetNetname().lstrip("/"),
+                "net": net,
                 "dx": round(pcbnew.ToMM(rel.x), 3),
                 "dy": round(pcbnew.ToMM(rel.y), 3),
                 # Pad geometry is what a *clearance* is measured on; the
@@ -199,6 +201,10 @@ def main() -> int:
                 "h": round(pcbnew.ToMM(sz.y), 3),
                 "angle": round((p.GetOrientationDegrees()
                                 - fp.GetOrientationDegrees()) % 360, 2),
+                # What *this* pad really carries on this net (a 100k pull-up on
+                # +12V_IN is 0.1 A, not 20 A).  The pad-level ratsnest colours
+                # by this, so a tap does not look like a power trace.
+                "current": round(conducted(ref, k, value, net), 3) if net else 0.0,
             })
         nets_of = {p["net"] for p in pads if p["net"]}
         nodes.append({
@@ -206,7 +212,7 @@ def main() -> int:
             "label": mnemonic(ref),
             "value": value,
             "fp": fp_name,
-            "kind": kind(ref),
+            "kind": k,
             "block": ref_block.get(ref, "?"),
             "power": component_is_power(ref, value, nets_of),
             "w": bw, "h": bh,
