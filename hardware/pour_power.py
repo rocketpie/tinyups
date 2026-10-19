@@ -32,7 +32,7 @@ DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
 MARGIN = 0.6          # mm each side beyond the half width, for the filler to carve
 
 
-def add_power_pours(board) -> None:
+def add_power_pours(board, nets=None) -> None:
     """One F.Cu pour per high-current net, swept along its **series** pads.
 
     Only the parts that carry the net's current are waypoints: a clamp diode or
@@ -42,8 +42,11 @@ def add_power_pours(board) -> None:
     into a neighbour's region, where the filler severs it.  With the series pads
     the pours become local shapes between adjacent power parts, which is how
     high-current copper is actually drawn.
+
+    `nets` limits the pour to a set of net names (e.g. the set a board already
+    carried); the default is every net in `DESIGN_CURRENT` except GND.
     """
-    nets = [n for n in DESIGN_CURRENT if n != "GND"]     # GND has the In1 plane
+    nets = [n for n in (nets or DESIGN_CURRENT) if n != "GND"]  # GND = In1 plane
     series = series_parts()
     anchor = None
     for fp in board.GetFootprints():

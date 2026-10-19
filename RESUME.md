@@ -17,10 +17,11 @@ Commands: `make place` (UI) · `make drc` · `make render` · `make route` ·
 
 ## Next steps
 
-1. **Verify the power path** — `make power` (ampacity) and `make channels`
+1. **apply fixed2 as the new board master** 
+2. **Verify the power path** — `make power` (ampacity) and `make channels`
    (pour clearance); this is the blocker.
-2. **Route** — `make route` from the main board, then `make drc`.
-3. **Keep signals off `In1.Cu`** — it is a thin GND return that needs to carry
+3. **Route** — `make route` from the main board, then `make drc`.
+4. **Keep signals off `In1.Cu`** — it is a thin GND return that needs to carry
    the 20 A as well.
 
 ## Where things came from

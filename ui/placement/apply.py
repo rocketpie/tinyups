@@ -45,6 +45,26 @@ def main() -> int:
                                        pcbnew.FromMM(p["y"])))
         fp.SetOrientationDegrees(p.get("angle", 0))
         placed += 1
+
+    # The pours were swept through the *old* pad positions; leaving them means
+    # the DRC (and the UI feedback read from it) reports every moved pad as a
+    # clearance/mask violation.  Regenerate exactly the set the board carried,
+    # then fill, so the DRC sees this placement.
+    hw = os.path.join(ROOT, "hardware")
+    sys.path.insert(0, hw)
+    from pour_power import add_power_pours
+    pour_nets = [z.GetNetname().lstrip("/") for z in board.Zones()
+                 if z.GetZoneName().startswith("power pour")]
+    for z in list(board.Zones()):
+        if z.GetZoneName().startswith("power pour"):
+            # Delete(), not Remove(): Remove() hands ownership to Python and the
+            # zone proxies are freed while pcbnew still holds the board lists,
+            # which corrupts the next GetFootprints() walk (segfault).
+            board.Delete(z)
+    if pour_nets:
+        add_power_pours(board, nets=pour_nets)
+        pcbnew.ZONE_FILLER(board).Fill(board.Zones())
+
     pcbnew.SaveBoard(out, board)
     print(f"applied {placed} placements -> {out}")
 
