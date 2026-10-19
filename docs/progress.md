@@ -23,7 +23,7 @@ gates — `make erc`, `make drc`.
 | 9 | +pack terminals J6/J7 | | | | | 27 | 22.7 | 62.0 | 6.27 | |
 | 10 | power-first bands | | | | 14.7 / — | 26 | 12.3 | 35.0 | 4.14 | HPWL 5942→8227 |
 | 11 | try5 hand-tuned (UI) | 3527 | 13452 | | | | | | | wire 3960, ovl 8, axisR 0.68 — [history 0015](history/0015-placement-cleanup.md) |
-| 12 | fixed1 hand-tuned (UI) | 3672 | 16501 | | | | | | 0.76 | wire 4295, ovl 0, out 0, axisR 0.76, path 574 — [history 0019](history/0019-place-apply-stale-pours.md) |
+| 12 | fixed1 hand-tuned (UI) | 3672 | 16501 | | | | | | 0.76 | wire 4295, ovl 0, out 0, axisR 0.76, path 574 — [history 0019](history/0019-board-fixup.md) |
 
 ## Routing
 
@@ -36,7 +36,7 @@ gates — `make erc`, `make drc`.
 | 5 | SW1/SW2 fixed | 4L, GND + 3 signal | 0.127 mm | 1 | 0.095 | 78 | 4 | 288 | advanced PASS, standard FAIL |
 | 6 | +radial QFN fanout | (as row 5) | 0.127 mm | — | 0.127 | 0 | — | — | rejected — 42 clearance + 14 shorts |
 | 7 | try5-poured, not routed | F.Cu / In1 GND / In2 / B.Cu | — | — | — | — | 284 | 0 | [history 0015](history/0015-placement-cleanup.md) |
-| 8 | fixed1 routed (re-poured) | F.Cu / In1 GND / In2 / B.Cu | 0.127 mm | 2 | 0.127 | 0 | 24 | 191 | 869 tracks, 2819 mm, 0 clearance; 20 of 24 unconn are pour islands — [history 0019](history/0019-place-apply-stale-pours.md) |
+| 8 | fixed1 routed (re-poured) | F.Cu / In1 GND / In2 / B.Cu | 0.127 mm | 2 | 0.127 | 0 | 24 | 191 | 869 tracks, 2819 mm, 0 clearance; 20 of 24 unconn are pour islands — [history 0019](history/0019-board-fixup.md) |
 
 ## Power / gates
 
@@ -50,4 +50,4 @@ gates — `make erc`, `make drc`.
 | 6 | standard 5 mil rules | | | | 0 | 524 (446 clr + 78 w) | 0 | FAIL | PASS | |
 | 7 | try5-poured (pours open) | pours on F.Cu | 0.000 | 11/11 | 0 | 52 | 284 | FAIL | — | channel N_AF 3.3/9.4 mm — [history 0015](history/0015-placement-cleanup.md) |
 | 8 | derived board gets the DRU | pours on F.Cu | 0.000 | 11/11 | 0 | 52 (was 73) | 284 | FAIL | — | 21 false 5U1 pad-pad items gone — [history 0017](history/0017-drc-rules-do-not-follow-a-board-copy.md) |
-| 9 | fixed1 routed | pours on F.Cu | 0.000 | 22/24 | 0 | 53 | 24 | FAIL | — | channels +12V_IN 6.4, N_AF 5.2, VIN_LM 4.0 / 9.4 mm SHORT; pad-limited — [0007](history/0007-power-pads-limit.md), [0019](history/0019-place-apply-stale-pours.md) |
+| 9 | fixed1 routed | pours on F.Cu | 0.000 | 22/24 | 0 | 53 | 24 | FAIL | — | pad-limited [0019](history/0019-board-fixup.md) |

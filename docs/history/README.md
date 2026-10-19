@@ -50,5 +50,6 @@ allowed and expected to age, to be superseded, and to be wrong in the future.
 - [0016 – placement UI: tracked state and the belongs-to force](0016-placement-ui-decisions.md)
 - [0017 – DRC rules do not follow a board copy](0017-drc-rules-do-not-follow-a-board-copy.md)
 - [0018 – placement UI: route feedback, pad nets](0018-ui-feedback-loop.md)
+- [0019 – board fixup: stale parts, power nets](0019-board-fixup.md)
 
 

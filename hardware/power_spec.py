@@ -26,8 +26,8 @@ DESIGN_CURRENT = {
     "SW2_OUT": 17.0,
     "N_CS": 17.0,      # output current sense
     "N_PACKMID": 17.0, # pack protection FET mid-node
-    "CELL0": 17.0,     # pack - (bottom cell)
-    "CELL4": 17.0,     # pack + (top cell)
+    "CELL0": 0.01,     # pack - Kelvin tap (sense only, not the pack current)
+    "CELL4": 0.01,     # pack + Kelvin tap (sense only)
     "PACK+": 17.0,     # pack terminal, through the protection FETs
     "VOUT12": 17.0,    # regulated output
     "N_VCAP": 0.05,    # LM74700 charge-pump cap (tiny)

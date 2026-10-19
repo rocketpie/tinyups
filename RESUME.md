@@ -15,6 +15,11 @@
 Commands: `make place` (UI) · `make drc` · `make render` · `make route` ·
 `make sim` · `make power`.
 
+`fixed2` (a UI save) is applied with the new power parts (ATO fuse, WSR2
+shunts): DRC-clean placement (0 courtyard/clearance/short); the corrected
+channel gate passes except `N_CS` 7.0/7.5 mm. The power pad gate is still
+the FET-package item ([0007](docs/history/0007-power-pads-limit.md)).
+
 ## Next steps
 
 1. **apply fixed2 as the new board master** 

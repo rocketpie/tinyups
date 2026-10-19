@@ -63,6 +63,11 @@ def widths(board) -> dict:
 
     out = {}
     for net, need in DESIGN_CURRENT.items():
+        # The channel is a pour metric.  A net that fits in a trace (say < 2 A,
+        # < 0.5 mm at 2 oz) is not asked to leave a corridor; its pour, if any,
+        # is the router's business.
+        if width_for(need) < 0.5:
+            continue
         own = [p for p in pads if p[1] == net]
         if not own:
             continue
@@ -72,7 +77,11 @@ def widths(board) -> dict:
         free[:edge, :] = free[-edge:, :] = False
         free[:, :edge] = free[:, -edge:] = False
         for _, n, ax0, ay0, ax1, ay1 in pads:
-            if n == net:
+            # A pad with no net is not "another net".  TO-252's four
+            # unnumbered thermal pads sit under (and are the same copper as)
+            # the tab pad 2; counting them as obstacles pinched N_PACKMID from
+            # 11.0 mm to 2.0 mm between two FETs.
+            if n == net or not n:
                 continue
             i0 = max(0, int((ax0 - CLEAR - x0) / GRID))
             i1 = min(nx - 1, int((ax1 + CLEAR - x0) / GRID) + 1)
@@ -80,8 +89,9 @@ def widths(board) -> dict:
             j1 = min(ny - 1, int((ay1 + CLEAR - y0) / GRID) + 1)
             free[j0:j1 + 1, i0:i1 + 1] = False
         dist = ndimage.distance_transform_edt(free) * GRID
-        cells = [(int(((px0 + px1) / 2 - x0) / GRID),
-                  int(((py0 + py1) / 2 - y0) / GRID))
+        # (row, col) in the distance map — y first, x second.
+        cells = [(int(((py0 + py1) / 2 - y0) / GRID),
+                  int(((px0 + px1) / 2 - x0) / GRID))
                  for _, _, px0, py0, px1, py1 in core]
 
         def fits(w):
