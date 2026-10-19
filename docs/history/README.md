@@ -52,5 +52,6 @@ allowed and expected to age, to be superseded, and to be wrong in the future.
 - [0018 – placement UI: route feedback, pad nets](0018-ui-feedback-loop.md)
 - [0019 – board fixup: stale parts, power nets](0019-board-fixup.md)
 - [0020 – FET drain and source are reversed on the board](0020-fet-pin-mapping.md)
+- [0021 – UI: zoom, pin outline, pour overlay](0021-ui-zoom-and-pin-outline.md)
 
 

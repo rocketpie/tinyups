@@ -125,7 +125,7 @@ label.switch { display: flex; gap: 7px; align-items: center; color: var(--dim);
 .node text { fill: #fff; paint-order: stroke; stroke: #000; stroke-width: 0.28;
   pointer-events: none; user-select: none; }
 .node.dragging .courtyard { stroke: var(--pinned); stroke-width: .7; stroke-dasharray: 2 1; }
-.node.pinned .courtyard { stroke: var(--pinned); stroke-width: .55; }
+.node.pin-marked .courtyard { stroke: var(--pinned); stroke-width: .55; }
 /* selection is an outline, not a fade — the rest of the board stays readable */
 .node.selected .courtyard { stroke: var(--accent); stroke-width: .6; }
 .node.selected text { font-weight: 600; }

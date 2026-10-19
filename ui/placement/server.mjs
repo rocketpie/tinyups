@@ -33,6 +33,7 @@ const PUBLIC = path.join(HERE, "public");
 const LAYOUT = path.join(ROOT, "build", "layout");
 const GRAPH = path.join(LAYOUT, "graph.json");
 const FEEDBACK = path.join(LAYOUT, "route-feedback.json");
+const POURS = path.join(LAYOUT, "pours.json");
 // The tracked tuning file.  Unlike everything else the UI writes, this one is
 // *in* the repo on purpose: the tuning is a reviewable, revertable artifact
 // (see docs/history/0016-placement-ui-decisions.md).
@@ -219,6 +220,13 @@ const server = http.createServer(async (req, res) => {
         return sendJSON(res, 404, { error: "no route feedback - run make route" });
       }
       return serveFile(res, FEEDBACK);
+    }
+    // Filled power pours of the last applied board (ui/placement/pours.py).
+    if (req.method === "GET" && (p === "/pours.json" || p === "/api/pours")) {
+      if (!fs.existsSync(POURS)) {
+        return sendJSON(res, 404, { error: "no pours - run make place-apply" });
+      }
+      return serveFile(res, POURS);
     }
     if (req.method === "GET" && p === "/api/seeds") {
       return sendJSON(res, 200, { default: DEFAULT_SEED, seeds: listSeeds() });

@@ -15,6 +15,7 @@ const DEFAULTS = M.DEFAULTS;   // one truth for values
 const NS = "http://www.w3.org/2000/svg";
 const svg = document.getElementById("board");
 const viewport = document.getElementById("viewport");
+const layerPours = document.getElementById("pours");
 const layerEdges = document.getElementById("edges");
 const layerNodes = document.getElementById("nodes");
 const boardRect = document.getElementById("boardRect");
@@ -99,6 +100,7 @@ const S = {
   graph: null, board: { w: 150, h: 140 },
   nodes: [], edges: [], byId: new Map(),
   feedback: null, showIssues: true, showClearance: true, paramsCollapsed: false,
+  pours: null, showPours: true,
   padNets: true, padEdges: [], padLayer: null,
   issueFilter: { unrouted: true, clearance: true, channel: true },
   params: {}, paramOrder: [], paramSource: "defaults", model: null,
@@ -109,7 +111,7 @@ const S = {
   seedName: null, seedData: null,
   view: { k: 1, x: 0, y: 0 },
   hover: null, selected: null,
-  onlyDraw: true, showLabels: true,
+  onlyDraw: true, showLabels: true, showPinned: true,
   paused: false, lastMetrics: 0, savedFile: null,
   scatterFixed: false,
 };
@@ -122,15 +124,17 @@ const { setExtents, padXY, isFixed } = M;
 
 // --- load -------------------------------------------------------------------
 async function boot() {
-  const [graph, seeds, repo, feedback] = await Promise.all([
+  const [graph, seeds, repo, feedback, pours] = await Promise.all([
     fetch("/graph.json").then((r) => r.json()),
     fetch("/api/seeds").then((r) => r.json()),
     fetch("/api/params").then((r) => r.json()).catch(() => null),
     fetch("/api/route-feedback").then((r) => r.ok ? r.json() : null).catch(() => null),
+    fetch("/api/pours").then((r) => r.ok ? r.json() : null).catch(() => null),
   ]);
   S.graph = graph;
   S.board = graph.board;
   S.feedback = feedback;
+  S.pours = pours;
   renderRoute();
   if (repo && repo.params) {
     S.repo = { file: repo.file || S.repo.file, exists: !!repo.exists,
@@ -167,8 +171,10 @@ function restoreUI(defSeed) {
   if ([...sel.options].some((o) => o.value === want)) sel.value = want;
   S.onlyDraw = ui.onlyDraw !== false; $("#onlyDraw").checked = S.onlyDraw;
   S.showLabels = ui.showLabels !== false; $("#showLabels").checked = S.showLabels;
+  S.showPinned = ui.showPinned !== false; $("#showPinned").checked = S.showPinned;
   S.showClearance = ui.showClearance !== false; $("#showClearance").checked = S.showClearance;
   S.padNets = ui.padNets !== false; $("#padNets").checked = S.padNets;
+  S.showPours = ui.showPours !== false; $("#showPours").checked = S.showPours;
   S.showIssues = ui.showIssues !== false; $("#showIssues").checked = S.showIssues;
   S.paramsCollapsed = ui.paramsCollapsed === true;
   applyParamsCollapse();
@@ -184,9 +190,9 @@ function restoreUI(defSeed) {
 function saveUI() {
   storeJSON(LS.ui, {
     seed: S.seedName, onlyDraw: S.onlyDraw, showLabels: S.showLabels,
-    showClearance: S.showClearance, showIssues: S.showIssues,
+    showPinned: S.showPinned, showClearance: S.showClearance, showIssues: S.showIssues,
     paramsCollapsed: S.paramsCollapsed, issueFilter: S.issueFilter, padNets: S.padNets,
-    scatterFixed: S.scatterFixed, saveName: $("#saveName").value,
+    showPours: S.showPours, scatterFixed: S.scatterFixed, saveName: $("#saveName").value,
   });
 }
 
@@ -220,6 +226,7 @@ async function loadSeed(name, force = false) {
   boardRect.setAttribute("width", S.board.w); boardRect.setAttribute("height", S.board.h);
   gridRect.setAttribute("width", S.board.w); gridRect.setAttribute("height", S.board.h);
   buildScene();
+  buildPours();
   buildPadNets();
   buildIssues();
   buildSim();
@@ -289,6 +296,37 @@ function hoverStillValid() {
 }
 
 // --- scene ------------------------------------------------------------------
+// Filled F.Cu power pours of the last applied board (ui/placement/pours.py).
+// They are copper, not placement: they do not move with a drag; Apply refreshes
+// them.  Drawn under the graph so the power corridors read as a background.
+function buildPours() {
+  layerPours.replaceChildren();
+  layerPours.style.display = S.showPours && S.pours ? "" : "none";
+  if (!S.showPours || !S.pours) return;
+  for (const p of S.pours.pours || []) {
+    const net = (S.graph.nets || {})[p.net] || {};
+    const col = color(net.current || 0);
+    let d = "";
+    for (const poly of p.polys || []) {
+      for (const ring of [poly.outer, ...(poly.holes || [])]) {
+        if (!ring || ring.length < 3) continue;
+        d += "M" + ring.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join("L") + "Z";
+      }
+    }
+    if (!d) continue;
+    const el = document.createElementNS(NS, "path");
+    el.setAttribute("d", d);
+    el.setAttribute("fill", col);
+    el.setAttribute("fill-opacity", "0.16");
+    el.setAttribute("fill-rule", "evenodd");
+    el.setAttribute("stroke", col);
+    el.setAttribute("stroke-opacity", "0.35");
+    el.setAttribute("stroke-width", "0.15");
+    el.setAttribute("class", "pour");
+    layerPours.appendChild(el);
+  }
+}
+
 function buildScene() {
   layerEdges.replaceChildren();
   layerNodes.replaceChildren();
@@ -402,6 +440,7 @@ function fill(n) {
 function styleNodes() {
   for (const n of S.nodes) {
     n._el.classList.toggle("pinned", n.pinned);
+    n._el.classList.toggle("pin-marked", S.showPinned && n.pinned);
     n._el.classList.toggle("terminal", n.anchor != null);
     n._el.classList.toggle("selected", n.id === S.selected);
     n._text.style.display = S.showLabels ? "" : "none";
@@ -882,11 +921,15 @@ function bindEvents() {
   svg.addEventListener("wheel", (ev) => {
     ev.preventDefault();
     const before = toMM(ev);
-    S.view.k = clamp(S.view.k * Math.exp(-ev.deltaY * 0.0012), 0.4, 16);
+    S.view.k = clamp(S.view.k * Math.exp(-ev.deltaY * 0.0012), 0.4, 80);
+    // Apply the new scale *before* measuring again: toMM reads the live SVG
+    // transform, so with the old one still on the DOM `after` equals `before`
+    // and the correction below is zero — which anchored the zoom at the
+    // viewport origin (top-left) instead of the cursor.
+    applyView();
     const after = toMM(ev);
-    const k = S.view.k;
-    S.view.x += (after.x - before.x) * k;
-    S.view.y += (after.y - before.y) * k;
+    S.view.x += (after.x - before.x) * S.view.k;
+    S.view.y += (after.y - before.y) * S.view.k;
     applyView();
   }, { passive: false });
 
@@ -917,6 +960,7 @@ function bindEvents() {
   $("#rotCCW").addEventListener("click", () => rotateSelected(90));
   $("#onlyDraw").addEventListener("change", (e) => { S.onlyDraw = e.target.checked; applyHighlight(); saveUI(); });
   $("#showLabels").addEventListener("change", (e) => { S.showLabels = e.target.checked; styleNodes(); saveUI(); });
+  $("#showPinned").addEventListener("change", (e) => { S.showPinned = e.target.checked; styleNodes(); saveUI(); });
   $("#showClearance").addEventListener("change", (e) => {
     S.showClearance = e.target.checked;
     for (const n of S.nodes) {
@@ -924,6 +968,11 @@ function bindEvents() {
       n._el.classList.toggle("tight", S.showClearance && n.clear != null);
       n._el.classList.toggle("overlap", S.showClearance && !!n.overlap);
     }
+    saveUI();
+  });
+  $("#showPours").addEventListener("change", (e) => {
+    S.showPours = e.target.checked;
+    buildPours();
     saveUI();
   });
   $("#padNets").addEventListener("change", (e) => {

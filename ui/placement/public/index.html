@@ -76,8 +76,12 @@
           draw only the trace-ordered edges (not the full clique)</label>
         <label class="switch"><input type="checkbox" id="showLabels" checked>
           component labels</label>
+        <label class="switch" title="Outline pinned (fixed) parts in yellow. Turn off to hide the pin outline; the parts stay pinned."><input type="checkbox" id="showPinned" checked>
+          mark pinned parts</label>
         <label class="switch" title="Amber: a different-net pad is closer than the 0.2 mm design clearance. Red: the courtyard overlaps another part"><input type="checkbox" id="showClearance" checked>
           mark parts too close (pad &lt; 0.2 mm / courtyard overlap)</label>
+        <label class="switch" title="Filled F.Cu power pours from the last Apply to board + DRC (build/layout/board.kicad_pcb)"><input type="checkbox" id="showPours" checked>
+          show power pours (last apply)</label>
         <label class="switch" title="Draw the real ratsnest (pad → pad, MST per net) coloured / sized by the required 2 oz amps instead of part-centre links"><input type="checkbox" id="padNets" checked>
           pad-level nets (ratsnest, amp-coloured)</label>
         <div id="params"></div>
@@ -133,6 +137,7 @@
       <g id="viewport">
         <rect id="boardRect" fill="#0f3d1a" stroke="#7fffa0" stroke-width="0.5"/>
         <rect id="gridRect" fill="url(#grid)" stroke="none"/>
+        <g id="pours"></g>
         <g id="edges"></g>
         <g id="nodes"></g>
       </g>
