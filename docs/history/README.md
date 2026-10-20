@@ -56,5 +56,6 @@ allowed and expected to age, to be superseded, and to be wrong in the future.
 - [0022 – board fixup: power pours, charger input, CELL0](0022-board-fixup.md)
 - [0025 – current-sense loops were not gated](0025-sense-gate.md)
 - [0026 – pads are copper, not holes](0026-pads-are-copper.md)
+- [0027 – power pours take a trunk, not a chain through every pad](0027-pour-taps.md)
 
 

@@ -63,6 +63,7 @@ gates — `make erc`, `make drc`.
 | 12 | charger input VBUS -> VIN_SYS | pours on F.Cu | — | 7/22 | 0 | 46 (silk) | 259 | — | — | 2R1/2U1 on VIN_SYS, VBUS net/pour gone; placement touch-up pending — [0022](history/0022-board-fixup.md) |
 | 13 | fixed5 applied (unrouted) | pours on F.Cu | — | 6/22 (all unrouted signal nets) | 0 | 62 (silk) | 261 | — | — | high-current 16/16 PASS; 16/16 channels ok, N_PACKMID 2.4→8.8; N_CS/SW1_OUT fill 0.70/0.67 (pad necks) — [0026](history/0026-pads-are-copper.md) |
 | 14 | fixed5 routed | pours on F.Cu | 0.127 | 2/22 (`N_VCAP` unrouted, `+3V3` 0.9 of 1.0 A) | 0 | 92 (silk 62, via dangling 30) | 47 | PASS | — | high-current 16/16 PASS; 16/16 channels ok; 5/5 sense loops no Kelvin (pour, 0 mm dedicated) |
+| 15 | pour trunk/branches (fixed5, unrouted) | pours on F.Cu | — | 6/22 (all unrouted signal nets) | 0 | 62 (silk) | 262 | — | — | high-current 16/16 PASS; VIN_SYS `1Q1→3Q1→5Q1`, `2R1`/caps on branches; fill +12V_IN 5.48→6.01, N_AF 7.06→7.44, VIN_SYS 1.11→1.35, VOUT12 1.58→2.72; 0 clearance, 0 zone islands — [0027](history/0027-pour-taps.md) |
 
 ## Sense (Kelvin)
 

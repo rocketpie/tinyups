@@ -68,6 +68,27 @@ GRAPH = os.path.join(os.path.dirname(HERE), "build", "layout", "graph.json")
 SERIES_A = 1.0     # a graph edge carries power if its current is >= this
 
 
+def series_edges() -> dict[str, dict[frozenset, float]]:
+    """net -> {(part, part): current} for the graph's >= 1 A edges.
+
+    A single edge is a *pair* of parts, not a net-wide set: the current on
+    `VIN_SYS` is 20 A between the pass FETs, but only 4.5 A into a 470 uF
+    hold-up cap.  The pour needs the pair current to size a branch, not the
+    net's design current.
+    """
+    import json
+    try:
+        g = json.load(open(GRAPH))
+    except OSError:
+        return {}
+    out: dict[str, dict[frozenset, float]] = {}
+    for e in g["edges"]:
+        if e.get("current", 0) >= SERIES_A:
+            out.setdefault(e["net"], {})[
+                frozenset((e["source"], e["target"]))] = e["current"]
+    return out
+
+
 def series_parts() -> dict:
     """net -> {parts} that carry the current on it, from the graph's edge weights.
 
@@ -78,15 +99,12 @@ def series_parts() -> dict:
     are thick; `1R7` and `1D1` sit on thin edges.  Sizing a pour (or asking a
     placement for room) across a tap measures the wrong thing.
     """
-    import json
-    try:
-        g = json.load(open(GRAPH))
-    except OSError:
-        return {}
     out: dict[str, set] = {}
-    for e in g["edges"]:
-        if e.get("current", 0) >= SERIES_A:
-            out.setdefault(e["net"], set()).update((e["source"], e["target"]))
+    for net, edges in series_edges().items():
+        refs = set()
+        for pair in edges:
+            refs.update(pair)
+        out[net] = refs
     return out
 
 
