@@ -59,12 +59,12 @@ const PARAM_SPEC = [
     help: "Constant force towards the board centre (Y)." },
   { key: "BOUND", label: "Board keep-in force", min: 0, max: 400, step: 5, d: DEFAULTS.BOUND, group: "spread",
     help: "How hard the board edge pushes parts back inside." },
-  { key: "HOST_STR", label: "Belongs-to force (small part → its IC)", min: 0, max: 20, step: 0.5, d: DEFAULTS.HOST_STR, group: "host",
-    help: "Every small part (R/C/D/L) is pulled onto a ring around the IC it belongs to. Which IC: the one it shares the most *specific* net with (a 2-pad boot cap counts 1.0, a 12-pad rail 0.09); a tie goes to the nearest IC. If it shares no IC net at all, it uses the nearest IC in its own block — never an IC from another block. 0 = off." },
+  { key: "HOST_STR", label: "Belongs-to force (small part → its host)", min: 0, max: 20, step: 0.5, d: DEFAULTS.HOST_STR, group: "host",
+    help: "Every small part (R/C/D/L) is pulled onto a ring around the IC, power switch or connector it belongs to. Which host: the one it shares the most *specific* net with (a 2-pad boot cap counts 1.0, a 12-pad rail 0.09); a tie goes to the nearest host. If it shares no host net at all, it uses the nearest IC/switch in its own block. 0 = off." },
   { key: "HOST_D", label: "Belongs-to ring (mm)", min: 1, max: 30, step: 0.5, d: DEFAULTS.HOST_D, group: "host",
     help: "Preferred distance from the host: farther and the small part is pulled in, closer and it is pushed out. Only the small part moves — the controller stays put and its parts fan out around it." },
   { key: "HOST_POWER", label: "Belongs-to also for power-flagged parts", type: "check", d: DEFAULTS.HOST_POWER, group: "host",
-    help: "Off = only the small parts that are *not* on the power path get a host ring. On = every small passive does, including the passives the power chain runs through (sense resistors, snubbers) — which can kink the input→output flow (the `axisR` metric)." },
+    help: "Off = only the small parts that are *not* on the power path are pulled by the ring; every part still gets a host for the inspector and the host-pair metric. On = power passives are pulled too, including 470 uF hold-ups and shunts — which can kink the input→output flow (the `axisR` metric)." },
   { key: "MAX_V", label: "Max move per tick (mm)", min: 0.5, max: 30, step: 0.5, d: DEFAULTS.MAX_V, group: "solver",
     help: "Velocity clamp. With the link distance/strength actually wired in (see README), d3-force diverges on a dense start — a 2-part net gets weight 1 and up to POW_STR. Clamping tames it." },
   { key: "VEL_DECAY", label: "Velocity decay", min: 0, max: 0.95, step: 0.05, d: DEFAULTS.VEL_DECAY, group: "solver",
@@ -218,7 +218,7 @@ async function loadSeed(name, force = false) {
     return n;
   });
   S.byId = new Map(S.nodes.map((n) => [n.id, n]));
-  M.assignHosts(S.nodes, S.graph, S.byId, { includePower: S.params.HOST_POWER });
+  M.assignHosts(S.nodes, S.graph, S.byId);
   S.edges = S.graph.edges.map((e) => ({ ...e }));   // strings; forceLink rewrites to refs
   S.selected = null;
   $("#boardInfo").textContent =
@@ -721,6 +721,14 @@ function renderMetrics() {
     rows.push([`${ref} fan · d/bias/sp`, `${fmt(f.d, 1)} / ${fmt(f.bias, 2)} / ${fmt(f.spacing, 1)}`,
       f.bias < 0.25 && f.d < 25 ? "good" : ""]);
   }
+  if (m.host && m.host.n) {
+    rows.push(["host pairs", `${m.host.n} · ${m.host.over} over target`,
+      m.host.over ? "bad" : "good"]);
+    for (const w of m.host.worst.slice(0, 4)) {
+      rows.push([`  ${w.id} → ${w.host}`, `${fmt(w.d, 1)} / ${fmt(w.target, 0)} mm`,
+        w.over ? "bad" : "good"]);
+    }
+  }
   $("#metrics").innerHTML = rows.map(([k, v, cls]) =>
     `<tr class="${cls}"><td>${k}</td><td>${v}</td></tr>`).join("");
   for (const n of S.nodes) {
@@ -806,6 +814,10 @@ function renderInspect() {
   const rf = (S.feedback && S.feedback.parts && S.feedback.parts[n.id]) || null;
   const clear = n.clear == null ? "–" : `${fmt(n.clear, 2)} mm` +
     (n.clearRef ? ` → ${n.clearRef} (${n.clearNet})` : "");
+  const host = n.host ? S.byId.get(n.host) : null;
+  const hostD = host ? Math.hypot((n.x + n.cx) - (host.x + host.cx),
+                                  (n.y + n.cy) - (host.y + host.cy)) : 0;
+  const hostT = host ? M.hostTarget(n) : 0;
   $("#inspBody").innerHTML = `
     <div class="row"><b>${n.label || n.id}</b> <span class="tag">${n.kind}${n.power ? " · power" : ""}</span></div>
     <div class="hint">${n.value || ""}<br>${n.fp || ""}</div>
@@ -819,7 +831,7 @@ function renderInspect() {
       <tr><td>pinned</td><td>${n.pinned ? "yes" : n.anchor != null ? "terminal" : "no"}</td></tr>
       <tr class="${n.clear != null ? "bad" : ""}"><td>min pad clearance</td><td>${clear}</td></tr>
       ${rf ? `<tr class="${rf.unrouted + rf.clearance ? "bad" : ""}"><td>last route</td><td>${rf.unrouted} unrouted · ${rf.clearance} clearance${rf.min_clearance_mm != null ? ` · ${fmt(rf.min_clearance_mm, 2)} mm` : ""}</td></tr>` : ""}
-      ${n.host ? `<tr><td>belongs to</td><td>${n.host}${n.hostScore ? ` (net score ${fmt(n.hostScore, 2)})` : " (nearest IC in block)"}</td></tr>` : ""}
+      ${n.host ? `<tr class="${hostD > hostT ? "bad" : ""}"><td>belongs to</td><td>${n.host}${n.hostScore ? ` (net score ${fmt(n.hostScore, 2)})` : " (nearest in block)"} · ${fmt(hostD, 1)} / ${fmt(hostT, 0)} mm</td></tr>` : ""}
     </table>
     <table id="metrics" style="margin-top:6px">${nets}</table>`;
 }

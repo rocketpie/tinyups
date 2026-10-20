@@ -27,7 +27,7 @@ export KICAD9_3DMODEL_DIR   ?= /usr/share/kicad/3dmodels
 RENDER_ROTATE ?= -15,0,-5
 RENDER_ZOOM   ?= 0.95
 
-.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power channels sense place place-seed place-render place-legalize place-apply route check clean
+.PHONY: all help erc drc netlist bom gerbers drill fab pos step render svg silk sim test power channels proximity sense place place-seed place-render place-legalize place-apply route check clean
 
 all: help
 
@@ -124,6 +124,13 @@ channels: $(OUT)/layout/graph.json | $(OUT) ## Power-channel clearance per rail 
 power: $(OUT)/layout/graph.json | $(REPORTS) ## Power / ampacity check (design current per net)
 	$(call require,$(PCB))
 	@set -o pipefail; $(PYTHON) hardware/power_report.py $(PCB) | tee $(REPORTS)/power.rpt
+
+# Placement side of "which parts belong together": every small passive -> its
+# IC/power switch, compared with a 6 mm (signal) or 15 mm (power) target.
+PROX_BOARD ?= $(PCB)
+proximity: $(OUT)/layout/graph.json ## Host-pair proximity report (PROX_BOARD=<board>)
+	$(call require,$(PROX_BOARD))
+	$(PYTHON) hardware/proximity_report.py $(PROX_BOARD)
 
 # Current-sense Kelvin check: a shunt/controller tap that shares the power
 # copper adds IR drop to the sense voltage.  Run it on a routed board, e.g.

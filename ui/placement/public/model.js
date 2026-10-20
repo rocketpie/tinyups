@@ -262,8 +262,7 @@ export function makeCollide(P) {
 // a ring around that host and one-sided: only the small part moves, so a
 // controller keeps its position while its parts fan around it.
 // Rationale + measurements: ADR-0012, docs/history/0005.
-export function assignHosts(nodes, graph, byId, opts = {}) {
-  const includePower = !!opts.includePower;
+export function assignHosts(nodes, graph, byId) {
   const members = new Map();
   for (const e of graph.edges) {
     const s = typeof e.source === "object" ? e.source.id : e.source;
@@ -274,14 +273,29 @@ export function assignHosts(nodes, graph, byId, opts = {}) {
   for (const n of nodes) {
     n.host = null; n.hostScore = 0;
     if (!"RCDL".includes(n.kind)) continue;              // only small passives
-    if (n.power && !includePower) continue;              // (see HOST_POWER)
+    // Assign a host even when the *force* is off for power parts: the
+    // inspector and the host metric still need to say what the cap serves.
+    // `HOST_POWER` gates the force, not the assignment (see forceHost).
+    //
+    // A two-terminal cap to GND on a power rail is a bypass/hold-up: it
+    // bypasses the *switch* on that rail, and on a wide rail every IC ties on
+    // the same net, so net specificity alone would pick whichever controller
+    // happens to be closest (5C1 → 3U1).  Restrict those caps to Q hosts; a
+    // boot/charge-pump cap between two non-GND nets keeps the IC scoring.
+    const nonGnd = [...new Set((n.pads || []).map((p) => p.net)
+      .filter((net) => net && net !== "GND"))];
+    const railBypass = n.kind === "C" && nonGnd.length === 1
+      && (((graph.nets || {})[nonGnd[0]] || {}).current || 0) >= 1;
+    const hostKinds = railBypass ? "QJ" : "UQ";
     const score = new Map();
     for (const pad of n.pads || []) {
       const mem = members.get(pad.net);
       if (!mem || mem.size < 2) continue;
       for (const r of mem) {
-        const ic = byId.get(r);
-        if (!ic || ic.kind !== "U" || r === n.id) continue;
+        const h = byId.get(r);
+        // A decoupling cap belongs to the switch it bypasses as much as to a
+        // controller; a gate resistor belongs to its FET.  Both are hosts.
+        if (!h || !hostKinds.includes(h.kind) || r === n.id) continue;
         score.set(r, (score.get(r) || 0) + 1 / (mem.size - 1));
       }
     }
@@ -294,9 +308,9 @@ export function assignHosts(nodes, graph, byId, opts = {}) {
       }
     }
     if (!best) {
-      // Nothing specific → the nearest IC *in the same functional block*.
+      // Nothing specific → the nearest IC or switch *in the same block*.
       for (const h of nodes) {
-        if (h.kind !== "U" || h.id === n.id) continue;
+        if (!"UQ".includes(h.kind) || h.id === n.id) continue;
         if (h.block !== n.block) continue;
         const d = Math.hypot(n.x - h.x, n.y - h.y);
         if (d < bestD) { best = h.id; bestD = d; }
@@ -313,6 +327,7 @@ export function forceHost(P, byId) {
     if (!STR) return;
     for (const n of nodes) {
       if (isFixed(n) || !n.host) continue;
+      if (n.power && !P.HOST_POWER) continue;   // assignment always, force gated
       const h = byId.get(n.host); if (!h) continue;
       const dx = (n.x + n.cx) - (h.x + h.cx), dy = (n.y + n.cy) - (h.y + h.cy);
       const L = Math.hypot(dx, dy) || 1e-6;
@@ -471,6 +486,7 @@ export function metrics(nodes, edges, graph, board, byId) {
     }
   }
   m.fan = fanStats(nodes, graph, board, byId);
+  m.host = hostStats(nodes, byId);
   return m;
 }
 
@@ -512,4 +528,44 @@ export function fanStats(nodes, graph, board, byId) {
     out[n.id] = { k, d: d / k, bias: bias / k, spacing: spacing / k, inside };
   }
   return out;
+}
+
+// --- host proximity metric --------------------------------------------------
+// What the belongs-to force is for, as a number: every small passive has a
+// host (IC or power switch) and an allowed distance.  A signal bypass or gate
+// resistor wants ~6 mm; a power path part (a 470 uF hold-up cap, a shunt) is
+// allowed 15 mm because it is bulk/current, not a high-frequency loop.
+export function hostTarget(n) {
+  const power = !!n.power || (n.pads || []).some((p) => (p.current || 0) >= 1);
+  return power ? 15 : 6;
+}
+
+export function hostCritical(n) {
+  if (!n.host) return false;
+  if (n.kind === "C" || n.kind === "L" || n.power) return true;
+  // Gate resistors are the one ordinary R that changes switching performance.
+  return n.kind === "R" && (n.pads || []).some((p) =>
+    (p.net || "").startsWith("N_G") || p.net === "N_PGATE");
+}
+
+export function hostStats(nodes, byId) {
+  const rows = [];
+  for (const n of nodes) {
+    if (!hostCritical(n)) continue;
+    const h = byId.get(n.host);
+    if (!h) continue;
+    const d = Math.hypot((n.x + n.cx) - (h.x + h.cx),
+                         (n.y + n.cy) - (h.y + h.cy));
+    const target = hostTarget(n);
+    rows.push({ id: n.id, host: n.host, d, target, over: d > target });
+  }
+  rows.sort((a, b) => (b.d - b.target) - (a.d - a.target) || b.d - a.d);
+  const n = rows.length;
+  return {
+    n,
+    mean: n ? rows.reduce((s, r) => s + r.d, 0) / n : 0,
+    max: n ? rows.reduce((s, r) => Math.max(s, r.d), 0) : 0,
+    over: rows.filter((r) => r.over).length,
+    worst: rows,
+  };
 }

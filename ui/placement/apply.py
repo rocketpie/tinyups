@@ -74,8 +74,9 @@ def main() -> int:
     # after the board, so the derived board needs its own copy — without it DRC
     # falls back to the netclass clearance and reports phantom violations (5U1's
     # 0.15 mm QFN pads against the 0.2 mm default).
-    if os.path.exists(RULES):
-        shutil.copyfile(RULES, os.path.splitext(out)[0] + ".kicad_dru")
+    sidecar = os.path.splitext(out)[0] + ".kicad_dru"
+    if os.path.exists(RULES) and os.path.abspath(RULES) != os.path.abspath(sidecar):
+        shutil.copyfile(RULES, sidecar)
 
     rpt = os.path.join(ROOT, "build", "layout", "drc.rpt")
     subprocess.run(["kicad-cli", "pcb", "drc", "--severity-all",

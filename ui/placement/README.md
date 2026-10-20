@@ -157,21 +157,33 @@ Every slider maps to a force in `public/model.js`.
 
 **Belongs-to** — a custom force, not a d3 one
 - `HOST_STR` (0 = off, default 1.5) — every small part (`R/C/D/L`) is pulled onto
-  a ring around the IC it belongs to. The host is derived from the netlist at
-  load: the IC with the most *specific* shared net (`1/(k−1)` per net — a 2-pad
-  boot cap scores 1.0, a 12-pad rail 0.09), ties broken by proximity; a part with
-  no IC on any kept net takes the nearest IC **in its own functional block** (and
-  none if the block has no IC — proximity to another block is not evidence). The inspector shows the choice
-  (`belongs to 5U1 (net score 1.25)`) and a selected part draws a dashed line to
+  a ring around the IC, power switch or connector it belongs to. The host is derived
+  from the netlist at load: the host with the most *specific* shared net
+  (`1/(k−1)` per net — a 2-pad boot cap scores 1.0, a 12-pad rail 0.09), ties
+  broken by proximity; a part with no host on any kept net takes the nearest
+  IC/switch **in its own functional block** (and none if the block has none —
+  proximity to another block is not evidence). The inspector shows the choice
+  (`belongs to 5Q1 · 5.2 / 6 mm`) and a selected part draws a dashed line to
   its host; `place.assignHosts()` re-derives it after a big rearrangement.
 - `HOST_D` ring radius in mm (default 5) — closer and the part is pushed out,
   farther and it is pulled in. **One-sided**: only the small part moves, so a
-  controller keeps the position you gave it while its parts fan around it.
+  controller/FET keeps the position you gave it while its parts fan around it.
 - `HOST_POWER` (default **off**) — off, only passives that are *not* on the power
-  path get a ring; on, every small passive does, including the parts the power
-  chain runs through. Measured on neutral starts: ringing those bends the
-  input→output path (flow `axisR` 0.76 → 0.33) — see
+  path are pulled; every passive still gets a host for the inspector and the
+  host-pair metric. On, power passives are pulled too, including hold-up caps
+  and shunts. Measured on neutral starts: ringing those bends the input→output
+  path (flow `axisR` 0.76 → 0.33) — see
   [`docs/history/0006`](../../docs/history/0006-host-force-on-neutral-starts.md).
+
+### Host-pair metric
+
+The metrics panel reports **host pairs** — how many small parts have a host,
+how many are farther than their target, and the four worst `part → host`
+distances. Targets are 6 mm for a signal bypass/gate part and 15 mm for a
+power-path part (470 µF hold-up, shunt, power inductor). The same rule is
+available headless as `make proximity` (`PROX_BOARD=<board>`) or
+`python hardware/proximity_report.py <board>`; it prints every pair sorted by
+`distance − target`.
 
   This is the answer to "why do a controller's caps drift to the middle": the net
   links pull a part toward its *net's centroid* (a wide rail's centroid is where
