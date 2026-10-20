@@ -117,11 +117,11 @@ silk: | $(OUT) ## 2D view with red power-silkscreen markers
 # 2 oz, so the placement has to leave a channel of that width between each
 # high-current net's pads.  A channel width is a metric, and this is it.
 CHANNEL_BOARD ?= $(PCB)
-channels: | $(OUT) ## Power-channel clearance per rail (CHANNEL_BOARD=<board>)
+channels: $(OUT)/layout/graph.json | $(OUT) ## Power-channel clearance per rail (CHANNEL_BOARD=<board>)
 	$(call require,$(CHANNEL_BOARD))
 	$(PYTHON) hardware/power_channel.py $(CHANNEL_BOARD)
 
-power: | $(REPORTS) ## Power / ampacity check (design current per net)
+power: $(OUT)/layout/graph.json | $(REPORTS) ## Power / ampacity check (design current per net)
 	$(call require,$(PCB))
 	@set -o pipefail; $(PYTHON) hardware/power_report.py $(PCB) | tee $(REPORTS)/power.rpt
 

@@ -31,6 +31,7 @@ from power_spec import POUR_MARGIN  # noqa: E402
 
 DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
 MARGIN = POUR_MARGIN  # mm each side beyond the half width, for the filler to carve
+BRIDGE = 0.10        # mm a part's series-pad bridge extends past its pads
 
 
 def add_power_pours(board, nets=None) -> None:
@@ -71,7 +72,7 @@ def add_power_pours(board, nets=None) -> None:
                 box = (pcbnew.ToMM(r.GetWidth()), pcbnew.ToMM(r.GetHeight()))
                 own.append((xy, box))
                 if fp.GetReference() in series.get(net, ()):
-                    core.append((xy, box))
+                    core.append((fp.GetReference(), xy, box))
         pad_box: dict[tuple[float, float], tuple[float, float]] = {}
         for xy, box in own:
             pad_box[xy] = (max(box[0], pad_box.get(xy, (0, 0))[0]),
@@ -81,7 +82,7 @@ def add_power_pours(board, nets=None) -> None:
         if len(core) < 2:
             print(f"  {net}: no >=1 A series path; left to the router")
             continue
-        pts = [xy for xy, _ in core]
+        pts = [xy for _, xy, _ in core]
         if len(core) >= 2 and len(core) != len(own):
             print(f"  {net}: {len(core)} series pad(s) of {len(own)} "
                   f"({'taps excluded' if len(core) < len(own) else 'all series'})")
@@ -139,6 +140,19 @@ def add_power_pours(board, nets=None) -> None:
                 a = 2 * math.pi * k / 16
                 part.Append(pcbnew.FromMM(px + r * math.cos(a)),
                             pcbnew.FromMM(py + r * math.sin(a)), i)
+            ps.BooleanAdd(part)
+
+        # A multi-pin terminal is one land, not N separate lobes: bridge the
+        # series pads of each part with their group's bbox.  Without it the
+        # corridor can clip a middle pin (5Q2.1 sat on the fill boundary and
+        # `pour_width` read the whole N_CS pour as split).
+        for _, (px, py), (bw, bh) in core:
+            x0, y0 = px - bw / 2 - BRIDGE, py - bh / 2 - BRIDGE
+            x1, y1 = px + bw / 2 + BRIDGE, py + bh / 2 + BRIDGE
+            part = pcbnew.SHAPE_POLY_SET()
+            i = part.NewOutline()
+            for qx, qy in ((x0, y0), (x1, y0), (x1, y1), (x0, y1)):
+                part.Append(pcbnew.FromMM(qx), pcbnew.FromMM(qy), i)
             ps.BooleanAdd(part)
 
         found = board.FindNet(net) or board.FindNet("/" + net)

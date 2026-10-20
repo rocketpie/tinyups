@@ -27,6 +27,8 @@ gates — `make erc`, `make drc`.
 | 13 | fixed2 hand-tuned (UI, new power parts) | 3736 | 17577 | | | | | | 0.78 | wire 4362, ovl 0, out 0, axisR 0.78 — [history 0019](history/0019-board-fixup.md) |
 | 14 | fixed2 + Power56 FETs | 3804 | 16855 | | | | | | 0.79 | wire 4365, ovl 0, out 0, axisR 0.79 — [history 0020](history/0020-fet-pin-mapping.md) |
 | 15 | fixed3 hand-tuned (UI) | 3771 | 17456 | | | | | | 0.78 | wire 4373, ovl 0, out 0, axisR 0.78 — [history 0020](history/0020-fet-pin-mapping.md) |
+| 16 | fixed4 hand-tuned (UI) | 3233 | 14663 | | | | | | 0.80 | wire 4141, ovl 0, out 0, axisR 0.80 — [history 0022](history/0022-board-fixup.md) |
+| 17 | fixed5 (4Q1 −6 mm) | 3227 | 14661 | | | | | | 0.80 | wire 4132, ovl 0, out 0, path 533 — N_PACKMID 8.8 mm, 16/16 channels ok — [history 0026](history/0026-pads-are-copper.md) |
 
 ## Routing
 
@@ -41,6 +43,7 @@ gates — `make erc`, `make drc`.
 | 7 | try5-poured, not routed | F.Cu / In1 GND / In2 / B.Cu | — | — | — | — | 284 | 0 | [history 0015](history/0015-placement-cleanup.md) |
 | 8 | fixed1 routed (re-poured) | F.Cu / In1 GND / In2 / B.Cu | 0.127 mm | 2 | 0.127 | 0 | 24 | 191 | 869 tracks, 2819 mm, 0 clearance; 20 of 24 unconn are pour islands — [history 0019](history/0019-board-fixup.md) |
 | 9 | fixed3 routed | F.Cu / In1 GND / In2 / B.Cu | 0.127 mm | 8 | 0.127 | 0 | 20 | 221 | 1107 tracks, 3044 mm, 0 clearance; 13 pour islands + 7 GND/track — [history 0022](history/0022-board-fixup.md) |
+| 10 | fixed5 routed (1 pass) | F.Cu / In1 GND / In2 / B.Cu | 0.127 mm | 47 | 0.127 | 0 | 47 | 159 | 800 tracks, 1939 mm, 0 clearance; 77 signal tracks on In1 (guard open, [0013](history/0013-plane-layer-type-kills-vias.md)); 30 dangling vias; taps outside the pours ([0027](history/0027-pour-taps.md)) |
 
 ## Power / gates
 
@@ -58,9 +61,13 @@ gates — `make erc`, `make drc`.
 | 10 | fixed2 + Power56 FETs, terminal-aware gate | all high-current nets poured | — | 6/23 | 0 | 42 (silk) | 280 | PASS | — | high-current rails pass copper + terminal; [ADR-0015](decisions/0015-terminal-rating-in-power-gate.md) |
 | 11 | fixed3 routed | pours on F.Cu | 0.127 | 5/23 | 0 | 59 | 20 | PASS | — | pour split: VIN_SYS, VBUS, SW2_OUT, N_CS; +3V3 0.13 mm ~0.9 A; N_PACKMID channel 1.5/7.5 — [ADR-0015](decisions/0015-terminal-rating-in-power-gate.md), [0022](history/0022-board-fixup.md) |
 | 12 | charger input VBUS -> VIN_SYS | pours on F.Cu | — | 7/22 | 0 | 46 (silk) | 259 | — | — | 2R1/2U1 on VIN_SYS, VBUS net/pour gone; placement touch-up pending — [0022](history/0022-board-fixup.md) |
+| 13 | fixed5 applied (unrouted) | pours on F.Cu | — | 6/22 (all unrouted signal nets) | 0 | 62 (silk) | 261 | — | — | high-current 16/16 PASS; 16/16 channels ok, N_PACKMID 2.4→8.8; N_CS/SW1_OUT fill 0.70/0.67 (pad necks) — [0026](history/0026-pads-are-copper.md) |
+| 14 | fixed5 routed | pours on F.Cu | 0.127 | 2/22 (`N_VCAP` unrouted, `+3V3` 0.9 of 1.0 A) | 0 | 92 (silk 62, via dangling 30) | 47 | PASS | — | high-current 16/16 PASS; 16/16 channels ok; 5/5 sense loops no Kelvin (pour, 0 mm dedicated) |
 
 ## Sense (Kelvin)
 
 | # | change | shunts | worst distance | worst shared error | note |
 | - | ------ | -----: | -------------: | -----------------: | ---- |
 | 1 | `make sense` / `sense_report.py` | 5 | 73.2 mm (`2R2`) | 200 % (`4R1`) | fixed3, unrouted; sense-trace total — (unrouted), shunt-IC span 212.4 mm; 1 % budget, upper bound if the tap is not at the pad — [0025](history/0025-sense-gate.md) |
+| 2 | fixed4 | 5 | 51.3 mm (`4R1`) | 168 % (`4R1`) | shunt-IC span 138.4 mm (was 212.4); `2R1` 13.1 mm (was 25.4); unrouted, still not Kelvin — [0025](history/0025-sense-gate.md) |
+| 3 | fixed5 routed | 5 | 51.3 mm (`4R1`) | 168 % (`4R1`) | 0.0 mm dedicated sense tracks; all 5 loops `pour/zone`, no Kelvin — [0025](history/0025-sense-gate.md) |

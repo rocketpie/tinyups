@@ -98,6 +98,10 @@ def pour_width(poly: "pcbnew.SHAPE_POLY_SET", pads: list) -> float:
     reach; if all the pads then sit in *one* outline, the copper between them
     is everywhere >= w.  That is the pour's current-carrying width, and it is
     the pad connections and necks that set it, not the pour's area.
+
+    A pad is copper of its own, not a hole in the fill: it is connected when
+    the eroded region reaches its land (KiCad's filled polygon stops at the
+    pad edge).  `pads` is a list of `(position, (width_mm, height_mm))`.
     """
     def ok(w):
         p = pcbnew.SHAPE_POLY_SET(poly)
@@ -105,9 +109,10 @@ def pour_width(poly: "pcbnew.SHAPE_POLY_SET", pads: list) -> float:
         if p.OutlineCount() == 0:
             return False
         islands = set()
-        for pt in pads:
+        for pt, (bw, bh) in pads:
+            touch = pcbnew.FromMM(0.5 * min(bw, bh))
             for i in range(p.OutlineCount()):
-                if p.Contains(pt, i):
+                if p.Collide(pt, touch):
                     islands.add(i)
                     break
             else:
@@ -165,8 +170,10 @@ def main() -> int:
         for pad in fp.Pads():
             nm = pad.GetNetname().lstrip("/")
             if nm:
-                pads.setdefault(nm, []).append((ref, pad.GetPosition()))
                 sz = pad.GetSize()
+                pads.setdefault(nm, []).append(
+                    (ref, pad.GetPosition(),
+                     (pcbnew.ToMM(sz.x), pcbnew.ToMM(sz.y))))
                 part_widths.setdefault(nm, {}).setdefault(ref, 0.0)
                 part_widths[nm][ref] += min(pcbnew.ToMM(sz.x),
                                             pcbnew.ToMM(sz.y))
@@ -203,8 +210,8 @@ def main() -> int:
             # a tap (clamp, sense pin, cap) just has to be reachable, which the
             # filler/necks do.  Fall back to every pad if the graph is absent.
             own = pads.get(net, [])
-            core = [pt for ref, pt in own if ref in series_refs] or \
-                [pt for _, pt in own]
+            core = [(pt, box) for ref, pt, box in own if ref in series_refs] or \
+                [(pt, box) for _, pt, box in own]
             # The designed copper is the corridor the generator swept:
             # required width + the shared margin.  The filled polygon is
             # narrower at every pad taper, and that taper is the component

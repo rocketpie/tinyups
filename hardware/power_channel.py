@@ -29,23 +29,22 @@ from scipy import ndimage
 GRID = 0.25          # mm per cell
 CLEAR = 0.2          # mm, the board's netclass clearance
 EDGE = 0.5           # mm copper-to-edge
-# NOTE: this measures the channel between *all* pads of a net, which is
-# conservative — it is stricter than the physics.  A clamp diode or a divider tap
-# sits on a 20 A net but carries milliamps (extract.py's `conducted()`: IC /
-# diode / bias pins are STUB_A = 0.1 A), and the graph says so in its edge
-# weights: for `+12V_IN`/`N_AF` only `1F1->1J1`, `1F1->1R1`, `1Q1->1R1` are
-# thick (20 A); `1R7` and `1D1` are on thin edges.  So the width requirement
-# belongs to the **series** path only, and a tap merely has to be reachable.
-# Refining that needs per-*edge* channels (source pads <-> target pads for every
-# graph edge with current >= SERIES_A), not a per-net pad set: selecting a pad
-# subset per net is the wrong shape for it.  Until then, over-requiring is the
-# safe direction — it can only ask for more room than the copper needs.
+# The endpoints are the **series** parts (`power_report.series_parts()`, the
+# graph's >= 1 A edges): a clamp diode or a divider tap sits on a 20 A net but
+# carries milliamps (extract.py's `conducted()`: IC / diode / bias pins are
+# STUB_A = 0.1 A), so its pin is not a channel endpoint.  An IC pin is also
+# boxed in by its own footprint's other pads and can never clear w/2 — counting
+# every pad made the gate drop such pads silently and read the remaining ones.
+# Per-*edge* channels (source pads <-> target pads per graph edge) would be
+# sharper still; per-series-part is the same shape at one part's granularity.
 SERIES_A = 1.0       # an edge carries power if its current is >= this
 
 
 def widths(board) -> dict:
     """net -> (required mm, achieved channel mm, where it pinches)."""
-    from power_report import DESIGN_CURRENT, width_for
+    from power_report import DESIGN_CURRENT, series_parts, width_for
+
+    series = series_parts()
 
     bb = board.GetBoardEdgesBoundingBox()
     x0, y0 = pcbnew.ToMM(bb.GetX()), pcbnew.ToMM(bb.GetY())
@@ -71,7 +70,10 @@ def widths(board) -> dict:
         own = [p for p in pads if p[1] == net]
         if not own:
             continue
-        core = own            # conservative: every pad owes the width (see NOTE)
+        # Only the series terminals owe the width: an IC sense pin or a clamp
+        # tap on the same net carries milliamps and is not a channel endpoint.
+        refs = series.get(net)
+        core = [p for p in own if p[0] in refs] if refs else own
         free = np.ones((ny, nx), bool)
         edge = max(1, int(EDGE / GRID))
         free[:edge, :] = free[-edge:, :] = False
@@ -96,8 +98,23 @@ def widths(board) -> dict:
 
         def fits(w):
             lab, _ = ndimage.label(dist >= w / 2)
-            ids = {lab[j, i] for j, i in cells if 0 <= j < ny and 0 <= i < nx}
-            ids.discard(0)
+            ids = set()
+            half = w / 2
+            # A pad is copper, not a point: the channel only has to come within
+            # w/2 of its land.  Requiring the pad *centre* to clear every
+            # obstacle by w/2 fails at every FET, whose source pins sit 0.6 mm
+            # from their own drain tab (and made N_PACKMID read 1.5 mm however
+            # far the two sources were moved apart).
+            for _, _, px0, py0, px1, py1 in core:
+                i0 = max(0, int((px0 - half - x0) / GRID))
+                i1 = min(nx - 1, int((px1 + half - x0) / GRID) + 1)
+                j0 = max(0, int((py0 - half - y0) / GRID))
+                j1 = min(ny - 1, int((py1 + half - y0) / GRID) + 1)
+                near = set(lab[j0:j1 + 1, i0:i1 + 1].ravel())
+                near.discard(0)
+                if not near:
+                    return False
+                ids |= near
             return len(ids) == 1
 
         lo, hi = (0.0, 30.0) if fits(0.3) else (0.0, 0.0)
