@@ -52,9 +52,10 @@ def main() -> int:
     # then fill, so the DRC sees this placement.
     hw = os.path.join(ROOT, "hardware")
     sys.path.insert(0, hw)
-    from pour_power import add_power_pours
+    from pour_power import add_gnd_landings, add_power_pours
     for z in list(board.Zones()):
-        if z.GetZoneName().startswith(("power pour", "power keepout")):
+        if z.GetZoneName().startswith(("power pour", "power keepout",
+                                       "power landing", "gnd landing")):
             # Delete(), not Remove(): Remove() hands ownership to Python and the
             # zone proxies are freed while pcbnew still holds the board lists,
             # which corrupts the next GetFootprints() walk (segfault).
@@ -62,7 +63,13 @@ def main() -> int:
     # Every net whose copper does not fit a trace, not only the set the source
     # board happened to carry (the old board predates several 17-20 A nets).
     add_power_pours(board)
+    # Fill the power/plane zones first, then add the GND landings and fill only
+    # those; adding a zone before the first fill can change the fill order and
+    # leave a small pad group as an island.
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
+    gnd = add_gnd_landings(board)
+    if not gnd.empty():
+        pcbnew.ZONE_FILLER(board).Fill(gnd)
 
     pcbnew.SaveBoard(out, board)
     # The UI overlay: the filled pours of *this* board, not the main board.

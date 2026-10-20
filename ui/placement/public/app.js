@@ -683,11 +683,14 @@ function renderRoute() {
   const ch = f.power_channels || [];
   table.innerHTML = ch.length ? ch.map((c) =>
     `<tr class="${c.ok ? "" : "bad"}"><td>${c.net}</td>` +
-    `<td>${fmt(c.channel_mm, 1)} / ${fmt(c.required_mm, 1)} mm</td></tr>`).join("") : "";
-  note.innerHTML = `channel = measured pour width / IPC-2221 2 oz requirement. ` +
-    `Markers are the ${s.tracks ? "last route" : "applied board DRC"}'s verdict; ` +
-    `they follow named parts, but only a fresh <code>make route</code> answers a ` +
-    `moved placement.`;
+    `<td>${fmt(c.channel_mm, 1)} / ${fmt(c.required_mm, 1)} mm</td>` +
+    `<td class="hint">${c.status && c.status !== "ok" ? c.status +
+      (c.detail ? ` · ${c.detail}` : "") : ""}</td></tr>`).join("") : "";
+  note.innerHTML = `channel = free channel between other-net pads, not the filled ` +
+    `neck at a pad. <b>pad-limited</b> means the series terminal covers the pad ` +
+    `land; it is not a placement short. Markers are the ` +
+    `${s.tracks ? "last route" : "applied board DRC"}'s verdict; a moved placement ` +
+    `needs a fresh <code>make route</code>.`;
 }
 
 // --- metrics ----------------------------------------------------------------

@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 import sys
 
 import pcbnew
@@ -51,7 +52,6 @@ from power_spec import POUR_MARGIN  # noqa: E402
 DEFAULT = os.path.join(HERE, "tinyups.kicad_pcb")
 MARGIN = POUR_MARGIN  # mm each side beyond the half width, for the filler to carve
 BRIDGE = 0.10        # mm a part's series-pad bridge extends past its pads
-OVERSHOOT = 0.35     # mm the corridor body runs into its pad land, so the two overlap
 CLEAR = 0.20         # mm pad-clearance padding used for the corridor estimate
 PENALTY = 25.0       # mm of detour worth accepting to keep one part out of a corridor
 BRANCH_RATIO = 0.75  # a part whose other side carries < this share is a branch
@@ -157,25 +157,134 @@ def _hits(a, b, half, obstacles) -> set[str]:
 def _capsule(ps, a, b, half) -> None:
     """The straight body of a corridor; the pad lands close its ends.
 
-    The body runs `OVERSHOOT` past each port so it overlaps the pad-group
-    bridge.  Without that overlap a 0.7 mm terminal (a Power56 source pin)
-    lands on the very end of the body and the filler drops the joint below its
-    minimum thickness.
+    The body runs straight between the two pad centres; the round ends at the
+    centres do the landing.
     """
     if math.dist(a, b) < 1e-6:
         return
     dx, dy = b[0] - a[0], b[1] - a[1]
     length = math.hypot(dx, dy) or 1e-9
-    ux, uy = dx / length, dy / length
-    ax, ay = a[0] - ux * OVERSHOOT, a[1] - uy * OVERSHOOT
-    bx, by = b[0] + ux * OVERSHOOT, b[1] + uy * OVERSHOOT
-    nx, ny = -uy * half, ux * half
+    nx, ny = -dy / length * half, dx / length * half
     part = pcbnew.SHAPE_POLY_SET()
     i = part.NewOutline()
-    for px, py in ((ax + nx, ay + ny), (bx + nx, by + ny),
-                   (bx - nx, by - ny), (ax - nx, ay - ny)):
+    for px, py in ((a[0] + nx, a[1] + ny), (b[0] + nx, b[1] + ny),
+                   (b[0] - nx, b[1] - ny), (a[0] - nx, a[1] - ny)):
         part.Append(pcbnew.FromMM(px), pcbnew.FromMM(py), i)
     ps.BooleanAdd(part)
+
+
+def _nearest_foreign(board, net, centre):
+    """Nearest pad on another net: distance, direction, area and centre."""
+    best = (float("inf"), (1.0, 0.0), 0.0, centre)
+    for fp in board.GetFootprints():
+        for pad in fp.Pads():
+            name = pad.GetNetname().lstrip("/")
+            if name == net:
+                continue
+            bb = pad.GetBoundingBox()
+            x0 = pcbnew.ToMM(bb.GetX())
+            y0 = pcbnew.ToMM(bb.GetY())
+            x1 = x0 + pcbnew.ToMM(bb.GetWidth())
+            y1 = y0 + pcbnew.ToMM(bb.GetHeight())
+            qx = min(max(centre[0], x0), x1)
+            qy = min(max(centre[1], y0), y1)
+            d = math.hypot(qx - centre[0], qy - centre[1])
+            if d < best[0]:
+                if d < 1e-6:
+                    vec = (1.0, 0.0)
+                else:
+                    vec = ((qx - centre[0]) / d, (qy - centre[1]) / d)
+                p = pad.GetPosition()
+                best = (d, vec, (x1 - x0) * (y1 - y0),
+                        (pcbnew.ToMM(p.x), pcbnew.ToMM(p.y)))
+    return best
+
+
+def _terminal_group_centre(pads):
+    sx = sy = area = 0.0
+    for pad in pads:
+        bb = pad.GetBoundingBox()
+        a = pcbnew.ToMM(bb.GetWidth()) * pcbnew.ToMM(bb.GetHeight())
+        q = pad.GetPosition()
+        sx += pcbnew.ToMM(q.x) * a
+        sy += pcbnew.ToMM(q.y) * a
+        area += a
+    return (sx / area, sy / area)
+
+
+def nearest_power_group(board, term, net):
+    """Centre of the nearest foreign power terminal group on the same part."""
+    fp = board.FindFootprintByReference(term["ref"])
+    if fp is None:
+        return _nearest_foreign(board, net, term["port"])[3]
+    groups = {}
+    for pad in fp.Pads():
+        n = pad.GetNetname().lstrip("/")
+        if not n or n == net or n not in DESIGN_CURRENT:
+            continue
+        if DESIGN_CURRENT[n] < 1.0:
+            continue
+        groups.setdefault(n, []).append(pad)
+    best = None
+    for pads in groups.values():
+        c = _terminal_group_centre(pads)
+        d = math.dist(term["port"], c)
+        if best is None or d < best[0]:
+            best = (d, c)
+    if best is None:
+        return _nearest_foreign(board, net, term["port"])[3]
+    return best[1]
+
+
+def assign_thermal_pads(board) -> None:
+    """Give a Power56's unnumbered thermal pads the exposed-pad net."""
+    import re
+    for fp in board.GetFootprints():
+        if not re.match(r"^\d+Q", fp.GetReference()):
+            continue
+        named = [p for p in fp.Pads() if p.GetNetname()]
+        if not named:
+            continue
+        ep = max(named, key=lambda p: p.GetSize().x * p.GetSize().y)
+        for pad in fp.Pads():
+            if not pad.GetNumber() and not pad.GetNetname():
+                # A no-number pad's net is not serialised by KiCad; make it a
+                # duplicate of the exposed-pad pin so it is part of that land.
+                pad.SetNumber(ep.GetNumber())
+                pad.SetNet(ep.GetNet())
+
+
+def _voronoi_disc(ps, centre, half, other, gap=0.1) -> None:
+    """A round cap clipped at the midline between two similar pads.
+
+    A full disc at 1F1 would reach over the neighbouring pad; no disc at all
+    leaves a flat end.  The Voronoi line is the perpendicular bisector of the
+    two pad centres, moved `gap` towards this pad so the two zones keep the
+    board clearance.  The result is round on the free side and flat at the
+    shared line.
+    """
+    dx, dy = centre[0] - other[0], centre[1] - other[1]
+    length = math.hypot(dx, dy) or 1e-9
+    ux, uy = dx / length, dy / length
+    nx, ny = -uy, ux
+    bx = (centre[0] + other[0]) / 2 + ux * gap
+    by = (centre[1] + other[1]) / 2 + uy * gap
+    width = 2.0 * half + 10.0
+    depth = 2.0 * half + 10.0
+    clip = pcbnew.SHAPE_POLY_SET()
+    i = clip.NewOutline()
+    for qx, qy in ((bx + nx * width / 2, by + ny * width / 2),
+                   (bx + nx * width / 2 + ux * depth,
+                    by + ny * width / 2 + uy * depth),
+                   (bx - nx * width / 2 + ux * depth,
+                    by - ny * width / 2 + uy * depth),
+                   (bx - nx * width / 2, by - ny * width / 2)):
+        clip.Append(pcbnew.FromMM(qx), pcbnew.FromMM(qy), i)
+    disc = pcbnew.SHAPE_POLY_SET()
+    _disc(disc, centre, half)
+    disc.BooleanIntersection(clip)
+    if disc.OutlineCount():
+        ps.BooleanAdd(disc)
 
 
 def _disc(ps, centre, half, steps=24) -> None:
@@ -186,55 +295,6 @@ def _disc(ps, centre, half, steps=24) -> None:
         part.Append(pcbnew.FromMM(centre[0] + half * math.cos(angle)),
                     pcbnew.FromMM(centre[1] + half * math.sin(angle)), i)
     ps.BooleanAdd(part)
-
-
-def _join(ps, centre, half, directions) -> None:
-    """A round join on the side the corridor actually occupies.
-
-    A full disc of the pour half-width at an intermediate terminal reaches
-    around the part and takes the space of the pads on the far side (3Q1's
-    VIN_SYS tab covers the VBAT pins).  Subtracting the intersection of the
-    half-planes opposite each edge keeps the outside of the bend and leaves the
-    far side to the neighbouring net.
-    """
-    if not _needs_join(directions):
-        return
-    disc = pcbnew.SHAPE_POLY_SET()
-    _disc(disc, centre, half)
-    clip = None
-    for ux, uy in directions:
-        px, py = centre
-        nx, ny = -uy, ux
-        length = half + 2.0
-        width = 2.0 * half + 4.0
-        part = pcbnew.SHAPE_POLY_SET()
-        i = part.NewOutline()
-        for qx, qy in ((px + nx * width / 2, py + ny * width / 2),
-                       (px + nx * width / 2 - ux * length,
-                        py + ny * width / 2 - uy * length),
-                       (px - nx * width / 2 - ux * length,
-                        py - ny * width / 2 - uy * length),
-                       (px - nx * width / 2, py - ny * width / 2)):
-            part.Append(pcbnew.FromMM(qx), pcbnew.FromMM(qy), i)
-        if clip is None:
-            clip = part
-        else:
-            clip.BooleanIntersection(part)
-    if clip is not None and clip.OutlineCount():
-        disc.BooleanSubtract(clip)
-    if disc.OutlineCount():
-        ps.BooleanAdd(disc)
-
-
-def _needs_join(directions) -> bool:
-    """A round join only where the corridor actually bends."""
-    if len(directions) >= 3:
-        return True
-    if len(directions) == 2:
-        dot = (directions[0][0] * directions[1][0]
-               + directions[0][1] * directions[1][1])
-        return dot > math.cos(math.radians(150))
-    return False
 
 
 def _rectangle(ps, box, pad=0.0) -> None:
@@ -311,6 +371,106 @@ def _branch_current(term) -> float:
     return current
 
 
+def add_gnd_landings(board) -> pcbnew.ZONES:
+    """Small F.Cu GND pours on the GND pads of power FETs and shunts.
+
+    The global GND zone can be carved away from a low-side FET's source pins or
+    a shunt's return pad; the landing keeps a round, current-sized copper pad
+    there for a stitching via.  Radius follows the part's power-side current,
+    and the same Voronoi/foreign-pad trim as the power pours keeps it off the
+    neighbouring gate/drain pads.
+    """
+    for z in list(board.Zones()):
+        if z.GetZoneName().startswith(("gnd landing",)):
+            board.Delete(z)
+    added = pcbnew.ZONES()
+    found = board.FindNet("GND") or board.FindNet("/GND")
+    if found is None:
+        return added
+    for fp in board.GetFootprints():
+        ref = fp.GetReference()
+        gnd = [p for p in fp.Pads()
+               if p.GetNetname().lstrip("/") == "GND"]
+        if not gnd:
+            continue
+        power_nets = {p.GetNetname().lstrip("/") for p in fp.Pads()
+                      if p.GetNetname().lstrip("/") in DESIGN_CURRENT}
+        if not power_nets:
+            continue
+        is_fet = bool(re.match(r"^\d+Q", ref))
+        is_shunt = (bool(re.match(r"^\d+R", ref))
+                    and ("Shunt" in fp.GetFPIDAsString()
+                         or "m" in fp.GetValue().lower()))
+        if not (is_fet or is_shunt):
+            continue
+        current = max(DESIGN_CURRENT[n] for n in power_nets)
+        half = width_for(current) / 2.0 + MARGIN
+        boxes = []
+        for pad in gnd:
+            bb = pad.GetBoundingBox()
+            boxes.append((pcbnew.ToMM(bb.GetX()), pcbnew.ToMM(bb.GetY()),
+                          pcbnew.ToMM(bb.GetX() + bb.GetWidth()),
+                          pcbnew.ToMM(bb.GetY() + bb.GetHeight())))
+        box = (min(b[0] for b in boxes), min(b[1] for b in boxes),
+               max(b[2] for b in boxes), max(b[3] for b in boxes))
+        sx = sy = area = 0.0
+        for pad, b in zip(gnd, boxes):
+            a = (b[2] - b[0]) * (b[3] - b[1])
+            p = pad.GetPosition()
+            sx += pcbnew.ToMM(p.x) * a
+            sy += pcbnew.ToMM(p.y) * a
+            area += a
+        port = (sx / area, sy / area)
+
+        ps = pcbnew.SHAPE_POLY_SET()
+        other = nearest_power_group(board, {"ref": ref, "port": port}, "GND")
+        _voronoi_disc(ps, port, half, other)
+        _rectangle(ps, box, BRIDGE)
+        keepout = _foreign_pads(board, "GND")
+        if keepout.OutlineCount():
+            ps.BooleanSubtract(keepout)
+        # Keep the landing off the already-poured power corridors: a second
+        # fill pass does not re-clear against them, and 0.1 mm is below the
+        # JLCPCB 0.127 mm rule.
+        for pz in board.Zones():
+            if not pz.GetZoneName().startswith("power pour"):
+                continue
+            cut = pcbnew.SHAPE_POLY_SET(pz.Outline())
+            cut.Inflate(pcbnew.FromMM(0.30),
+                        pcbnew.CORNER_STRATEGY_ROUND_ALL_CORNERS,
+                        pcbnew.FromMM(0.005))
+            ps.BooleanSubtract(cut)
+
+        z = pcbnew.ZONE(board)
+        z.SetLayer(pcbnew.F_Cu)
+        z.SetNetCode(found.GetNetCode())
+        z.SetZoneName(f"gnd landing {ref}")
+        z.SetAssignedPriority(0)
+        z.SetMinThickness(pcbnew.FromMM(0.25))
+        z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL)
+        z.Outline().BooleanAdd(ps)
+        board.Add(z)
+        added.append(z)
+
+        ra = pcbnew.ZONE(board)
+        ra.SetIsRuleArea(True)
+        ra.SetLayer(pcbnew.F_Cu)
+        ra.SetZoneName(f"gnd landing keepout {ref}")
+        ra.SetDoNotAllowTracks(True)
+        ra.SetDoNotAllowVias(False)
+        ra.SetDoNotAllowPads(False)
+        ra.SetDoNotAllowFootprints(False)
+        ra.SetDoNotAllowCopperPour(False)
+        keep = pcbnew.SHAPE_POLY_SET(ps)
+        keep.Deflate(pcbnew.FromMM(max(0.05, MARGIN - 0.05)),
+                     pcbnew.CORNER_STRATEGY_ROUND_ALL_CORNERS,
+                     pcbnew.FromMM(0.005))
+        ra.Outline().BooleanAdd(keep if keep.OutlineCount() else ps)
+        board.Add(ra)
+        print(f"  + GND landing {ref:>4} {current:4.1f} A -> {2 * half:4.1f} mm")
+    return added
+
+
 def add_power_pours(board, nets=None) -> None:
     """One F.Cu pour per high-current net, as a trunk with short branches.
 
@@ -320,6 +480,7 @@ def add_power_pours(board, nets=None) -> None:
     does not need a pour, and its fragment would only confuse the filler and
     freerouting.
     """
+    assign_thermal_pads(board)
     nets = [n for n in (nets or DESIGN_CURRENT)
             if n != "GND" and width_for(DESIGN_CURRENT[n]) >= 0.5]
     edges_by_net = series_edges()
@@ -343,39 +504,33 @@ def add_power_pours(board, nets=None) -> None:
         trunk, branches = _trunk(terminals, anchor or (0, 0), obstacles, half)
 
         ps = pcbnew.SHAPE_POLY_SET()
-        directions: dict[str, list[tuple[float, float]]] = {}
         by_port = {t["port"]: t["ref"] for t in terminals}
-
-        def add_direction(a, b):
-            dx, dy = b[0] - a[0], b[1] - a[1]
-            length = math.hypot(dx, dy)
-            if length > 1e-6:
-                directions.setdefault(by_port[a], []).append(
-                    (dx / length, dy / length))
+        terminal_half = {t["ref"]: half for t in trunk}
 
         for a, b in zip(trunk, trunk[1:]):
             _capsule(ps, a["port"], b["port"], half)
-            add_direction(a["port"], b["port"])
-            add_direction(b["port"], a["port"])
         for term in branches:
             current = _branch_current(term)
             branch_half = width_for(current) / 2.0 + MARGIN
             attach = None
             for a, b in zip(trunk, trunk[1:]):
-                d, q, t = _point_segment(term["port"][0], term["port"][1],
-                                         a["port"], b["port"])
-                if 0.0 <= t <= 1.0 and (attach is None or d < attach[0]):
+                d, q, tv = _point_segment(term["port"][0], term["port"][1],
+                                          a["port"], b["port"])
+                if 0.0 <= tv <= 1.0 and (attach is None or d < attach[0]):
                     attach = (d, q)
-            if attach is None:
-                q = min((t["port"] for t in trunk),
-                        key=lambda p: math.dist(p, term["port"]))
-            else:
-                q = attach[1]
+            q = attach[1] if attach else min(
+                (t["port"] for t in trunk),
+                key=lambda p: math.dist(p, term["port"]))
             _capsule(ps, term["port"], q, branch_half)
-            add_direction(term["port"], q)
+            terminal_half[term["ref"]] = branch_half
+            if q in by_port:
+                tr = by_port[q]
+                terminal_half[tr] = max(terminal_half.get(tr, half), branch_half)
 
         for term in terminals:
-            _join(ps, term["port"], half, directions.get(term["ref"], []))
+            th = terminal_half.get(term["ref"], half)
+            other = nearest_power_group(board, term, net)
+            _voronoi_disc(ps, term["port"], th, other)
 
         # A multi-pin terminal is one land, not N separate lobes: bridge the
         # pads of each part with their group's bbox.
@@ -445,6 +600,9 @@ def main() -> int:
     board = pcbnew.LoadBoard(path)
     add_power_pours(board)
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
+    gnd = add_gnd_landings(board)
+    if not gnd.empty():
+        pcbnew.ZONE_FILLER(board).Fill(gnd)
     pcbnew.SaveBoard(path, board)
     print(f"poured + filled -> {path}")
     return 0

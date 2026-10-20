@@ -175,7 +175,7 @@ def channel_feedback(board) -> list[dict]:
         print(f"warning: power channel measurement skipped: {e}", file=sys.stderr)
         return []
     out = []
-    for net, (need, have, where) in measured.items():
+    for net, (need, have, where, status, detail) in measured.items():
         pinch = None
         if where:
             m = re.search(r"\((-?[\d.]+),(-?[\d.]+)\)", where)
@@ -186,7 +186,9 @@ def channel_feedback(board) -> list[dict]:
             "current_a": DESIGN_CURRENT.get(net),
             "required_mm": round(need, 2),
             "channel_mm": round(have, 2),
-            "ok": have >= need,
+            "ok": status != "SHORT",
+            "status": status,
+            "detail": detail,
             "pinch": pinch,
         })
     out.sort(key=lambda d: (d["ok"], d["channel_mm"] / max(d["required_mm"], 1e-3)))

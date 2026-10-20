@@ -9,7 +9,10 @@ channel that joins one net's pads — a disk of width w fits iff the distance to
 the nearest obstacle is >= w/2, and every pad must land in **one** connected
 component of that free set.
 
-Exit code is non-zero if any net is short, so it can gate a placement.
+Exit code is non-zero if any net is short, so it can gate a placement.  A
+channel below the required width is **pad-limited** (not short) when it is still
+wider than the series pad and the rated series terminals cover the current; the
+pad/terminal, not the placement, is the bottleneck then.
 
 Why the placement and not the pour: this measurement on ~100 parts is cheap, and
 it is the honest form of the "power corridor" the PoC dropped.  A corridor was a
@@ -41,8 +44,18 @@ SERIES_A = 1.0       # an edge carries power if its current is >= this
 
 
 def widths(board) -> dict:
-    """net -> (required mm, achieved channel mm, where it pinches)."""
+    """net -> (need, channel, pinch, status, detail).
+
+    `status` is ``ok``, ``pad-limited`` or ``SHORT``.  A channel below the
+    required width is *pad-limited* when it is still wider than the smallest
+    series pad and every rated series terminal covers the current: the copper
+    bottleneck is then the component pad/terminal, not the placement.  That is
+    the difference between the free channel and the filled pour (see
+    ``power_report.pour_width``); moving two FETs apart raises the former, not
+    the latter.
+    """
     from power_report import DESIGN_CURRENT, series_parts, width_for
+    from power_spec import terminal_rating
 
     series = series_parts()
 
@@ -133,7 +146,31 @@ def widths(board) -> dict:
                 watch = np.where(lab == lab[seed], dist, np.inf)
                 j, i = np.unravel_index(np.argmin(watch), watch.shape)
                 where = f"({x0 + i * GRID:.0f},{y0 + j * GRID:.0f})"
-        out[net] = (width_for(need), lo, where)
+        refs = series.get(net) or set()
+        land = min((min(pcbnew.ToMM(p.GetSize().x), pcbnew.ToMM(p.GetSize().y))
+                    for fp in board.GetFootprints() if fp.GetReference() in refs
+                    for p in fp.Pads()
+                    if p.GetNetname().lstrip("/") == net), default=0.0)
+        series_fps = [fp for fp in board.GetFootprints()
+                      if fp.GetReference() in refs
+                      and any(p.GetNetname().lstrip("/") == net
+                              for p in fp.Pads())]
+        rated = [t.amps for fp in series_fps
+                 for t in (terminal_rating(fp.GetFPIDAsString(), fp.GetValue()),)
+                 if t]
+        # Pad-limited only if *every* series terminal is rated: one rated FET
+        # must not cover an unrated connector's pad.
+        terminal_ok = (len(rated) == len(series_fps) and bool(rated)
+                       and min(rated) >= need)
+        if lo >= width_for(need):
+            status, detail = "ok", ""
+        elif terminal_ok and lo >= land:
+            status = "pad-limited"
+            detail = (f"pad {land:.2f} mm, terminal {min(rated):.0f} A "
+                      f">= {need:.0f} A")
+        else:
+            status, detail = "SHORT", f"{width_for(need) / max(lo, 1e-3):.1f}x"
+        out[net] = (width_for(need), lo, where, status, detail)
     return out
 
 
@@ -144,10 +181,14 @@ def main() -> int:
         b = pcbnew.LoadBoard(path)
         print(f"board: {path}")
         print(f"  {'net':9} {'need':>6} {'channel':>8}  verdict")
-        for net, (need, have, where) in widths(b).items():
-            ok = have >= need
-            bad += not ok
-            note = "ok" if ok else f"SHORT {need / max(have, 1e-3):.1f}x at {where}"
+        for net, (need, have, where, status, detail) in widths(b).items():
+            if status == "SHORT":
+                bad += 1
+            note = status
+            if status == "pad-limited":
+                note += f" ({detail})"
+            elif status == "SHORT":
+                note += f" {detail} at {where}"
             print(f"  {net:9} {need:6.1f} {have:8.1f}  {note}")
     return 1 if bad else 0
 

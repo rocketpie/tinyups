@@ -29,7 +29,7 @@ gates — `make erc`, `make drc`.
 | 15 | fixed3 hand-tuned (UI) | 3771 | 17456 | | | | | | 0.78 | wire 4373, ovl 0, out 0, axisR 0.78 — [history 0020](history/0020-fet-pin-mapping.md) |
 | 16 | fixed4 hand-tuned (UI) | 3233 | 14663 | | | | | | 0.80 | wire 4141, ovl 0, out 0, axisR 0.80 — [history 0022](history/0022-board-fixup.md) |
 | 17 | fixed5 (4Q1 −6 mm) | 3227 | 14661 | | | | | | 0.80 | wire 4132, ovl 0, out 0, path 533 — N_PACKMID 8.8 mm, 16/16 channels ok — [history 0026](history/0026-pads-are-copper.md) |
-| 18 | fixed5 + caps beside 5Q1 (main board) | 3227 | 14661 | | | | | | 0.82 | wire 4200, ovl 0, out 0, path 518; host pairs 45, 39 over, mean 13.5 mm; 5C1→5Q1 5.8/6 — [history 0028](history/0028-host-pair-metric.md) |
+| 18 | fixed5 + caps beside 5Q1, 4Q1 close (main board) | 3233 | 14659 | | | | | | 0.82 | wire 4202, ovl 0, out 0, path 516; host pairs 45, 39 over, mean 13.5 mm; 5C1→5Q1 5.8/6 — [history 0028](history/0028-host-pair-metric.md) |
 
 ## Routing
 
@@ -65,7 +65,7 @@ gates — `make erc`, `make drc`.
 | 13 | fixed5 applied (unrouted) | pours on F.Cu | — | 6/22 (all unrouted signal nets) | 0 | 62 (silk) | 261 | — | — | high-current 16/16 PASS; 16/16 channels ok, N_PACKMID 2.4→8.8; N_CS/SW1_OUT fill 0.70/0.67 (pad necks) — [0026](history/0026-pads-are-copper.md) |
 | 14 | fixed5 routed | pours on F.Cu | 0.127 | 2/22 (`N_VCAP` unrouted, `+3V3` 0.9 of 1.0 A) | 0 | 92 (silk 62, via dangling 30) | 47 | PASS | — | high-current 16/16 PASS; 16/16 channels ok; 5/5 sense loops no Kelvin (pour, 0 mm dedicated) |
 | 15 | pour trunk/branches (fixed5, unrouted) | pours on F.Cu | — | 6/22 (all unrouted signal nets) | 0 | 62 (silk) | 262 | — | — | high-current 16/16 PASS; VIN_SYS `1Q1→3Q1→5Q1`, `2R1`/caps on branches; fill +12V_IN 5.48→6.01, N_AF 7.06→7.44, VIN_SYS 1.11→1.35, VOUT12 1.58→2.72; 0 clearance, 0 zone islands — [0027](history/0027-pour-taps.md) |
-| 16 | caps moved beside 5Q1 (main board) | pours on F.Cu | — | 6/22 (all unrouted signal nets) | 0 | 58 (silk) | 261 | — | — | high-current 16/16 PASS; 16/16 channels ok, N_PACKMID 8.8; VIN_SYS fill 1.35→0.88 (branches now 3C3 18.8 / 6C3 25.6 mm from 5Q1), 0 clearance, 0 islands — [0028](history/0028-host-pair-metric.md) |
+| 16 | full Voronoi pours + GND landings (main board) | pours on F.Cu | — | 6/22 (all unrouted signal nets) | 0 | 57 (silk) | 257 | — | — | high-current 16/16 PASS; 16/16 channels ok, N_PACKMID 2.5 **pad-limited** (0.70 mm pad / 32 A terminal); fills VIN_SYS 1.93, VBAT 0.82, SW1_OUT 1.96, N_CS 1.08, N_PACKMID 1.58, VOUT12 3.49; 4 GND landings, thermal pads as EP-pin duplicates; 0 clearance, 0 islands — [0029](history/0029-round-pad-ends.md) |
 
 ## Sense (Kelvin)
 

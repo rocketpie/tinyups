@@ -35,7 +35,11 @@ def write_pours(board_path: str = BOARD, out_path: str = OUT) -> int:
         if z.GetLayer() != pcbnew.F_Cu:
             continue
         net = z.GetNetname().lstrip("/")
-        if not net or net == "GND":
+        if not net or z.GetZoneName().startswith("power landing"):
+            continue
+        # GND is normally the plane, not a power-pour overlay; the small
+        # stitching landings are the exception.
+        if net == "GND" and not z.GetZoneName().startswith("gnd landing"):
             continue
         filled = z.GetFilledPolysList(pcbnew.F_Cu)
         if filled.OutlineCount() == 0:

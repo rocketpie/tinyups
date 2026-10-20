@@ -58,5 +58,6 @@ allowed and expected to age, to be superseded, and to be wrong in the future.
 - [0026 – pads are copper, not holes](0026-pads-are-copper.md)
 - [0027 – power pours take a trunk, not a chain through every pad](0027-pour-taps.md)
 - [0028 – a rail bypass belongs to a switch, not to the nearest controller](0028-host-pair-metric.md)
+- [0029 – power pours are full Voronoi cells](0029-round-pad-ends.md)
 
 

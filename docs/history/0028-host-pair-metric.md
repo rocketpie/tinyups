@@ -22,4 +22,4 @@ cap it belongs there), `5C9 -> 5J2` **18.4 / 15**, `4R1 -> 4U1` **42.5 / 15**
 (the Kelvin gate's problem), `5L1 -> 5U1` **45.2 / 15**.  The critical set is 45
 pairs, 39 over target, mean 13.5 mm — the metric is a screen, not a gate.
 
-**Status:** force assignment fixed; placement work remains for the pairs above.
+**Status:** force assignment fixed; placement work remains for the pairs above.  The close `4Q1`/`4Q2` placement is not an ampacity short: `N_PACKMID` is 2.5 mm free channel, pad-limited by the 0.70 mm series pad and covered by the 32 A terminal ([0029](0029-round-pad-ends.md)).
