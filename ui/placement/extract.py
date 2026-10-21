@@ -42,6 +42,7 @@ from power_spec import (CAP_ESR, DESIGN_CURRENT, RIPPLE_V_RMS,   # noqa: E402
 from power_report import width_for                              # noqa: E402
 from power_map import (_cap, _num, component_is_power,           # noqa: E402
                         OVERRIDES)
+import placement_spec as pspec                                  # noqa: E402
 
 BOARD = os.path.join(ROOT, "hardware", "tinyups.kicad_pcb")
 OUT = os.path.join(ROOT, "build", "layout", "graph.json")
@@ -175,9 +176,37 @@ def main() -> int:
             anchors[label(base)] = (round(pcbnew.ToMM(p.x), 2),
                                     round(pcbnew.ToMM(p.y), 2))
 
+    def spec_payload(ref: str) -> dict:
+        """Design-intent limits for one part, plus the host/ring the UI uses.
+
+        The host is the *most demanding* reach in the spec (smallest allowed
+        max), so a hold-up cap that must be within 10 mm of the FET is pulled
+        there rather than to a 15 mm controller.  Free/anchor parts get no host:
+        the UI no longer invents one.
+        """
+        limits = pspec.as_json(ref)
+        role = pspec.ROLES.get(ref, "")
+        reach = [l for l in limits
+                 if l["max"] is not None and l["host"] != "BOARD_EDGE"]
+        if not reach:
+            return {"role": role, "limits": limits, "host": None}
+        # primary host first; then the smallest reach; prefer a pad rule
+        best = min(reach, key=lambda l: (not l["primary"], l["max"],
+                                        l["measure"] != "pad", l["host"]))
+        return {
+            "role": role,
+            "limits": limits,
+            "host": best["host"],
+            "max": best["max"],
+            "min": best["min"],
+            "measure": best["measure"],
+            "net": best["net"],
+            "why": best["why"],
+            "ring": round(min(best["max"], 8.0), 2),
+        }
+
     nodes = []
-    for ref, fp in sorted(fps.items()):
-        # The board's footprint, not the netlist's: a swapped part keeps its
+    for ref, fp in sorted(fps.items()):        # The board's footprint, not the netlist's: a swapped part keeps its
         # schematic footprint id in the netlist until the schematic is re-synced,
         # and the resulting pad geometry would be a different part.
         bx, by, bw, bh = local_bbox(fp)
@@ -215,6 +244,8 @@ def main() -> int:
             "kind": k,
             "block": ref_block.get(ref, "?"),
             "power": component_is_power(ref, value, nets_of),
+            "role": pspec.ROLES.get(ref, ""),
+            "spec": spec_payload(ref),
             "w": bw, "h": bh,
             "bbox": [bx, by, bw, bh],
             "anchor": anchors.get(ref),

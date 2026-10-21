@@ -30,6 +30,7 @@ gates — `make erc`, `make drc`.
 | 16 | fixed4 hand-tuned (UI) | 3233 | 14663 | | | | | | 0.80 | wire 4141, ovl 0, out 0, axisR 0.80 — [history 0022](history/0022-board-fixup.md) |
 | 17 | fixed5 (4Q1 −6 mm) | 3227 | 14661 | | | | | | 0.80 | wire 4132, ovl 0, out 0, path 533 — N_PACKMID 8.8 mm, 16/16 channels ok — [history 0026](history/0026-pads-are-copper.md) |
 | 18 | fixed5 + caps beside 5Q1, 4Q1 close (main board) | 3233 | 14659 | | | | | | 0.82 | wire 4202, ovl 0, out 0, path 516; host pairs 45, 39 over, mean 13.5 mm; 5C1→5Q1 5.8/6 — [history 0028](history/0028-host-pair-metric.md) |
+| 19 | design-intent placement spec v1 | | | | | | | | | 124 parts, 236 limits, 195 rule groups: 1 short / 101 over; worst `5C3→5Q4` 36.8 mm (limit 3) — [history 0030](history/0030-placement-intent.md) |
 
 ## Routing
 

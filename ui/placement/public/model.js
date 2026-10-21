@@ -253,15 +253,12 @@ export function makeCollide(P) {
 }
 
 // --- the "belongs-to" (host) force ------------------------------------------
-// A decoupling cap or bias resistor belongs *beside the IC it serves*, and the
-// netlist only says so through a *specific* net: a 2-pad boot cap is worth 1.0,
-// a 12-pad supply rail 0.09 — and GND, the one net that would tie every small
-// part to its IC, is a plane and is dropped.  So score every IC by the
-// specificity of the shared nets, take the best, and break a tie (a bulk cap
-// sharing GND + the rail with all of them equally) by proximity.  The force is
-// a ring around that host and one-sided: only the small part moves, so a
-// controller keeps its position while its parts fan around it.
-// Rationale + measurements: ADR-0012, docs/history/0005.
+// The host comes from hardware/placement_spec.py: every part has a designed
+// role and a host with min/max limits.  The graph carries those limits, so the
+// UI never scores nets or falls back to "nearest Q in the block" — that model
+// tied every VIN_SYS cap to whichever switch was closest.  The force is a ring
+// around the spec host and one-sided: only the small part moves.
+// Decision: ADR-0016; the defect: docs/history/0030.
 export function assignHosts(nodes, graph, byId) {
   const members = new Map();
   for (const e of graph.edges) {
@@ -272,6 +269,16 @@ export function assignHosts(nodes, graph, byId) {
   }
   for (const n of nodes) {
     n.host = null; n.hostScore = 0;
+    // The design says what this part serves (hardware/placement_spec.py).  If a
+    // spec entry exists, use it verbatim — no netlist scoring, no nearest-Q
+    // tie-break.  The legacy inference below only runs for a graph from an
+    // older extractor.
+    if (n.spec) {
+      n.host = n.spec.host || null;
+      n.hostScore = null;
+      n.hostWhy = n.spec.why || "";
+      continue;
+    }
     if (!"RCDL".includes(n.kind)) continue;              // only small passives
     // Assign a host even when the *force* is off for power parts: the
     // inspector and the host metric still need to say what the cap serves.
@@ -331,7 +338,8 @@ export function forceHost(P, byId) {
       const h = byId.get(n.host); if (!h) continue;
       const dx = (n.x + n.cx) - (h.x + h.cx), dy = (n.y + n.cy) - (h.y + h.cy);
       const L = Math.hypot(dx, dy) || 1e-6;
-      const f = STR * (L - D) * alpha;
+      const ring = (n.spec && n.spec.ring != null) ? n.spec.ring : D;
+      const f = STR * (L - ring) * alpha;
       n.vx -= (dx / L) * f;
       n.vy -= (dy / L) * f;
     }
@@ -531,16 +539,18 @@ export function fanStats(nodes, graph, board, byId) {
 }
 
 // --- host proximity metric --------------------------------------------------
-// What the belongs-to force is for, as a number: every small passive has a
-// host (IC or power switch) and an allowed distance.  A signal bypass or gate
-// resistor wants ~6 mm; a power path part (a 470 uF hold-up cap, a shunt) is
-// allowed 15 mm because it is bulk/current, not a high-frequency loop.
+// What the belongs-to force is for, as a number: every part with a spec host is
+// measured against that limit's reach.  The exact measure is copper-edge on
+// the named net (`pad`) or body gap (`edge`); the UI approximates it with
+// centroid distance, so this is a screen.  `make proximity` is authoritative.
 export function hostTarget(n) {
+  if (n.spec && n.spec.max != null) return n.spec.max;
   const power = !!n.power || (n.pads || []).some((p) => (p.current || 0) >= 1);
   return power ? 15 : 6;
 }
 
 export function hostCritical(n) {
+  if (n.spec) return !!n.host;              // the spec decides
   if (!n.host) return false;
   if (n.kind === "C" || n.kind === "L" || n.power) return true;
   // Gate resistors are the one ordinary R that changes switching performance.

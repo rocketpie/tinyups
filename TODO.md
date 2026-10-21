@@ -19,44 +19,26 @@
   the terminals sit right opposite each other, how would spacing them make the power transfer any better?
 
 
-- Where should the caps sit?
-The caps are now electrically decoupled from the pour path, so the pours do not require moving them.
-    5C1 (10 µF) is the one worth moving first: it is 46.9 mm from 5Q1 and 52.8 mm from 5U1.
-    If it is the HF bypass for 5U1’s VIN_SYS pins, it belongs next to those pins. 
-    Its graph current is only 0.793 A, so it is a routed trace, not one of the pours.
-    
-    3C2 / 3C3 (2 × 470 µF hold-up) are currently 21.6 / 21.8 mm from 1Q1, but 49.4 / 59.6 mm from 5Q1 and similarly far from 5U1. 
-    For the converter-input hold-up loop they would ideally sit at the 5Q1 drain / 5U1 VIN_SYS node with a short GND return. Because they are bulk electrolytics
-    ESR/ESL dominates and this is second-order; 
+- Where should the caps sit?  **Resolved** — design intent, not a guess:
+  `docs/placement.md` + `hardware/placement_spec.py`. `5C1` is the output
+  stage's 3 mm input ceramic (`5Q1`/`5U1`); `3C2`/`3C3` are converter-input
+  hold-up (`5U1` 15 mm, `5Q1` 10 mm, ≥ 4 mm off the heat); `6C3` is the 3.3 V
+  buck's input bypass at `6U3` (3 mm). `make proximity` is the backlog:
+  102 violations on `fixed5`; the gate loops (`5Qx→5U1` 24–38 mm, limit 5) and
+  the BMS gates (`4Qx→4U1` ~40 mm, limit 10) come first.
 
+  Current hand placement, measured against the new spec:
 
-- Host-pair spacing
-  Targets: 6 mm for signal bypass/gate parts, 15 mm for power-path parts (hold-up caps, shunts, inductors).
-
-  Current worst critical pairs on the main board:
-  pair 	distance / target 	
-  5C1 → 5Q1 	5.8 / 6 mm 	ok
-  3C2 → 5Q1 	12.0 / 15 mm 	ok
-  3C3 → 5Q1 	18.8 / 15 mm 	over
-  6C3 → 5Q1 	25.6 / 6 mm 	over (12.1 mm from 6U3)
-  5C9 → 5J2 	18.4 / 15 mm 	over
-  5C10 → 6J5 	32.3 / 6 mm 	over
-  4R1 → 4U1 	42.5 / 15 mm 	over — the Kelvin problem
-  5L1 → 5U1 	45.2 / 15 mm 	over
-  2C2 → 2U1 	9.4 / 6 mm 	over
-
-  Overall: 45 critical pairs, 39 over target, mean 13.5 mm. That is the honest state of the hand placement; the report is a screen, not a gate.
-
-  For best performance the rule is therefore:
-
-      rail bypass / hold-up cap → the switch or connector on that rail,
-      boot/charge-pump cap → its controller,
-      shunt → its sense controller,
-      inductor → its switching node/controller.
+    195 rule groups
+    1 too close — 3C2/3C3 vs 5Q1, 3.2 mm (limit 4)
+    101 too far
+    worst: 5C3 → 5Q4 36.8 mm (bootstrap loop, limit 3)
+    next obvious: 5Q4 → 5U1 37.8, 4Q1/4Q2 → 4U1 ~41/39, 5C2 → 5Q1 28.2, 6C4 → 6U3 41.6
 
 
 
 # UI
+- add proximity metric display 
 - works with json. a board is .kicad_pcb.
 - data extraction and re-integration stays python (`extract.py`, `apply.py`,
   `route_feedback.py`); the UI reads `graph.json` + `route-feedback.json` and

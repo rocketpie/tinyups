@@ -15,7 +15,7 @@ tools below.
 | `tinyups.kicad_dru` | Custom design rules. |
 | `sym-lib-table` | Project symbol table (standard libs + `tinyups`). |
 | `libs/tinyups.kicad_sym` | Custom IC symbols (box symbols from the datasheets). |
-| `blocks.py`, `power_map.py`, `power_spec.py` | Shared design data: block map, per-part power estimate, per-net current/voltage. |
+| `blocks.py`, `power_map.py`, `power_spec.py`, `placement_spec.py` | Shared design data: block map, per-part power estimate, per-net current/voltage, placement intent (roles + limits). |
 
 ## Board
 

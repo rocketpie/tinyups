@@ -58,6 +58,7 @@ allowed and expected to age, to be superseded, and to be wrong in the future.
 - [0026 – pads are copper, not holes](0026-pads-are-copper.md)
 - [0027 – power pours take a trunk, not a chain through every pad](0027-pour-taps.md)
 - [0028 – a rail bypass belongs to a switch, not to the nearest controller](0028-host-pair-metric.md)
+- [0030 – the host-pair metric still guessed, so four VIN_SYS caps became "5Q1's"](0030-placement-intent.md)
 - [0029 – power pours are full Voronoi cells](0029-round-pad-ends.md)
 
 

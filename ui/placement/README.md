@@ -156,20 +156,20 @@ Every slider maps to a force in `public/model.js`.
 - `CENTER_X`, `CENTER_Y` pull to board centre; `BOUND` keep-in force
 
 **Belongs-to** — a custom force, not a d3 one
-- `HOST_STR` (0 = off, default 1.5) — every small part (`R/C/D/L`) is pulled onto
-  a ring around the IC, power switch or connector it belongs to. The host is derived
-  from the netlist at load: the host with the most *specific* shared net
-  (`1/(k−1)` per net — a 2-pad boot cap scores 1.0, a 12-pad rail 0.09), ties
-  broken by proximity; a part with no host on any kept net takes the nearest
-  IC/switch **in its own functional block** (and none if the block has none —
-  proximity to another block is not evidence). The inspector shows the choice
-  (`belongs to 5Q1 · 5.2 / 6 mm`) and a selected part draws a dashed line to
-  its host; `place.assignHosts()` re-derives it after a big rearrangement.
-- `HOST_D` ring radius in mm (default 5) — closer and the part is pushed out,
-  farther and it is pulled in. **One-sided**: only the small part moves, so a
-  controller/FET keeps the position you gave it while its parts fan around it.
+- `HOST_STR` (0 = off, default 1.5) — every part is pulled toward the host
+  written down in [`hardware/placement_spec.py`](../../hardware/placement_spec.py).
+  The graph carries the limits (role, host, min/max, measure, reason); there is
+  no netlist scoring and no nearest-IC fallback. A free part or a controller
+  anchor has no host and is not pulled. The inspector shows the role and the
+  chosen limit (`belongs to 5Q1 · 5.2 / 3 mm`) and a selected part draws a
+  dashed line to its host.
+- `HOST_D` ring radius in mm (default 5) — **fallback only**, for a graph from
+  an older extractor. The per-part `spec.ring` (the limit's reach, capped at
+  8 mm) wins. Closer than the ring and the part is pushed out, farther and it
+  is pulled in. **One-sided**: only the small part moves, so a controller/FET
+  keeps the position you gave it while its parts fan around it.
 - `HOST_POWER` (default **off**) — off, only passives that are *not* on the power
-  path are pulled; every passive still gets a host for the inspector and the
+  path are pulled; every part still has its spec host for the inspector and the
   host-pair metric. On, power passives are pulled too, including hold-up caps
   and shunts. Measured on neutral starts: ringing those bends the input→output
   path (flow `axisR` 0.76 → 0.33) — see
@@ -177,13 +177,23 @@ Every slider maps to a force in `public/model.js`.
 
 ### Host-pair metric
 
-The metrics panel reports **host pairs** — how many small parts have a host,
-how many are farther than their target, and the four worst `part → host`
-distances. Targets are 6 mm for a signal bypass/gate part and 15 mm for a
-power-path part (470 µF hold-up, shunt, power inductor). The same rule is
-available headless as `make proximity` (`PROX_BOARD=<board>`) or
-`python hardware/proximity_report.py <board>`; it prints every pair sorted by
-`distance − target`.
+The metrics panel reports **host pairs** — how many parts have a spec host, how
+many exceed that limit, and the four worst `part → host` distances. The limit
+is the one in `placement_spec.py` (3 mm pad for a pin loop, 10 mm for a bias or
+Kelvin pair, 15 mm for bulk, etc.), not a global 6/15 bin. The UI approximates
+the measure with centroid distance; the authoritative check is headless:
+
+```sh
+make proximity                         # writes reports/proximity.rpt
+make proximity PART=5Q3                # one part (make owns --part)
+make proximity PROX_ARGS="--all"       # passing rules too
+make proximity PROX_BOARD=build/layout/board.kicad_pcb
+python hardware/proximity_report.py --part 6C3
+```
+
+It prints every violated group with the host, the named net, the measured gap,
+the min/max and the reason. A part without a role, or a limit whose host is
+missing, is an error (exit 2), not a free part.
 
   This is the answer to "why do a controller's caps drift to the middle": the net
   links pull a part toward its *net's centroid* (a wide rail's centroid is where

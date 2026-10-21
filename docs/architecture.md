@@ -64,6 +64,23 @@ ref: blocks.py
 4. **Low battery** – host warned at ≤ 30 % SOC; force-off at 3.0 V/cell.
 5. **Off / storage** – output disabled, ≤ 1 mA from pack.
 
+## Placement intent
+
+Placement follows a written contract, not the netlist:
+[`hardware/placement_spec.py`](../hardware/placement_spec.py) gives every part
+a role and the limits (host, min/max, measure, reason) that follow from its
+circuit function.  The power path is ordered input → protection → priority
+path → converter → output; the charger and BMS are separate loops; switching
+cells stay tight, the AFE/crystal/USB/harness stay away from the magnetics.
+`make proximity` measures the board against it and `make place` uses the same
+limits.  The measures, target families and per-block table are in
+[`docs/placement.md`](placement.md); the decision is
+[ADR-0016](decisions/0016-placement-intent.md).
+
+The report prints every violated group and writes `reports/proximity.rpt`.  It
+is a screen, not a CI gate by default; pass `--strict` to make it exit non-zero
+(a missing role or host is always an error).
+
 ## Directory structure (planned)
 
 ```
@@ -74,6 +91,7 @@ hardware/
   tinyups.kicad_dru      # design rules (JLCPCB)
   libs/                  # custom symbols
   blocks.py              # functional-block / reference map
+  placement_spec.py      # roles + placement limits (design intent)
   power_*.py             # power spec, map, ampacity, pour, channel
   route.py               # FreeRouting driver
   route_feedback.py      # routed board + DRC -> placement-UI feedback JSON

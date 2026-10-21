@@ -125,12 +125,20 @@ power: $(OUT)/layout/graph.json | $(REPORTS) ## Power / ampacity check (design c
 	$(call require,$(PCB))
 	@set -o pipefail; $(PYTHON) hardware/power_report.py $(PCB) | tee $(REPORTS)/power.rpt
 
-# Placement side of "which parts belong together": every small passive -> its
-# IC/power switch, compared with a 6 mm (signal) or 15 mm (power) target.
+# Placement side of "which parts belong together": the design-intent limits in
+# hardware/placement_spec.py (roles, hosts, min/max and why).  No host inference.
 PROX_BOARD ?= $(PCB)
-proximity: $(OUT)/layout/graph.json ## Host-pair proximity report (PROX_BOARD=<board>)
+# Extra report arguments.  make parses `--part` itself, so pass it through a
+# variable: `make proximity PART=5Q3` or `make proximity PROX_ARGS="--all"`.
+PART ?=
+PROX_ARGS ?= $(if $(PART),--part $(PART))
+proximity: hardware/placement_spec.py | $(REPORTS) ## Placement intent check (PROX_BOARD=<board>, PART=<ref>)
 	$(call require,$(PROX_BOARD))
-	$(PYTHON) hardware/proximity_report.py $(PROX_BOARD)
+	@set -o pipefail; if [ -n "$(PROX_ARGS)" ]; then \
+		$(PYTHON) hardware/proximity_report.py $(PROX_BOARD) $(PROX_ARGS); \
+	else \
+		$(PYTHON) hardware/proximity_report.py $(PROX_BOARD) | tee $(REPORTS)/proximity.rpt; \
+	fi
 
 # Current-sense Kelvin check: a shunt/controller tap that shares the power
 # copper adds IR drop to the sense voltage.  Run it on a routed board, e.g.
@@ -154,7 +162,7 @@ GRAPH      := $(OUT)/layout/graph.json
 # The graph is derived from the board; rebuild it when the board (or the
 # extractor's shared design data) changes, so a swapped component cannot leave
 # the UI drawing the old footprint.
-$(GRAPH): $(PCB) $(UI_DIR)/extract.py hardware/blocks.py hardware/power_spec.py hardware/power_map.py hardware/power_report.py | $(OUT)
+$(GRAPH): $(PCB) $(UI_DIR)/extract.py hardware/blocks.py hardware/power_spec.py hardware/power_map.py hardware/power_report.py hardware/placement_spec.py | $(OUT)
 	$(PYTHON) $(UI_DIR)/extract.py
 place: $(GRAPH) | $(OUT) ## Interactive placement UI (http://localhost:4097)
 	@test -d $(UI_DIR)/node_modules || (cd $(UI_DIR) && npm install --no-audit --no-fund)

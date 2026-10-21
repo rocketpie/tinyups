@@ -60,9 +60,9 @@ const PARAM_SPEC = [
   { key: "BOUND", label: "Board keep-in force", min: 0, max: 400, step: 5, d: DEFAULTS.BOUND, group: "spread",
     help: "How hard the board edge pushes parts back inside." },
   { key: "HOST_STR", label: "Belongs-to force (small part → its host)", min: 0, max: 20, step: 0.5, d: DEFAULTS.HOST_STR, group: "host",
-    help: "Every small part (R/C/D/L) is pulled onto a ring around the IC, power switch or connector it belongs to. Which host: the one it shares the most *specific* net with (a 2-pad boot cap counts 1.0, a 12-pad rail 0.09); a tie goes to the nearest host. If it shares no host net at all, it uses the nearest IC/switch in its own block. 0 = off." },
+    help: "Every part is pulled toward the host written down in hardware/placement_spec.py (design intent, not a netlist guess). The ring is that limit's reach, capped at 8 mm; free parts and controller anchors are not pulled. 0 = off." },
   { key: "HOST_D", label: "Belongs-to ring (mm)", min: 1, max: 30, step: 0.5, d: DEFAULTS.HOST_D, group: "host",
-    help: "Preferred distance from the host: farther and the small part is pulled in, closer and it is pushed out. Only the small part moves — the controller stays put and its parts fan out around it." },
+    help: "Fallback ring only for a graph with no spec (not used by the current extractor). The per-part reach from placement_spec.py wins." },
   { key: "HOST_POWER", label: "Belongs-to also for power-flagged parts", type: "check", d: DEFAULTS.HOST_POWER, group: "host",
     help: "Off = only the small parts that are *not* on the power path are pulled by the ring; every part still gets a host for the inspector and the host-pair metric. On = power passives are pulled too, including 470 uF hold-ups and shunts — which can kink the input→output flow (the `axisR` metric)." },
   { key: "MAX_V", label: "Max move per tick (mm)", min: 0.5, max: 30, step: 0.5, d: DEFAULTS.MAX_V, group: "solver",
@@ -823,7 +823,7 @@ function renderInspect() {
   const hostT = host ? M.hostTarget(n) : 0;
   $("#inspBody").innerHTML = `
     <div class="row"><b>${n.label || n.id}</b> <span class="tag">${n.kind}${n.power ? " · power" : ""}</span></div>
-    <div class="hint">${n.value || ""}<br>${n.fp || ""}</div>
+    <div class="hint">${n.value || ""}<br>${n.role || n.fp || ""}</div>
     <table id="metrics" style="margin-top:6px">
       <tr><td>position</td><td>${fmt(n.x)}, ${fmt(n.y)} mm</td></tr>
       <tr><td>courtyard</td><td>${fmt(n.w)} × ${fmt(n.h)} mm</td></tr>
@@ -834,7 +834,7 @@ function renderInspect() {
       <tr><td>pinned</td><td>${n.pinned ? "yes" : n.anchor != null ? "terminal" : "no"}</td></tr>
       <tr class="${n.clear != null ? "bad" : ""}"><td>min pad clearance</td><td>${clear}</td></tr>
       ${rf ? `<tr class="${rf.unrouted + rf.clearance ? "bad" : ""}"><td>last route</td><td>${rf.unrouted} unrouted · ${rf.clearance} clearance${rf.min_clearance_mm != null ? ` · ${fmt(rf.min_clearance_mm, 2)} mm` : ""}</td></tr>` : ""}
-      ${n.host ? `<tr class="${hostD > hostT ? "bad" : ""}"><td>belongs to</td><td>${n.host}${n.hostScore ? ` (net score ${fmt(n.hostScore, 2)})` : " (nearest in block)"} · ${fmt(hostD, 1)} / ${fmt(hostT, 0)} mm</td></tr>` : ""}
+      ${n.host ? `<tr class="${hostD > hostT ? "bad" : ""}"><td>belongs to</td><td>${n.host}${n.spec ? ` (${n.spec.measure}${n.spec.net ? `, ${n.spec.net}` : ""})` : n.hostScore ? ` (net score ${fmt(n.hostScore, 2)})` : " (nearest in block)"} · ${fmt(hostD, 1)} / ${fmt(hostT, 0)} mm</td></tr>` : ""}
     </table>
     <table id="metrics" style="margin-top:6px">${nets}</table>`;
 }
